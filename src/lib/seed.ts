@@ -395,9 +395,11 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
         images: mediaIds.map((id) => ({ image: id })),
         category: categoryIds[p.categorySlug],
         status: 'published',
-        isFeatured: ['aloe-lips', 'forever-daily', 'aloe-body-perfect-match'].includes(
-          p.slug,
-        ),
+        isFeatured: [
+          'aloe-lip-balm',
+          'daily-multivitamin',
+          'aloe-body-duo-gift-set',
+        ].includes(p.slug),
         isNew: true,
         foreverProductCode: p.foreverProductCode,
       },
