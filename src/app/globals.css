@@ -1,0 +1,161 @@
+/*
+ * Shoresh — global styles
+ * -------------------------------------------------------------
+ * Loaded by src/app/(storefront)/[locale]/layout.tsx. NOT loaded
+ * by the Payload admin (which uses its own CSS).
+ *
+ * Tailwind v4 is CSS-first: theme tokens live in the @theme block
+ * below, NOT in tailwind.config.ts. To change the palette, edit
+ * brand.config.ts AND this file (the two must stay in sync). If
+ * you add a new token here, also add it to brand.config.ts.
+ */
+
+@import "tailwindcss";
+
+@theme {
+  /* ===== Color palette (Shoresh — logo-derived) ===== */
+  --color-primary: #5b7342;
+  --color-primary-dark: #3d5240;
+  --color-accent: #a67a4a;
+  --color-accent-deep: #7c4e2f;
+  --color-background: #ece5d4;
+  --color-surface: #ffffff;
+  --color-foreground: #2a2a2a;
+  --color-muted: #8b7a5c;
+  --color-border-brand: #e6d9b8;
+
+  /* ===== Font families (wired to next/font variables in layout.tsx) ===== */
+  --font-sans: var(--font-heebo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-frank-ruhl), ui-serif, Georgia, serif;
+
+  /* ===== Radius scale ===== */
+  --radius-brand: 0.75rem;
+}
+
+/* Base body style — applied to the storefront only. */
+html,
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  min-height: 100%;
+}
+
+body {
+  /* Rendering polish for Hebrew + Latin mixed content. */
+  font-feature-settings: "kern";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+/* Paper grain overlay — very subtle noise on top of the parchment
+   background so the page feels handmade instead of digital. Uses
+   a fixed-position pseudo-element so it doesn't move with scroll. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.05;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55, 0 0 0 0 0.45, 0 0 0 0 0.3, 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Keep primary interactive content above the grain overlay */
+body > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Smooth scroll + focus visibility */
+html {
+  scroll-behavior: smooth;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ===== Keyframes for micro-interactions ===== */
+@keyframes pulse-added {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-pulse-added {
+  animation: pulse-added 380ms ease-out;
+}
+
+.animate-fade-up {
+  animation: fade-up 400ms ease-out both;
+}
+
+/* ===== Nav link underline animation (RTL-aware) ===== */
+.nav-link {
+  position: relative;
+  padding-block: 0.25rem;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 280ms ease;
+}
+
+html[dir="rtl"] .nav-link::after {
+  transform-origin: right;
+}
+
+.nav-link:hover::after,
+.nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* ===== Product card hover lift ===== */
+.product-card {
+  transition:
+    transform 280ms ease,
+    box-shadow 280ms ease,
+    border-color 280ms ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -20px rgba(61, 82, 64, 0.35);
+  border-color: color-mix(in oklab, var(--color-primary) 35%, transparent);
+}
+
+/* ===== Button subtle lift ===== */
+.btn-lift {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
+}
+
+.btn-lift:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px -8px rgba(61, 82, 64, 0.45);
+}
+
+.btn-lift:active:not(:disabled) {
+  transform: translateY(0);
+}

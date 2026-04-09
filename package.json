@@ -1,0 +1,43 @@
+{
+  "name": "yarit-shop",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "seed": "curl -X POST http://localhost:3000/api/dev/seed",
+    "reset-db": "rm -f shoresh-dev.db shoresh-dev.db-journal shoresh-dev.db-shm shoresh-dev.db-wal && rm -rf public/media"
+  },
+  "dependencies": {
+    "@payloadcms/db-postgres": "^3.82.1",
+    "@payloadcms/db-sqlite": "^3.82.1",
+    "@payloadcms/next": "^3.82.1",
+    "@payloadcms/richtext-lexical": "^3.82.1",
+    "@payloadcms/storage-vercel-blob": "^3.82.1",
+    "@types/pg": "^8.20.0",
+    "graphql": "^16.13.2",
+    "next": "^16.2.3",
+    "next-intl": "^4.9.0",
+    "payload": "^3.82.1",
+    "pg": "^8.20.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@playwright/browser-chromium": "^1.59.1",
+    "@swc-node/register": "^1.11.1",
+    "@swc/core": "^1.15.24",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "^16.2.3",
+    "playwright-core": "^1.59.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

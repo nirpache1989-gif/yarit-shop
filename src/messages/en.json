@@ -1,0 +1,160 @@
+{
+  "common": {
+    "shopName": "Shoresh",
+    "tagline": "Rooted in wellness",
+    "skipToContent": "Skip to main content",
+    "loading": "Loading...",
+    "close": "Close"
+  },
+  "nav": {
+    "home": "Home",
+    "shop": "Shop",
+    "forever": "Forever",
+    "natural": "Natural",
+    "about": "About",
+    "contact": "Contact",
+    "cart": "Cart",
+    "account": "My account",
+    "search": "Search",
+    "language": "Language"
+  },
+  "home": {
+    "heroHeadline": "Rooted in wellness",
+    "heroSubheadline": "Natural wellness shop — Forever Living and a curated selection from Yarit",
+    "heroCta": "Shop now",
+    "heroSecondaryCta": "Our story",
+    "sectionsComingSoon": "The shop is opening soon",
+    "featuredEyebrow": "Hand-picked",
+    "featuredHeadline": "Our favorites",
+    "featuredSubheadline": "The products I love most, carefully chosen for you",
+    "seeAll": "See all",
+    "foreverHeadline": "Quality rooted in nature",
+    "foreverBody": "Yarit is an authorized Forever Living distributor — the world's leading company for pure aloe vera products. Browse dozens of items from the official catalog, all shipped directly from us with personal packaging and support.",
+    "foreverCta": "Explore the Forever catalog",
+    "categoriesEyebrow": "Find your fit",
+    "categoriesHeadline": "Categories"
+  },
+  "meetYarit": {
+    "eyebrow": "The person behind the shop",
+    "heading": "Hi, I'm Yarit",
+    "body": "Shoresh is my little shop — a place for products I genuinely trust and use every day myself. I'm here to help, answer questions, and find the right thing for you together.",
+    "readMore": "Read my story",
+    "imageAlt": "Hands holding an aloe seedling"
+  },
+  "testimonials": {
+    "eyebrow": "Customer love",
+    "heading": "Thank you, from the heart",
+    "subheading": "A handful of customers who have been with us for months, and years",
+    "t1": {
+      "name": "Michal A.",
+      "city": "Tel Aviv",
+      "quote": "Yarit has guided me since day one. The products are excellent and I keep coming back — amazing service."
+    },
+    "t2": {
+      "name": "Ronit S.",
+      "city": "Haifa",
+      "quote": "I found exactly what I was looking for at Yarit's, with a detailed personal explanation of every product. Highly recommend!"
+    },
+    "t3": {
+      "name": "Dana K.",
+      "city": "Jerusalem",
+      "quote": "Forever's aloe changed my skincare routine. Thank you Yarit for the spot-on recommendation."
+    }
+  },
+  "trustBar": {
+    "natural": "100% natural",
+    "authorized": "Authorized Forever distributor",
+    "shipping": "Shipping worldwide",
+    "personal": "Personal guidance"
+  },
+  "shop": {
+    "title": "The shop",
+    "subtitle": "{count} products",
+    "comingSoon": "The shop is opening soon",
+    "description": "We're still building the catalog. Soon you'll be able to browse all of Yarit's Forever Living products alongside her curated selection of natural wellness picks.",
+    "filterAll": "All",
+    "filterIndependent": "Natural picks",
+    "empty": "No products match this filter"
+  },
+  "product": {
+    "aboutThisProduct": "About this product",
+    "addToCart": "Add to cart",
+    "outOfStock": "Out of stock"
+  },
+  "cart": {
+    "title": "Shopping cart",
+    "empty": "Your cart is empty",
+    "browseShop": "Browse the shop",
+    "addToCart": "Add to cart",
+    "added": "Added ✓",
+    "remove": "Remove",
+    "subtotal": "Subtotal",
+    "shippingCalculated": "Shipping calculated at checkout",
+    "summary": "Order summary",
+    "viewCart": "View cart",
+    "checkout": "Checkout"
+  },
+  "about": {
+    "title": "About",
+    "heading": "Shoresh — natural wellness from the heart",
+    "body": "Shoresh is the online home of Yarit, an authorized Forever Living distributor. Here you'll find a curated range of high-quality natural products — Forever Living's catalog alongside other wellness picks Yarit loves — all in one place, with personal guidance and warm service.",
+    "moreComingSoon": "More details coming soon"
+  },
+  "contact": {
+    "title": "Contact",
+    "heading": "We're happy to help",
+    "body": "Got a question about a product, need advice, or want to order something special? Message Yarit directly.",
+    "whatsapp": "Send a WhatsApp message",
+    "email": "Send an email",
+    "phone": "Call",
+    "comingSoon": "A contact form is coming soon"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "contactInfo": "Contact info",
+    "email": "Email",
+    "fullName": "Full name",
+    "phone": "Phone",
+    "shippingAddress": "Shipping address",
+    "street": "Street address",
+    "city": "City",
+    "postalCode": "Postal code",
+    "country": "Country",
+    "shippingMethod": "Shipping method",
+    "noShippingForRegion": "No shipping options found for this region. Please contact us.",
+    "free": "Free",
+    "orderSummary": "Order summary",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "placeOrder": "Place order",
+    "processing": "Processing...",
+    "mockNotice": "Dev mode: no real charge. When a payment gateway is connected, the payment will go through it.",
+    "emptyCart": "Your cart is empty",
+    "genericError": "Something went wrong. Please try again."
+  },
+  "success": {
+    "heading": "Thank you for your order!",
+    "subheading": "We've received your order. A confirmation has been sent to your email.",
+    "orderNumber": "Order number",
+    "orderSummary": "Summary",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "continueShopping": "Continue shopping",
+    "backToShop": "Back to shop",
+    "noOrder": "Order not found"
+  },
+  "footer": {
+    "allRightsReserved": "All rights reserved",
+    "shop": "Shop",
+    "customerService": "Customer service",
+    "information": "Information",
+    "social": "Follow us",
+    "faq": "FAQ",
+    "shipping": "Shipping",
+    "returns": "Returns",
+    "privacy": "Privacy",
+    "terms": "Terms"
+  }
+}
