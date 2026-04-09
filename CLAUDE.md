@@ -2,7 +2,9 @@
 
 > **This file is auto-loaded by Claude Code when any session opens this project.**
 > It is the entry point for any AI assistant continuing work on Shoresh.
-> Read this file first, then `docs/STATE.md`, then `docs/TASKS.md` — in that order.
+> **Read `docs/NEXT-SESSION.md` FIRST** — it has the current status, known issues, and a 5-minute orientation. Then come back here, then `docs/STATE.md`, then `docs/TASKS.md`.
+>
+> 🚀 **Production is live at https://yarit-shop.vercel.app** (2026-04-10).
 
 ---
 

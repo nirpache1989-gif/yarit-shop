@@ -4,6 +4,62 @@ Every significant architectural or product decision is logged here with a date a
 
 ---
 
+## ADR-014 — Production deploy infrastructure: Neon + Vercel + Blob
+
+**Date:** 2026-04-10
+**Status:** Accepted
+**Context:** First production deploy for the Phase A–E + design polish build. Decisions on DB, media storage, deploy platform, and the env-branching strategy.
+
+**Decisions:**
+
+1. **DB: Neon Postgres (EU Central / Frankfurt)** — free tier, 0.5 GB storage, auto-suspend. Frankfurt is the closest region to Israel on the free tier (~60ms). Connection string lives in Vercel env vars only — never committed.
+
+2. **DB adapter selection by env var format** — `src/payload.config.ts` picks the Payload DB adapter based on `DATABASE_URI` shape: `postgres://` or `postgresql://` → `postgresAdapter` (production); anything else (including `file:./...`) → `sqliteAdapter` (local dev). This keeps local dev zero-config while production runs on a real database, with no `if (NODE_ENV === 'production')` branching anywhere.
+
+3. **Postgres `push: true`** — the adapter is configured with `push: true` so Drizzle syncs the schema on boot without committed migration files. This is suitable for MVP and early deploys (no schema history, fast iteration) but should be swapped for real migrations via `payload generate:migration` + `payload migrate` before the site sees real traffic or before we make breaking schema changes.
+
+4. **Media: Vercel Blob via `@payloadcms/storage-vercel-blob` plugin, conditionally** — the plugin is added to Payload's `plugins` array only when `BLOB_READ_WRITE_TOKEN` is set. Local dev stores uploads in `./media/` (gitignored); production stores them in Vercel Blob. Vercel auto-injects the token when a Blob store is linked to the project — no manual copy-paste.
+
+5. **Deploy platform: Vercel** — native Next.js integration, same company. Free "Hobby" tier is enough for the first year at Shoresh's expected volume.
+
+6. **`vercel.json` with explicit `framework: nextjs`** — the first deploy failed because Vercel auto-detected the framework as "Other" (probably because the `vercel link` call happened while my CWD was momentarily at the parent directory which had a rogue package.json). Committing `vercel.json` to the repo locks the framework preset regardless of where `vercel link` is run from. This is the recommended pattern for any Next.js project and prevents future confusion.
+
+7. **Repo: public** — `github.com/nirpache1989-gif/yarit-shop` is public. The brand name "Shoresh" is a placeholder — when the final name is picked, the rename is a one-file change (`src/brand.config.ts`) because Phase A enforced brand-data centralization.
+
+**Consequences:**
+- Local dev still works offline with zero external credentials (SQLite).
+- Production DB + media are fully managed, auto-scaling, and auto-suspending.
+- Swapping to a different hosting platform later (Fly.io, Railway, self-hosted) requires: (a) new DB URL, (b) new media storage plugin (or `@payloadcms/storage-s3` with R2), (c) new build target. Nothing architectural changes.
+- The free-tier constraints (Neon 0.5 GB, Vercel Blob 1 GB, Vercel Hobby no custom build machines) are MORE than enough for MVP.
+- Phase F still needs to land the `/account` page, full responsive QA, SEO metadata, and the image fix (see `docs/NEXT-SESSION.md`).
+
+---
+
+## ADR-013 — Git history rewrite to fix commit author
+
+**Date:** 2026-04-10
+**Status:** Accepted
+**Context:** After pushing the initial commit to GitHub, the client noticed that both commits (the create-next-app scaffold AND the Phase A–E feature commit) were authored by **Albert Shovtyuk <wazahaka@gmail.com>** instead of the client's own identity **Nir Pace <nirpache1989@gmail.com>**. The global git config was ALREADY set to Nir Pace correctly; no local config, no environment variables, no hooks overriding. Root cause unclear — likely a cached credential from a Git Credential Manager / Windows identity broker that injected a different identity at commit time, bypassing the config files.
+
+**Decision:** Rewrite the git history via an **orphan branch** approach:
+1. Create `fresh-main` as an orphan (no parent)
+2. Stage all files from the working tree
+3. Commit with explicit `GIT_AUTHOR_NAME` / `GIT_AUTHOR_EMAIL` / `GIT_COMMITTER_*` env vars forcing the Nir Pace identity
+4. Delete the original `main` branch
+5. Rename `fresh-main` → `main`
+6. Force-push with `--force-with-lease` (safer than `--force` — fails if someone else pushed in the meantime)
+
+The repo was 1 day old, public, with zero forks or external clones, so rewriting history was safe — no one lost anything.
+
+**Consequences:**
+- `github.com/nirpache1989-gif/yarit-shop` now shows ONE clean commit authored by Nir Pace with the full Phase A–E message.
+- The create-next-app scaffold commit (with Albert's name) is permanently gone from history.
+- LOCAL git config (`git config --local user.name "Nir Pace"`) was also set explicitly inside the yarit-shop repo to guarantee future commits don't regress.
+- Global git config already had Nir Pace set — the mystery of WHY the first commits used Albert's name remains unresolved but doesn't matter because local+explicit env var setting now prevents recurrence.
+- If the issue recurs on a future commit in this repo, the fix is to pass `GIT_AUTHOR_NAME`/`GIT_AUTHOR_EMAIL` explicitly inline: `GIT_AUTHOR_NAME="Nir Pace" GIT_AUTHOR_EMAIL="nirpache1989@gmail.com" git commit ...`
+
+---
+
 ## ADR-012 — Phase H (organization pass) added to plan at client request
 
 **Date:** 2026-04-10

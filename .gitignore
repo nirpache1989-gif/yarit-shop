@@ -61,3 +61,5 @@ shoresh-dev.db-*
 
 # Payload-generated TypeScript types (regenerated on every boot)
 /src/payload-types.ts
+
+.vercel
