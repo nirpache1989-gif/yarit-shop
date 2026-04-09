@@ -39,12 +39,6 @@ export function Header() {
           <Link href="/shop" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors">
             {t('shop')}
           </Link>
-          <Link href="/shop?brand=forever" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors">
-            {t('forever')}
-          </Link>
-          <Link href="/shop?brand=independent" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors">
-            {t('natural')}
-          </Link>
           <Link href="/about" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors">
             {t('about')}
           </Link>

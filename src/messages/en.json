@@ -9,7 +9,6 @@
   "nav": {
     "home": "Home",
     "shop": "Shop",
-    "forever": "Forever",
     "natural": "Natural",
     "about": "About",
     "contact": "Contact",
@@ -20,7 +19,7 @@
   },
   "home": {
     "heroHeadline": "Rooted in wellness",
-    "heroSubheadline": "Natural wellness shop — Forever Living and a curated selection from Yarit",
+    "heroSubheadline": "Natural wellness products, hand-picked by Yarit",
     "heroCta": "Shop now",
     "heroSecondaryCta": "Our story",
     "sectionsComingSoon": "The shop is opening soon",
@@ -28,11 +27,40 @@
     "featuredHeadline": "Our favorites",
     "featuredSubheadline": "The products I love most, carefully chosen for you",
     "seeAll": "See all",
-    "foreverHeadline": "Quality rooted in nature",
-    "foreverBody": "Yarit is an authorized Forever Living distributor — the world's leading company for pure aloe vera products. Browse dozens of items from the official catalog, all shipped directly from us with personal packaging and support.",
-    "foreverCta": "Explore the Forever catalog",
     "categoriesEyebrow": "Find your fit",
     "categoriesHeadline": "Categories"
+  },
+  "trustBar": {
+    "natural": "100% natural",
+    "curated": "Carefully curated",
+    "shipping": "Shipping worldwide",
+    "personal": "Personal guidance"
+  },
+  "shop": {
+    "title": "The shop",
+    "subtitle": "{count} products",
+    "comingSoon": "The shop is opening soon",
+    "description": "We're still building the catalog. Soon you'll be able to browse Yarit's curated selection of natural wellness picks.",
+    "filterAll": "All",
+    "empty": "No products match this filter"
+  },
+  "product": {
+    "aboutThisProduct": "About this product",
+    "addToCart": "Add to cart",
+    "outOfStock": "Out of stock"
+  },
+  "cart": {
+    "title": "Shopping cart",
+    "empty": "Your cart is empty",
+    "browseShop": "Browse the shop",
+    "addToCart": "Add to cart",
+    "added": "Added",
+    "remove": "Remove",
+    "subtotal": "Subtotal",
+    "shippingCalculated": "Shipping calculated at checkout",
+    "summary": "Order summary",
+    "viewCart": "View cart",
+    "checkout": "Checkout"
   },
   "meetYarit": {
     "eyebrow": "The person behind the shop",
@@ -58,56 +86,8 @@
     "t3": {
       "name": "Dana K.",
       "city": "Jerusalem",
-      "quote": "Forever's aloe changed my skincare routine. Thank you Yarit for the spot-on recommendation."
+      "quote": "The aloe Yarit sent me changed my skincare routine. Thank you for the spot-on recommendation."
     }
-  },
-  "trustBar": {
-    "natural": "100% natural",
-    "authorized": "Authorized Forever distributor",
-    "shipping": "Shipping worldwide",
-    "personal": "Personal guidance"
-  },
-  "shop": {
-    "title": "The shop",
-    "subtitle": "{count} products",
-    "comingSoon": "The shop is opening soon",
-    "description": "We're still building the catalog. Soon you'll be able to browse all of Yarit's Forever Living products alongside her curated selection of natural wellness picks.",
-    "filterAll": "All",
-    "filterIndependent": "Natural picks",
-    "empty": "No products match this filter"
-  },
-  "product": {
-    "aboutThisProduct": "About this product",
-    "addToCart": "Add to cart",
-    "outOfStock": "Out of stock"
-  },
-  "cart": {
-    "title": "Shopping cart",
-    "empty": "Your cart is empty",
-    "browseShop": "Browse the shop",
-    "addToCart": "Add to cart",
-    "added": "Added ✓",
-    "remove": "Remove",
-    "subtotal": "Subtotal",
-    "shippingCalculated": "Shipping calculated at checkout",
-    "summary": "Order summary",
-    "viewCart": "View cart",
-    "checkout": "Checkout"
-  },
-  "about": {
-    "title": "About",
-    "heading": "Shoresh — natural wellness from the heart",
-    "body": "Shoresh is the online home of Yarit, an authorized Forever Living distributor. Here you'll find a curated range of high-quality natural products — Forever Living's catalog alongside other wellness picks Yarit loves — all in one place, with personal guidance and warm service.",
-    "moreComingSoon": "More details coming soon"
-  },
-  "contact": {
-    "title": "Contact",
-    "heading": "We're happy to help",
-    "body": "Got a question about a product, need advice, or want to order something special? Message Yarit directly.",
-    "whatsapp": "Send a WhatsApp message",
-    "email": "Send an email",
-    "phone": "Call",
-    "comingSoon": "A contact form is coming soon"
   },
   "checkout": {
     "title": "Checkout",
@@ -144,6 +124,21 @@
     "continueShopping": "Continue shopping",
     "backToShop": "Back to shop",
     "noOrder": "Order not found"
+  },
+  "about": {
+    "title": "About",
+    "heading": "Shoresh — natural wellness from the heart",
+    "body": "Shoresh is the online home of Yarit. Here you'll find a curated range of high-quality natural products Yarit uses and loves — all in one place, with personal guidance and warm service.",
+    "moreComingSoon": "More details coming soon"
+  },
+  "contact": {
+    "title": "Contact",
+    "heading": "We're happy to help",
+    "body": "Got a question about a product, need advice, or want to order something special? Message Yarit directly.",
+    "whatsapp": "Send a WhatsApp message",
+    "email": "Send an email",
+    "phone": "Call",
+    "comingSoon": "A contact form is coming soon"
   },
   "footer": {
     "allRightsReserved": "All rights reserved",

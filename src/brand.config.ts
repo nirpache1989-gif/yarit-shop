@@ -32,8 +32,8 @@ export const brand = {
 
   /** Longer descriptive one-liner for hero sections and meta descriptions. */
   description: {
-    he: 'חנות מוצרי טבע ובריאות — Forever Living ומבחר אישי של ירית',
-    en: 'Natural wellness shop — Forever Living and a curated selection from Yarit',
+    he: 'חנות מוצרי טבע ובריאות — מבחר אישי של ירית',
+    en: 'Natural wellness shop — a curated personal selection from Yarit',
   },
 
   /**

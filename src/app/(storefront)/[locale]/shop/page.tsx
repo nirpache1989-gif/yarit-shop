@@ -22,14 +22,14 @@ export function generateStaticParams() {
 
 type Props = {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ category?: string; brand?: string }>
+  searchParams: Promise<{ category?: string }>
 }
 
 type CategoryData = { id: number | string; slug: string; title: string }
 
 export default async function ShopPage({ params, searchParams }: Props) {
   const { locale } = await params
-  const { category, brand } = await searchParams
+  const { category } = await searchParams
   setRequestLocale(locale)
   const typedLocale = locale as Locale
 
@@ -47,15 +47,15 @@ export default async function ShopPage({ params, searchParams }: Props) {
   const categories = categoriesRes.docs as unknown as CategoryData[]
 
   // Build the product query
+  // Note: the `type: forever | independent` discriminator exists on
+  // Products but is NEVER exposed to customers as a filter. It's a
+  // purely internal signal for fulfillment routing and stock tracking.
   const where: Where = {
     status: { equals: 'published' },
   }
   if (category) {
     const cat = categories.find((c) => c.slug === category)
     if (cat) where.category = { equals: cat.id }
-  }
-  if (brand === 'forever' || brand === 'independent') {
-    where.type = { equals: brand }
   }
 
   const productsRes = await payload.find({
@@ -79,28 +79,14 @@ export default async function ShopPage({ params, searchParams }: Props) {
         </p>
       </header>
 
-      {/* Filter chips — brand */}
-      <div className="mb-4 flex flex-wrap gap-2">
-        <FilterChip
-          href="/shop"
-          active={!brand && !category}
-          label={t('filterAll')}
-        />
-        <FilterChip
-          href="/shop?brand=forever"
-          active={brand === 'forever'}
-          label="Forever"
-        />
-        <FilterChip
-          href="/shop?brand=independent"
-          active={brand === 'independent'}
-          label={t('filterIndependent')}
-        />
-      </div>
-
-      {/* Filter chips — categories */}
+      {/* Filter chips — categories only (brand filter removed post-rebrand) */}
       {categories.length > 0 && (
         <div className="mb-10 flex flex-wrap gap-2">
+          <FilterChip
+            href="/shop"
+            active={!category}
+            label={t('filterAll')}
+          />
           {categories.map((c) => (
             <FilterChip
               key={c.id}

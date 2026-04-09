@@ -24,8 +24,7 @@ export function Footer() {
             </h3>
             <ul className="space-y-2 text-sm text-[var(--color-muted)]">
               <li><Link href="/shop" className="hover:text-[var(--color-primary-dark)]">{tNav('shop')}</Link></li>
-              <li><Link href="/shop?brand=forever" className="hover:text-[var(--color-primary-dark)]">Forever Living</Link></li>
-              <li><Link href="/shop?brand=independent" className="hover:text-[var(--color-primary-dark)]">{tNav('natural')}</Link></li>
+              <li><Link href="/about" className="hover:text-[var(--color-primary-dark)]">{tNav('about')}</Link></li>
             </ul>
           </div>
 

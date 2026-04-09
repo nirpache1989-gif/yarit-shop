@@ -112,15 +112,8 @@ export default async function ProductPage({ params }: Props) {
         {/* Info */}
         <div className="space-y-5">
           <div className="flex flex-wrap gap-2">
-            {product.type === 'forever' ? (
-              <Badge tone="accent">Forever Living</Badge>
-            ) : (
-              <Badge tone="primary">
-                {typedLocale === 'he' ? 'במלאי' : 'In stock'}
-              </Badge>
-            )}
             {product.isNew && (
-              <Badge tone="muted">{typedLocale === 'he' ? 'חדש' : 'New'}</Badge>
+              <Badge tone="accent">{typedLocale === 'he' ? 'חדש' : 'New'}</Badge>
             )}
           </div>
 

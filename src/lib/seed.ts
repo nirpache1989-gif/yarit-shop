@@ -75,7 +75,15 @@ const CATEGORIES = [
   { slug: 'gifts', title: { he: 'מתנות', en: 'Gifts' } },
 ]
 
-// ─── Forever product seed data (from the image-analysis agent) ──────
+// ─── Seed products sourced from Forever Living ──────────────────────
+// NOTE: These are products Yarit sources from Forever, but the
+// customer-facing titles NEVER mention "Forever" per Yarit's explicit
+// brand instructions (2026-04-10). The `foreverProductCode` field is
+// admin-only — Yarit uses it internally when placing orders with her
+// supplier. The `type: 'forever'` discriminator is also internal and
+// drives the fulfillment workflow (orders with these items go into
+// the "needs sourcing from Forever" queue). None of it leaks to
+// customers.
 type SeedProduct = {
   files: string[]
   slug: string
@@ -90,10 +98,10 @@ type SeedProduct = {
 const FOREVER_PRODUCTS: SeedProduct[] = [
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM.jpeg'],
-    slug: 'aloe-lips',
+    slug: 'aloe-lip-balm',
     title: {
-      he: "אלוורה ליפס עם ג'וג'ובה",
-      en: 'Aloe Lips with Jojoba',
+      he: "שפתון לחות אלוורה וג'וג'ובה",
+      en: 'Aloe & Jojoba Lip Balm',
     },
     shortDescription: {
       he: "שפתון לחות טבעי עם אלוורה, ג'וג'ובה ושעוות דבורים",
@@ -125,8 +133,8 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM (2).jpeg'],
-    slug: 'forever-bright-toothgel',
-    title: { he: 'פוראבר ברייט משחת שיניים', en: 'Forever Bright Toothgel' },
+    slug: 'aloe-toothgel',
+    title: { he: 'משחת שיניים אלוורה ופרופוליס', en: 'Aloe & Propolis Toothgel' },
     shortDescription: {
       he: 'משחת שיניים ללא פלואוריד עם אלוורה ופרופוליס',
       en: 'Fluoride-free toothgel with aloe vera and bee propolis',
@@ -144,8 +152,8 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
       'WhatsApp Image 2026-04-09 at 8.09.49 PM (3).jpeg',
       'WhatsApp Image 2026-04-09 at 8.09.50 PM.jpeg',
     ],
-    slug: 'aloe-first',
-    title: { he: 'אלוורה פירסט ספריי', en: 'Aloe First Spray' },
+    slug: 'aloe-soothing-spray',
+    title: { he: 'תרסיס אלוורה מרגיע', en: 'Aloe Soothing Spray' },
     shortDescription: {
       he: 'ספריי מרגיע ומלחלח לעור עם אלוורה וצמחי מרפא',
       en: 'Soothing moisturizing spray with aloe and botanical extracts',
@@ -160,8 +168,8 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM.jpeg'],
-    slug: 'aloe-vera-gelly',
-    title: { he: "אלוורה ג'לי", en: 'Aloe Vera Gelly' },
+    slug: 'aloe-vera-gel',
+    title: { he: "ג'ל אלוורה ורה", en: 'Aloe Vera Gel' },
     shortDescription: {
       he: "ג'ל אלוורה ורה שקוף להרגעה והזנה של העור",
       en: 'Clear aloe vera gel for soothing and nourishing the skin',
@@ -176,8 +184,8 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (1).jpeg'],
-    slug: 'forever-bee-propolis',
-    title: { he: 'פוראבר בי פרופוליס', en: 'Forever Bee Propolis' },
+    slug: 'bee-propolis',
+    title: { he: 'פרופוליס דבורים', en: 'Bee Propolis' },
     shortDescription: {
       he: 'תוסף תזונה טבעי על בסיס פרופוליס דבורים 100% טבעי',
       en: '100% natural bee propolis dietary supplement',
@@ -192,15 +200,15 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (2).jpeg'],
-    slug: 'forever-daily',
-    title: { he: 'פוראבר דיילי מולטי ויטמין', en: 'Forever Daily Multivitamin' },
+    slug: 'daily-multivitamin',
+    title: { he: 'מולטי ויטמין יומי', en: 'Daily Multivitamin' },
     shortDescription: {
       he: 'מולטי ויטמין יומי עם 55 רכיבים תזונתיים',
       en: 'Daily multivitamin with 55 nutrients',
     },
     description: {
-      he: 'תוסף מולטי ויטמין יומי עם טכנולוגיית AOS Complex ייחודית, המכיל 55 ויטמינים, מינרלים ופיטונוטריאנטים התומכים בתפקוד תקין של הגוף, במערכת החיסון וברמות האנרגיה. 60 טבליות.',
-      en: 'A daily multivitamin supplement with unique AOS Complex technology, containing 55 vitamins, minerals and phytonutrients that support normal body function, immune health and energy levels. 60 tablets.',
+      he: 'תוסף מולטי ויטמין יומי מתקדם המכיל 55 ויטמינים, מינרלים ופיטונוטריאנטים התומכים בתפקוד תקין של הגוף, במערכת החיסון וברמות האנרגיה. 60 טבליות.',
+      en: 'An advanced daily multivitamin supplement containing 55 vitamins, minerals and phytonutrients that support normal body function, immune health and energy levels. 60 tablets.',
     },
     categorySlug: 'nutrition',
     price: 140,
@@ -208,18 +216,18 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (3).jpeg'],
-    slug: 'aloe-body-perfect-match',
+    slug: 'aloe-body-duo-gift-set',
     title: {
-      he: 'מארז אלוורה בודי — הזוג המושלם',
-      en: "Aloe Body 'Perfect Match' Gift Set",
+      he: 'מארז מתנה אלוורה לגוף — הזוג המושלם',
+      en: "Aloe Body Duo Gift Set",
     },
     shortDescription: {
       he: 'מארז מתנה: ג\u2019ל רחצה וקרם גוף על בסיס אלוורה ורה',
       en: 'Gift set: aloe vera body wash and body lotion duo',
     },
     description: {
-      he: 'מארז מתנה יוקרתי הכולל ג\u2019ל רחצה Aloe Body Wash וקרם גוף Aloe Body Lotion, שניהם על בסיס אלוורה ורה. הג\u2019ל מנקה בעדינות תוך שמירה על לחות, והקרם נספג במהירות ומעניק הזנה ולחות לאורך היום. מתנה מושלמת לכל אירוע.',
-      en: 'A luxurious gift set including Aloe Body Wash and Aloe Body Lotion, both based on aloe vera. The wash gently cleanses while retaining moisture, and the lightweight lotion absorbs quickly to nourish and hydrate throughout the day. A perfect gift for any occasion.',
+      he: 'מארז מתנה יוקרתי הכולל ג\u2019ל רחצה וקרם גוף, שניהם על בסיס אלוורה ורה. הג\u2019ל מנקה בעדינות תוך שמירה על לחות, והקרם נספג במהירות ומעניק הזנה ולחות לאורך היום. מתנה מושלמת לכל אירוע.',
+      en: 'A luxurious gift set including a body wash and body lotion, both based on aloe vera. The wash gently cleanses while retaining moisture, and the lightweight lotion absorbs quickly to nourish and hydrate throughout the day. A perfect gift for any occasion.',
     },
     categorySlug: 'gifts',
     price: 195,
@@ -269,7 +277,13 @@ const INDEPENDENT_PRODUCTS = [
 // Takes an already-initialized Payload instance (the API route is
 // responsible for obtaining it). Returns a plain object summary of
 // what was created, so the route can JSON-respond with it.
-export async function runSeed(payload: Payload) {
+//
+// When `wipe: true`, the runner first deletes all existing products,
+// categories, tags, orders, and (non-admin) customers + media before
+// seeding. Admin users are preserved. This lets the dev endpoint be
+// called repeatedly against the same DB (e.g. Neon) to reset the
+// catalog in place without re-provisioning.
+export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
   const log: string[] = []
   const say = (msg: string) => {
     console.log(msg)
@@ -278,6 +292,44 @@ export async function runSeed(payload: Payload) {
 
   say('Shoresh seed — starting')
   say(`  assets: ${assetsDir}`)
+  if (opts.wipe) say('  WIPE MODE: deleting existing data first')
+
+  if (opts.wipe) {
+    for (const collection of ['orders', 'products', 'categories', 'tags', 'media'] as const) {
+      try {
+        const res = await payload.find({ collection, limit: 1000, depth: 0 })
+        for (const doc of res.docs) {
+          try {
+            await payload.delete({ collection, id: (doc as { id: number | string }).id })
+          } catch (err) {
+            say(`  · skipped ${collection}#${(doc as { id: unknown }).id}: ${err instanceof Error ? err.message : 'unknown'}`)
+          }
+        }
+        say(`  · wiped ${collection} (${res.docs.length} docs)`)
+      } catch (err) {
+        say(`  · could not wipe ${collection}: ${err instanceof Error ? err.message : 'unknown'}`)
+      }
+    }
+    // Wipe non-admin users only
+    try {
+      const users = await payload.find({
+        collection: 'users',
+        where: { role: { not_equals: 'admin' } },
+        limit: 1000,
+        depth: 0,
+      })
+      for (const u of users.docs) {
+        try {
+          await payload.delete({ collection: 'users', id: (u as { id: number | string }).id })
+        } catch {
+          /* non-fatal */
+        }
+      }
+      say(`  · wiped users (${users.docs.length} non-admin customers)`)
+    } catch (err) {
+      say(`  · could not wipe users: ${err instanceof Error ? err.message : 'unknown'}`)
+    }
+  }
 
   // 1. Categories
   say('\n[1/4] creating categories...')

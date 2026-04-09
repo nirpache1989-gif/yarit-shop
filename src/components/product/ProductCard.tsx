@@ -90,15 +90,12 @@ export function ProductCard({ product, locale, className }: Props) {
           className="object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-[1.05]"
         />
 
-        {/* Badges — top-end (opposite corner from the sprig) */}
+        {/* Badges — top-end (opposite corner from the sprig).
+            Post-rebrand: no longer reveals Forever vs independent
+            to the customer. Only the "New" flag is shown when set. */}
         <div className="absolute top-3 end-3 flex flex-col gap-1 items-end">
-          {product.type === 'forever' ? (
-            <Badge tone="accent">Forever</Badge>
-          ) : (
-            <Badge tone="primary">{locale === 'he' ? 'במלאי' : 'In stock'}</Badge>
-          )}
           {product.isNew && (
-            <Badge tone="muted">{locale === 'he' ? 'חדש' : 'New'}</Badge>
+            <Badge tone="accent">{locale === 'he' ? 'חדש' : 'New'}</Badge>
           )}
         </div>
       </Link>

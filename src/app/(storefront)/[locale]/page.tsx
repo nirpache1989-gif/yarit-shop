@@ -1,14 +1,12 @@
 /**
  * @file Storefront home page
- * @summary Phase C + post-design-review homepage. Composes all section
- *          components with BranchDivider separators between them so
- *          the page has visual connective tissue.
+ * @summary Homepage composition. ForeverSpotlight section was removed
+ *          in the post-launch rebrand (Yarit's feedback: minimize any
+ *          customer-facing mention of the Forever brand; keep the
+ *          internal type discriminator and fulfillment workflow only).
  *
- *          Order: Hero → TrustBar → Featured → MeetYarit → Forever
- *                 Spotlight → Testimonials → Categories
- *
- *          All data fetching happens inside each section server
- *          component. This file stays declarative and easy to reorder.
+ *          Current order:
+ *            Hero → TrustBar → Featured → MeetYarit → Testimonials → Categories
  */
 import { setRequestLocale } from 'next-intl/server'
 
@@ -17,7 +15,6 @@ import { Hero } from '@/components/sections/Hero'
 import { TrustBar } from '@/components/sections/TrustBar'
 import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
 import { MeetYarit } from '@/components/sections/MeetYarit'
-import { ForeverSpotlight } from '@/components/sections/ForeverSpotlight'
 import { Testimonials } from '@/components/sections/Testimonials'
 import { CategoryGrid } from '@/components/sections/CategoryGrid'
 import { BranchDivider } from '@/components/ui/BranchDivider'
@@ -43,7 +40,6 @@ export default async function HomePage({ params }: Props) {
       <FeaturedProducts locale={typedLocale} />
       <BranchDivider />
       <MeetYarit locale={typedLocale} />
-      <ForeverSpotlight locale={typedLocale} />
       <Testimonials locale={typedLocale} />
       <BranchDivider />
       <CategoryGrid locale={typedLocale} />
