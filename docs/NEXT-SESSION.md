@@ -4,7 +4,10 @@
 
 ## Where things stand (2026-04-10, end of session)
 
-**Status:** 🚀 Phases A–E + design polish are **complete and deployed to production**.
+**Status:** 🚀 Phases A–E + design polish + customer-facing rebrand (drop Forever mentions) are **complete and deployed to production**.
+
+### Rebrand summary
+Yarit gave explicit feedback after reviewing the first deploy: she doesn't want the Forever Living brand exposed publicly. We scrubbed every customer-facing Forever reference (navigation, badges, copy, product titles, the entire `ForeverSpotlight` homepage section) while keeping the internal `type: 'forever' | 'independent'` discriminator and fulfillment workflow completely intact. She still sees "Forever" in her admin — customers never do. See `docs/DECISIONS.md` ADR-015 for the full delta.
 
 - **Production URL:** https://yarit-shop.vercel.app (live, all routes respond 200)
 - **Admin:** https://yarit-shop.vercel.app/admin (`admin@shoresh.example` / `admin1234` — rotate password first thing)

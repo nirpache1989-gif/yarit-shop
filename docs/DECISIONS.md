@@ -4,6 +4,53 @@ Every significant architectural or product decision is logged here with a date a
 
 ---
 
+## ADR-015 — Customer-facing rebrand: drop all Forever mentions
+
+**Date:** 2026-04-10
+**Status:** Accepted
+**Context:** After the first production deploy went live, Yarit reviewed the site and sent explicit feedback: she doesn't want to publicly advertise her Forever Living distributor relationship. Verbatim (Hebrew): "Delete the whole distributor thing, I don't want to advertise the company at all, and as little as possible that I'm connected to the company. The word 'Forever' should be last."
+
+The challenge: the architecture was built with Forever as a first-class concept — the `type: 'forever' | 'independent'` discriminator, the `ForeverSpotlight` homepage section, Forever badges on product cards, "Forever" nav links, filter chips, a rich `foreverProductCode` admin field, and 5 out of 10 seed products had Forever-branded titles ("פוראבר דיילי", "Forever Bright Toothgel", etc.).
+
+**Decision:** Scrub every **customer-facing** reference to Forever while keeping the **internal** architecture 100% intact. Specifically:
+
+**REMOVED (customer-facing):**
+- `src/components/sections/ForeverSpotlight.tsx` — file deleted, section removed from homepage composition
+- Header nav "Forever" link
+- Shop page "Forever" filter chip (kept only category filter)
+- ProductCard "Forever" badge (now only shows "New" when `isNew`)
+- Product detail page "Forever Living" badge
+- Footer "Forever Living" link
+- Hero subheadline "Forever Living and a curated selection from Yarit" → "a curated personal selection from Yarit"
+- TrustBar "authorized Forever distributor" label → "carefully curated"
+- About page "an authorized Forever Living distributor" mention
+- All i18n strings in he.json + en.json with Forever references
+- Seed product titles: Hebrew "פוראבר ברייט", "פוראבר דיילי", "פוראבר בי" etc. → generic Hebrew names. English "Forever Bright Toothgel" etc. → generic English names.
+- Seed product slugs: `forever-bright-toothgel` → `aloe-toothgel`, `forever-bee-propolis` → `bee-propolis`, `forever-daily` → `daily-multivitamin` (plus a few cleanup renames of other slugs)
+- `brand.config.ts` `description` field
+
+**KEPT (internal):**
+- `Products.type: 'forever' | 'independent'` discriminator — drives routing
+- `Products.foreverProductCode` admin-only field — Yarit's supplier SKU
+- `Products.foreverDistributorPrice` admin-only field — margin tracking
+- `Orders.fulfillmentStatus = 'awaiting_forever_purchase'` state
+- `/fulfillment` admin dashboard's "לטיפול דחוף — להזמין מפוראבר" queue
+- Admin new-order email's ⚠️ Forever warning banner to Yarit
+- `src/lib/seed.ts` internal variable name `FOREVER_PRODUCTS` (just a code identifier)
+- `SiteSettings.forever` admin group (distributorName, distributorId — admin-only config)
+- Comments in code explaining the distinction
+
+**Tooling added:**
+- `?wipe=1` option on `POST /api/dev/seed` that deletes products/categories/tags/orders/media/non-admin-users before re-seeding. Lets us idempotently re-seed against Neon without re-provisioning the database.
+
+**Consequences:**
+- The customer experience now reads as "Yarit's curated natural wellness shop" instead of "Yarit's Forever Living distributor shop". The products still happen to come from Forever but that's invisible to the customer.
+- Yarit's internal workflow (sourcing from Forever per-order, the fulfillment state machine, the admin queue) is completely unchanged.
+- If Yarit later signs up to sell other brands' products (independent of Forever), the `type` discriminator still works — she'd just pick `independent` and manage stock herself, and both types render identically to customers.
+- Follow-up bug fixed: the rebrand renamed slugs, but the seed's `isFeatured` check still referenced the old slug names, so the Featured Products section rendered empty on the first rebrand deploy. Fixed in a follow-up commit.
+
+---
+
 ## ADR-014 — Production deploy infrastructure: Neon + Vercel + Blob
 
 **Date:** 2026-04-10
