@@ -21,6 +21,26 @@ import { cn } from '@/lib/cn'
 
 type Media = { id: number | string; url?: string; alt?: string }
 
+/**
+ * Static slug → image path overrides. When a product's slug matches a
+ * key in this map, the static image from `public/brand/ai/` is used
+ * instead of the Media collection's URL. This lets us ship real
+ * product photos on Vercel without wiring up Vercel Blob yet — the
+ * images are part of the static Next.js build output.
+ *
+ * When a new product gets a real photo, add a line here and drop the
+ * file in `public/brand/ai/`. No DB changes needed.
+ */
+const STATIC_IMAGE_OVERRIDES: Record<string, string> = {
+  'aloe-lip-balm': '/brand/ai/Aloelips.jpg',
+  'aloe-toothgel': '/brand/ai/AloeToothGel.jpg',
+  'aloe-soothing-spray': '/brand/ai/AloeFirst.jpg',
+  'aloe-vera-gel': '/brand/ai/AloeGelly.jpg',
+  'bee-propolis': '/brand/ai/ForeverBeepropolis.jpg',
+  'daily-multivitamin': '/brand/ai/ForeverDaily.jpg',
+  'aloe-body-duo-gift-set': '/brand/ai/BodylotionNwsh.jpg',
+}
+
 export type ProductCardData = {
   id: number | string
   type: 'forever' | 'independent'
@@ -42,8 +62,11 @@ type Props = {
 
 export function ProductCard({ product, locale, className }: Props) {
   const firstImage = product.images?.[0]?.image
-  const imageUrl =
+  // Prefer static slug override, fall back to Media URL, then placeholder
+  const staticOverride = STATIC_IMAGE_OVERRIDES[product.slug]
+  const mediaUrl =
     (firstImage && typeof firstImage === 'object' && firstImage.url) || null
+  const imageUrl = staticOverride ?? mediaUrl
   const imageAlt =
     (firstImage && typeof firstImage === 'object' && firstImage.alt) ||
     product.title
