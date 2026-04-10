@@ -16,7 +16,7 @@
 - **Primary language:** Hebrew (RTL), with English as a secondary locale
 - **Tech stack:** Next.js 16.2.3 + Tailwind CSS v4 + Payload CMS 3.82.1 + SQLite (dev) / Neon Postgres (prod) + next-intl 4.9
 - **Deployment target:** Vercel (app) + Neon (production DB)
-- **Current phase:** **A — Scaffolding, Brand, AI-Handoff Docs** (see `docs/STATE.md`)
+- **Current state:** Phases A → F.1 shipped, pre-launch hardening sprint shipped, full design + animation sprint shipped (both sessions), admin audit bug fixes shipped. Production is live. Only external dependencies remain (Meshulam credentials, Resend API key, legal markdown, custom domain, final catalog copy from Yarit). See `docs/NEXT-SESSION.md` for the exact path to finishing.
 
 ## The business model (read this carefully — it drives data shape)
 
