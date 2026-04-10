@@ -12,12 +12,34 @@
  *          theme kicks in (we can't inject an inline <head> script
  *          into Payload's layout the way the storefront does).
  *          Acceptable for non-public admin.
+ *
+ *          IMPORTANT: Payload's NestProviders
+ *          (`@payloadcms/next/dist/layouts/Root/NestProviders.js`)
+ *          wraps admin providers in a chain:
+ *            <Provider0>
+ *              <Provider1>
+ *                <Provider2>{admin content}</Provider2>
+ *              </Provider1>
+ *            </Provider0>
+ *          Every provider MUST accept `children` and render it as-is
+ *          or the chain breaks and everything nested below gets
+ *          dropped (including the entire admin UI). This component
+ *          was accidentally shipped without the `children` prop in
+ *          Design Round 3 — it happened to work because it was the
+ *          ONLY provider at the time (nothing below it to drop).
+ *          Round 4 added AdminToaster + AdminDriftingLeaves +
+ *          OnboardingTour, which broke the chain. Fixed by
+ *          propagating `children` in every provider.
  */
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 
-export function AdminThemeInit() {
+type Props = {
+  children?: ReactNode
+}
+
+export function AdminThemeInit({ children }: Props) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem('shoresh-theme')
@@ -30,5 +52,5 @@ export function AdminThemeInit() {
       /* localStorage blocked (private mode) — fall through to light */
     }
   }, [])
-  return null
+  return <>{children}</>
 }

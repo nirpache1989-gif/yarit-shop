@@ -11,15 +11,28 @@
  *          without needing the palette to change. Error toasts
  *          fall back to neutral red for clarity.
  *
+ *          IMPORTANT: Payload's NestProviders chain requires every
+ *          provider to render `children` — see the comment in
+ *          AdminThemeInit.tsx for the full story. We render
+ *          {children} alongside the Toaster so the admin UI below
+ *          this provider continues to render.
+ *
  *          See: Round 4 plan Track C2.
  */
 'use client'
 
+import type { ReactNode } from 'react'
 import { Toaster } from 'react-hot-toast'
 
-export function AdminToaster() {
+type Props = {
+  children?: ReactNode
+}
+
+export function AdminToaster({ children }: Props) {
   return (
-    <Toaster
+    <>
+      {children}
+      <Toaster
       position="bottom-center"
       reverseOrder={false}
       gutter={8}
@@ -59,6 +72,7 @@ export function AdminToaster() {
           },
         },
       }}
-    />
+      />
+    </>
   )
 }

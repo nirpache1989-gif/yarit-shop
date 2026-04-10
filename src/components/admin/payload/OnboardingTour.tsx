@@ -13,15 +13,23 @@
  *          The tour only triggers on `/admin` (not on collection
  *          list/edit pages) to avoid confusing Yarit mid-edit.
  *
+ *          IMPORTANT: Payload's NestProviders chain requires every
+ *          provider to render `children`. See AdminThemeInit.tsx
+ *          for the full story.
+ *
  *          See: Round 4 plan Track C11.
  */
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, type ReactNode } from 'react'
 
 const STORAGE_KEY = 'yarit-onboarding-complete'
 
-export function OnboardingTour() {
+type Props = {
+  children?: ReactNode
+}
+
+export function OnboardingTour({ children }: Props) {
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (localStorage.getItem(STORAGE_KEY) === '1') return
@@ -107,5 +115,5 @@ export function OnboardingTour() {
     }
   }, [])
 
-  return null
+  return <>{children}</>
 }

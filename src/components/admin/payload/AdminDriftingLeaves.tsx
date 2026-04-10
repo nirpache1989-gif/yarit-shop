@@ -8,8 +8,15 @@
  *          and doesn't expose a natural slot for absolute-positioned
  *          decoration. Providers render inside the admin document,
  *          so `position: fixed` + `z-index: 0` gives us a background
- *          layer behind Payload's own content (which sits at z-index
- *          ≥ 1 via the `@layer payload` rules in admin-brand.css).
+ *          layer behind Payload's own content.
+ *
+ *          IMPORTANT: Payload's NestProviders chain requires every
+ *          provider to render `children`. See AdminThemeInit.tsx for
+ *          the full story. {children} is rendered first so the admin
+ *          UI sits ABOVE the leaves in document order, and the
+ *          `body > *:not([role="dialog"]) { z-index: 2 }` rule in
+ *          admin-brand.css then lifts all Payload surfaces above the
+ *          position:fixed leaf layer at z-index: 0.
  *
  *          The drifting leaves CSS lives in admin-brand.css, NOT
  *          globals.css, because globals.css is not loaded in the
@@ -19,8 +26,18 @@
  */
 'use client'
 
+import type { ReactNode } from 'react'
 import { DriftingLeaves } from '@/components/ui/DriftingLeaves'
 
-export function AdminDriftingLeaves() {
-  return <DriftingLeaves />
+type Props = {
+  children?: ReactNode
+}
+
+export function AdminDriftingLeaves({ children }: Props) {
+  return (
+    <>
+      {children}
+      <DriftingLeaves />
+    </>
+  )
 }
