@@ -51,22 +51,31 @@ body {
 
 /* Paper grain overlay — very subtle noise on top of the parchment
    background so the page feels handmade instead of digital. Uses
-   a fixed-position pseudo-element so it doesn't move with scroll. */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.05;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55, 0 0 0 0 0.45, 0 0 0 0 0.3, 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+   a fixed-position pseudo-element so it doesn't move with scroll.
+   Wrapped in @layer base so Tailwind utility classes (e.g. .fixed
+   on the cart drawer) still win over us — without this, an
+   unlayered `body > *` rule below would override `position: fixed`
+   on the drawer because Tailwind v4 utilities sit inside layers. */
+@layer base {
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.05;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.55, 0 0 0 0 0.45, 0 0 0 0 0.3, 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
 
-/* Keep primary interactive content above the grain overlay */
-body > * {
-  position: relative;
-  z-index: 2;
+  /* Keep primary interactive content above the grain overlay.
+     Excludes elements with role="dialog" so the cart drawer (which
+     uses `fixed inset-0` to fill the viewport) isn't forced into
+     the document flow with `position: relative`. */
+  body > *:not([role="dialog"]) {
+    position: relative;
+    z-index: 2;
+  }
 }
 
 /* Smooth scroll + focus visibility */
