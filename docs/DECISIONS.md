@@ -4,6 +4,67 @@ Every significant architectural or product decision is logged here with a date a
 
 ---
 
+## ADR-017 — Centralize product image resolution in `lib/product-image.ts`
+
+**Date:** 2026-04-10
+**Status:** Accepted
+**Context:** During the post-rebrand polish, `ProductCard.tsx` carried a private `STATIC_IMAGE_OVERRIDES` map that mapped product slugs to static photos in `public/brand/ai/`. The map exists because Vercel Blob isn't wired up yet (ADR-015 + Phase F gap), so the Media collection's `/api/media/file/…` URLs return 404 in production. The override let the shop grid bypass the broken Media URLs and ship real photos as part of the static Next.js build.
+
+The bug: only the product grid used the override. `AddToCartButton` snapshotted the raw Media URL into the cart store, so the cart drawer + `/cart` page rendered a broken `/api/media/…` next/image src that returned HTTP 400 from the optimizer. Same issue on the product detail page (`/product/[slug]`) and on order line items snapshotted by `lib/checkout.ts`.
+
+**Decision:** Extract the override map into `src/lib/product-image.ts` exporting:
+- `STATIC_IMAGE_OVERRIDES` — the slug → URL map (the single source of truth)
+- `PRODUCT_PLACEHOLDER` — the shipped fallback path
+- `resolveProductImage(product)` — the helper everything calls
+
+ProductCard, AddToCartButton, the product detail page, and the checkout snapshot all import from this module. Adding a new product photo is now a single-line edit in `lib/product-image.ts` plus dropping the file in `public/brand/ai/`.
+
+**Consequences:**
+- One place to flip when Vercel Blob comes online — delete the map and `resolveProductImage` falls through to Media URLs everywhere automatically
+- Cart line items now snapshot a stable URL that survives Media record changes
+- Order receipts (and the admin order view) render the right image even if the Media collection is wiped
+- Coupling cost: every component that renders a product image now has a tiny dependency on this file. Acceptable — the alternative is duplicate maps that drift, which is exactly the bug this fixes
+
+---
+
+## ADR-016 — Cart drawer regression: globals.css `body > *` rule must be layered
+
+**Date:** 2026-04-10
+**Status:** Accepted
+**Context:** Yarit reported the cart button was unclickable on production after the rebrand deploy. A Playwright probe revealed: the click event fired, the cart store updated (item correctly added to localStorage), and the dialog `<div>` was inserted into the DOM with `class="fixed inset-0 z-50"` and `role="dialog"`. But its bounding box was `{x:0, y:2649, width:1280, height:0}` — i.e., positioned at the bottom of the document with zero height, instead of covering the viewport.
+
+Root cause: `src/app/globals.css` had an unlayered rule:
+
+```css
+body > * {
+  position: relative;
+  z-index: 2;
+}
+```
+
+It exists to keep page content above the parchment grain pseudo-element on `body::before`. In Tailwind CSS v4, `@import "tailwindcss"` puts all utilities (including `.fixed`) inside `@layer utilities`. **Unlayered styles win against any layered styles**, regardless of selector specificity. So the drawer's `.fixed` utility (specificity `(0,1,0)`) was beaten by the unlayered `body > *` rule (specificity `(0,0,2)`). The drawer flipped to `position: relative` and laid out in document flow with no inherited height, becoming invisible.
+
+**Decision:** Wrap the global body styles in `@layer base` and explicitly exclude `[role="dialog"]` from the `z-index: 2` rule for extra safety:
+
+```css
+@layer base {
+  body::before { … }
+  body > *:not([role="dialog"]) {
+    position: relative;
+    z-index: 2;
+  }
+}
+```
+
+Now Tailwind utilities (which sit in `@layer utilities`, a higher cascade priority than `@layer base`) win against the body rule, and the drawer renders as `position: fixed`.
+
+**Consequences:**
+- Cart drawer works on production
+- Any future custom CSS in `globals.css` should default to being inside `@layer base` (or `components` / `utilities` as appropriate). Unlayered rules in a Tailwind v4 project are a footgun that silently overrides utilities
+- Added `scripts/probe-cart.mjs` — Playwright probe that detects this class of regression by checking the actual rendered bounding box of the dialog after a click, not just whether the DOM node exists. Run with `node scripts/probe-cart.mjs https://yarit-shop.vercel.app`
+
+---
+
 ## ADR-015 — Customer-facing rebrand: drop all Forever mentions
 
 **Date:** 2026-04-10
