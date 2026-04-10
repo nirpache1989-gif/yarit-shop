@@ -27,6 +27,7 @@ import { getPaymentProvider } from '@/lib/payments'
 import { getEmailProvider } from '@/lib/email'
 import { renderOrderConfirmationEmail } from '@/lib/email/templates'
 import { countryToRegion, getShippingRatesForRegion } from '@/lib/shipping'
+import { STATIC_IMAGE_OVERRIDES } from '@/lib/product-image'
 
 export type CheckoutInput = {
   locale: 'he' | 'en'
@@ -106,8 +107,12 @@ export async function createOrderFromCheckout(
       }
     }
     const firstImage = product.images?.[0]?.image
-    const imageUrl =
+    const mediaUrl =
       firstImage && typeof firstImage === 'object' ? firstImage.url : undefined
+    // Prefer the shipped-with-the-build static override so orders
+    // snapshot a URL that will still resolve after the Media records
+    // are swapped out or Vercel Blob is reconfigured.
+    const imageUrl = STATIC_IMAGE_OVERRIDES[product.slug] ?? mediaUrl
 
     snapshots.push({
       productId: product.id,

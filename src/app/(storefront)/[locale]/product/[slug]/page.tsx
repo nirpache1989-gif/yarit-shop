@@ -17,6 +17,7 @@ import { Container } from '@/components/ui/Container'
 import { Badge } from '@/components/ui/Badge'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import type { ProductCardData } from '@/components/product/ProductCard'
+import { STATIC_IMAGE_OVERRIDES } from '@/lib/product-image'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -54,7 +55,12 @@ export default async function ProductPage({ params }: Props) {
   const product = res.docs[0] as unknown as ProductData | undefined
   if (!product) notFound()
 
-  const images =
+  // If this product has a static slug override, use it as the
+  // primary gallery image — otherwise fall through to the Media
+  // collection URLs. Keeps the product detail page in sync with the
+  // shop grid (both render via /brand/ai/…).
+  const staticOverride = STATIC_IMAGE_OVERRIDES[product.slug]
+  const mediaImages =
     product.images?.map((i) => {
       const img = i.image
       if (img && typeof img === 'object' && img.url) {
@@ -62,6 +68,9 @@ export default async function ProductPage({ params }: Props) {
       }
       return null
     }).filter((x): x is { url: string; alt: string } => x !== null) ?? []
+  const images = staticOverride
+    ? [{ url: staticOverride, alt: product.title }]
+    : mediaImages
 
   const priceText = formatPrice(product.price, typedLocale)
   const compareText = product.compareAtPrice

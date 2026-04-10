@@ -18,28 +18,9 @@ import { Link } from '@/lib/i18n/navigation'
 import { Badge } from '@/components/ui/Badge'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { cn } from '@/lib/cn'
+import { resolveProductImage } from '@/lib/product-image'
 
 type Media = { id: number | string; url?: string; alt?: string }
-
-/**
- * Static slug → image path overrides. When a product's slug matches a
- * key in this map, the static image from `public/brand/ai/` is used
- * instead of the Media collection's URL. This lets us ship real
- * product photos on Vercel without wiring up Vercel Blob yet — the
- * images are part of the static Next.js build output.
- *
- * When a new product gets a real photo, add a line here and drop the
- * file in `public/brand/ai/`. No DB changes needed.
- */
-const STATIC_IMAGE_OVERRIDES: Record<string, string> = {
-  'aloe-lip-balm': '/brand/ai/Aloelips.jpg',
-  'aloe-toothgel': '/brand/ai/AloeToothGel.jpg',
-  'aloe-soothing-spray': '/brand/ai/AloeFirst.jpg',
-  'aloe-vera-gel': '/brand/ai/AloeGelly.jpg',
-  'bee-propolis': '/brand/ai/ForeverBeepropolis.jpg',
-  'daily-multivitamin': '/brand/ai/ForeverDaily.jpg',
-  'aloe-body-duo-gift-set': '/brand/ai/BodylotionNwsh.jpg',
-}
 
 export type ProductCardData = {
   id: number | string
@@ -61,12 +42,8 @@ type Props = {
 }
 
 export function ProductCard({ product, locale, className }: Props) {
+  const imageUrl = resolveProductImage(product)
   const firstImage = product.images?.[0]?.image
-  // Prefer static slug override, fall back to Media URL, then placeholder
-  const staticOverride = STATIC_IMAGE_OVERRIDES[product.slug]
-  const mediaUrl =
-    (firstImage && typeof firstImage === 'object' && firstImage.url) || null
-  const imageUrl = staticOverride ?? mediaUrl
   const imageAlt =
     (firstImage && typeof firstImage === 'object' && firstImage.alt) ||
     product.title
@@ -106,7 +83,7 @@ export function ProductCard({ product, locale, className }: Props) {
         className="block relative aspect-square bg-[var(--color-surface)]"
       >
         <Image
-          src={imageUrl ?? '/brand/ai/product-placeholder.jpg'}
+          src={imageUrl}
           alt={imageAlt}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

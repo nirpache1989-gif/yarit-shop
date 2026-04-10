@@ -16,6 +16,7 @@ import { useCartStore } from '@/lib/cart/store'
 import { useCartDrawerStore } from '@/components/cart/drawerStore'
 import { Button } from '@/components/ui/Button'
 import type { ProductCardData } from '@/components/product/ProductCard'
+import { resolveProductImage } from '@/lib/product-image'
 import { cn } from '@/lib/cn'
 
 type Props = {
@@ -37,9 +38,9 @@ export function AddToCartButton({
   const [justAdded, setJustAdded] = useState(false)
 
   const handleClick = () => {
-    const firstImage = product.images?.[0]?.image
-    const imageUrl =
-      firstImage && typeof firstImage === 'object' ? firstImage.url : undefined
+    // Use the shared resolver so the cart drawer and /cart page show
+    // the same image the customer clicked on in the product grid.
+    const imageUrl = resolveProductImage(product)
     addItem(
       {
         productId: product.id,
