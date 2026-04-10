@@ -226,10 +226,39 @@
     width: max-content;
   }
 
-  /* === 4. Sidebar / nav === */
+  /* Round 6: hide the top-bar content-locale chip entirely.
+     Context: Yarit clicked the "Locale: עברית" chip expecting the
+     ADMIN UI to switch between Hebrew and English, got nothing
+     visible (because she was on a page with no localized content),
+     and gave up. The content-locale switcher is a developer
+     affordance for maintaining multi-language PRODUCT TITLES on
+     individual product/category edit forms — not a UI language
+     toggle. Yarit doesn't maintain English translations, so the
+     chip has negative value.
+
+     The correct admin-UI language switcher lives at /admin/account
+     (Payload's built-in account page, field name "שפה"). The
+     dashboard tile "🔑 חשבון, שפה וסיסמה" deep-links there.
+
+     Keeping the localizer in payload.config.ts (storefront code
+     still calls `setRequestLocale`) so content localization still
+     works under the hood — this rule just hides the admin-facing
+     control since she'll never use it. */
+  .app-header__localizer,
+  .app-header__localizer.localizer {
+    display: none !important;
+  }
+
+  /* === 4. Sidebar / nav ===
+     Round 5 fix: was hardcoded to light-mode cream gradient
+     (`linear-gradient(180deg, #F1EAD8 0%, #ECE5D4 100%)`) which
+     looked wrong in dark mode — cream strip glued to a warm-night
+     page bg with charcoal text becoming barely-legible on cream.
+     Now every sidebar color reads from theme tokens so the nav
+     blends correctly in both modes. */
   .nav,
   .nav-wrapper {
-    background: linear-gradient(180deg, #F1EAD8 0%, #ECE5D4 100%);
+    background: var(--theme-elevation-50);
     border-inline-end: 1px solid var(--theme-border-color);
   }
 
@@ -255,19 +284,22 @@
   }
 
   /* Child links — smaller than the parent label, lighter weight,
-     charcoal. Active state highlights with sage background. */
+     reads from --theme-text so it stays legible in both modes.
+     Active state highlights with brand primary background.
+     Round 5 fix: was hardcoded `color: #2A2A2A` which was
+     near-invisible in dark mode. */
   .nav__link {
     border-radius: var(--style-radius-m);
     margin-inline: 0.5rem;
     padding: 0.7rem 0.95rem;
-    color: #2A2A2A;
+    color: var(--theme-text);
     font-weight: 500;
     font-size: 1.15rem; /* ~13.8px — visually smaller than parent label */
     transition: background 180ms ease, color 180ms ease;
   }
 
   .nav__link:hover {
-    background: rgba(91, 115, 66, 0.10);
+    background: color-mix(in srgb, var(--color-success-400) 14%, transparent);
     color: var(--color-success-550);
   }
 
@@ -276,10 +308,18 @@
     color: #FFFFFF;
   }
 
-  /* === 5. Top header === */
+  /* === 5. Top header ===
+     Round 5 fix: was `rgba(236, 229, 212, 0.85)` hardcoded cream
+     which looked like a strip of daylight stuck to a dark-mode
+     page. Now reads from --theme-elevation-50 with transparency so
+     it blends correctly in both modes. */
   .app-header,
   header.app-header {
-    background: rgba(236, 229, 212, 0.85);
+    background: color-mix(
+      in srgb,
+      var(--theme-elevation-50) 92%,
+      transparent
+    );
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--theme-border-color);
   }
@@ -389,7 +429,11 @@
   }
 
   .table th {
-    background: rgba(91, 115, 66, 0.08);
+    /* Round 5 fix: was `rgba(91, 115, 66, 0.08)` (sage 8%) which
+       rendered invisible on dark-mode card bg because sage isn't in
+       the warm-night palette. Now reads from elevation-100 for a
+       subtle lift in both themes. */
+    background: var(--theme-elevation-100);
     color: var(--color-success-550);
     font-family: var(--font-serif);
     font-weight: 700;
@@ -403,7 +447,12 @@
   }
 
   .table tr:hover td {
-    background: rgba(91, 115, 66, 0.06);
+    /* Round 5 fix: same sage-tint visibility issue as above. */
+    background: color-mix(
+      in srgb,
+      var(--color-success-400) 8%,
+      transparent
+    );
   }
 
   /* Pagination — pill buttons */
@@ -652,7 +701,11 @@
 .yarit-sidebar-greet {
   margin: 1rem 0.75rem 1.25rem;
   padding: 1.1rem 1.2rem;
-  background: rgba(255, 255, 255, 0.6);
+  /* Round 5 fix: was `rgba(255, 255, 255, 0.6)` (translucent white)
+     which in dark mode looked like a random grey wash that
+     didn't blend with the warm-night palette. Now reads from
+     --theme-elevation-100 for a subtle card lift in both modes. */
+  background: var(--theme-elevation-100);
   border: 1px solid var(--theme-border-color);
   border-radius: var(--style-radius-m);
 }
@@ -709,7 +762,13 @@
 
 .yarit-sidebar-foot a:hover {
   color: var(--color-success-550);
-  background: rgba(91, 115, 66, 0.08);
+  /* Round 5 fix: was `rgba(91, 115, 66, 0.08)` (sage 8%) which
+     rendered invisible in dark mode. Now uses theme-primary mix. */
+  background: color-mix(
+    in srgb,
+    var(--color-success-400) 12%,
+    transparent
+  );
 }
 
 .yarit-sidebar-foot a:focus-visible {
