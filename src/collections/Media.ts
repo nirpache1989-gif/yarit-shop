@@ -29,6 +29,20 @@ export const Media: CollectionConfig = {
       en: 'Every image uploaded to the site lives here. You can upload directly from this page, or from inside a product/category form.',
       he: 'כל התמונות שעלו לאתר נמצאות כאן. אפשר להעלות תמונות חדשות ישירות מהדף הזה, או מתוך טופס עריכת מוצר/קטגוריה — שתי הדרכים שומרות את התמונה לאותה ספרייה.',
     },
+    // Round 5: Media collection is hidden from Yarit's sidebar.
+    // Reason: a standalone "image gallery" has no user-facing
+    // purpose here. Every storefront surface reads images through a
+    // relationship — product.images[], category.image,
+    // siteSettings.logo, siteSettings.heroImages — so an orphan
+    // upload to `/admin/collections/media` does nothing for the
+    // store. Yarit has exactly ONE correct way to add an image now:
+    // open the product/category/settings form and use its inline
+    // image picker, which still goes through this collection under
+    // the hood (relationship uploads work even when the collection
+    // is hidden from the sidebar — Payload documents this pattern).
+    //
+    // See: docs/ADMIN-SURFACES.md + Round 5 plan Fix 2.2.
+    hidden: true,
   },
   access: {
     read: () => true, // Public — media URLs are used in the storefront.

@@ -18,7 +18,11 @@
  */
 import type { AdminViewServerProps, Payload } from 'payload'
 import Link from 'next/link'
-import { WelcomeBanner } from './WelcomeBanner'
+// Round 5 Fix 2.4: WelcomeBanner removed — it duplicated
+// SidebarGreeting's "ברוכה הבאה לפאנל הניהול" message and wasted
+// dashboard space above the stats row. The component file itself
+// is kept on disk for a one-session grace period in case we want
+// it back. See: docs/ADMIN-SURFACES.md + Round 5 plan Fix 2.4.
 
 type Stats = {
   openOrders: number
@@ -158,13 +162,11 @@ function buildTiles(stats: Stats): Tile[] {
       hint: 'איך המוצרים מקובצים בחנות.',
       cta: 'ניהול קטגוריות',
     },
-    {
-      href: '/admin/collections/media',
-      icon: '🖼',
-      title: 'תמונות וגלריה',
-      hint: 'כל התמונות שעלו לאתר.',
-      cta: 'פתיחת הגלריה',
-    },
+    // Round 5 Fix 2.2: The "תמונות וגלריה" (gallery) tile was
+    // removed. Yarit uploads images through the inline image picker
+    // on each product/category form; a standalone gallery upload
+    // had no user-facing effect and caused confusion.
+    // See: docs/ADMIN-SURFACES.md
     {
       href: '/admin/globals/site-settings',
       icon: '⚙️',
@@ -186,6 +188,19 @@ function buildTiles(stats: Stats): Tile[] {
       hint: 'רשימת כל ההזמנות, גם הישנות.',
       cta: 'פתיחת הרשימה',
     },
+    // Round 5 Fix 2.5 + 2.8: Account-settings tile added so Yarit can
+    // find (a) password + email management and (b) the admin UI
+    // language switcher (Hebrew / English) — both of which live on
+    // Payload's built-in /admin/account page. The hint mentions
+    // "שפה" explicitly because switching the admin language was a
+    // pain point — Yarit couldn't find the control.
+    {
+      href: '/admin/account',
+      icon: '🔑',
+      title: 'חשבון, שפה וסיסמה',
+      hint: 'שינוי שפת פאנל הניהול (עברית / English), הסיסמה והמייל.',
+      cta: 'עדכון פרטי חשבון',
+    },
   ]
 }
 
@@ -196,11 +211,6 @@ export async function YaritDashboard(props: AdminViewServerProps) {
 
   return (
     <div className="yarit-dashboard" dir="rtl">
-      {/* WelcomeBanner is rendered inline because Payload's
-          `beforeDashboard` slot only fires when DefaultDashboard
-          is in use; we replaced it with YaritDashboard. */}
-      <WelcomeBanner />
-
       <header className="yarit-dashboard__hello">
         <h1>
           {hello} {emoji}

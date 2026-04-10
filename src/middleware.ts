@@ -18,11 +18,14 @@ export default createMiddleware(routing)
 
 export const config = {
   // Match everything except:
-  //   - /admin       — Payload admin UI
+  //   - /admin       — Payload admin UI (includes /admin/fulfillment)
   //   - /api         — Payload REST + GraphQL
-  //   - /fulfillment — custom (admin-tools) route group for Yarit
   //   - /_next       — Next internals
   //   - /_vercel     — Vercel internals
   //   - anything with a file extension (favicons, images, fonts, etc.)
-  matcher: ['/((?!admin|api|fulfillment|_next|_vercel|.*\\..*).*)'],
+  // Round 5: removed /fulfillment from the exclusion list — the old
+  // (admin-tools)/fulfillment route was deleted; the Yarit
+  // fulfillment view now lives at /admin/fulfillment (covered by the
+  // /admin exclusion).
+  matcher: ['/((?!admin|api|_next|_vercel|.*\\..*).*)'],
 }

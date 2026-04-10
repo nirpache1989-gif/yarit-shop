@@ -89,24 +89,30 @@
    * of parchment-to-forest-black. Success ladder uses muted
    * sage-olive for primary, warning uses warm ochre. */
   [data-theme="dark"] {
-    --theme-elevation-0: #1E1609;     /* deep warm molasses */
-    --theme-elevation-50: #2A2012;    /* warm coffee */
-    --theme-elevation-100: #362A1A;   /* warm panel */
-    --theme-elevation-150: #3A2E1C;
-    --theme-elevation-200: #463828;
-    --theme-elevation-250: #544434;
-    --theme-elevation-300: #635140;
-    --theme-elevation-350: #71604D;
+    /* Round 5 fix: the page bg used to be #1E1609 and cards sat at
+       elevation-50 (#2A2012) — that 12-unit difference showed up as
+       a "near-black gap" between field cards on every edit form.
+       Flattened the ladder: the page bg now matches the card bg, so
+       cards read as a subtle lift via border + shadow instead of
+       contrast. Every elevation token bumped one step warmer. */
+    --theme-elevation-0: #2A2012;     /* page bg (was #1E1609) */
+    --theme-elevation-50: #362A1A;    /* card bg (was #2A2012) */
+    --theme-elevation-100: #42341F;   /* raised card */
+    --theme-elevation-150: #4A3B22;
+    --theme-elevation-200: #55432A;
+    --theme-elevation-250: #604D34;
+    --theme-elevation-300: #6B5840;
+    --theme-elevation-350: #77654C;
     --theme-elevation-400: #B29973;   /* warm muted tan */
     --theme-elevation-450: #C4AC86;
     --theme-elevation-500: #D5BF9A;
     --theme-elevation-800: #F3E5C0;   /* warm candlelit cream */
     --theme-elevation-1000: #FFFFFF;
 
-    --theme-bg: #1E1609;
-    --theme-input-bg: #2A2012;
+    --theme-bg: #2A2012;              /* matches elevation-0 / card bg */
+    --theme-input-bg: #362A1A;        /* inputs sit one step above bg */
     --theme-text: #F3E5C0;
-    --theme-border-color: #3A2E1C;
+    --theme-border-color: #4A3B22;    /* slightly stronger border so cards are still visible */
     --theme-overlay: rgba(0, 0, 0, 0.75);
 
     --color-success-400: #8AAF6F;     /* muted sage-olive — primary */
@@ -520,7 +526,10 @@
 }
 
 .yarit-stat {
-  background: #FFFFFF;
+  /* Round 5: was hardcoded #FFFFFF which broke in dark mode.
+     Now reads from elevation-50 so it matches card styling
+     automatically in both themes. */
+  background: var(--theme-elevation-50);
   border: 1px solid var(--theme-border-color);
   border-radius: var(--style-radius-m);
   padding: 1rem 1.1rem;
@@ -562,7 +571,11 @@
   flex-direction: column;
   gap: 0.6rem;
   text-decoration: none;
-  background: #FFFFFF;
+  /* Round 5: was hardcoded #FFFFFF — flipped to the theme-aware
+     elevation-50 so tiles blend into the current theme
+     automatically. In light mode that's warm parchment, in dark
+     mode it's warm coffee. */
+  background: var(--theme-elevation-50);
   border: 1px solid var(--theme-border-color);
   border-radius: var(--style-radius-l);
   padding: 1.25rem 1.25rem 1.4rem;

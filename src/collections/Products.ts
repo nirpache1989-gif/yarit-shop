@@ -221,6 +221,11 @@ export const Products: CollectionConfig = {
       label: { en: 'Tags', he: 'תגיות' },
       admin: {
         position: 'sidebar',
+        // Round 5: hidden from the product edit form because no
+        // storefront surface queries `product.tags`. Kept in the
+        // schema so the Tags collection relationship stays intact.
+        // See: docs/ADMIN-SURFACES.md + Round 5 plan Fix 2.1.
+        hidden: true,
         description: {
           en: 'Optional — tags help with filtering. You can pick more than one or leave it empty.',
           he: 'אופציונלי — תגיות מסייעות לסינון באתר. אפשר לבחור כמה תגיות או להשאיר ריק.',

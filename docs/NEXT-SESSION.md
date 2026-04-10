@@ -2,6 +2,75 @@
 
 > This document is the fastest possible orientation for whoever opens the project next, human or AI. Read this, then `CLAUDE.md`, then `docs/STATE.md`. You'll be productive in 5 minutes.
 
+## Where things stand (2026-04-10, end of Round 5 — purposeful admin minimalism)
+
+**Status:** 🚀 Everything through Round 5 is **live on production** at `https://yarit-shop.vercel.app`. The admin panel has been trimmed of dead code (hidden Tags + Media collections, removed gallery tile, killed triple help-link redundancy), the dark mode "black gap between cards" visual bug is fixed, the old `(admin-tools)` route group is deleted, and a new `docs/ADMIN-SURFACES.md` inventory doc is the canonical map of every remaining admin surface.
+
+### Why Round 5 happened
+
+The user hit two problems at once:
+
+1. **Vercel wasn't deploying the Round 4 code.** He checked `yarit-shop.vercel.app/admin/login` and saw Payload's **stock** login page — no Shoresh branding, no Heebo/Bellefair fonts. Diagnosed via `gh api` + `npx vercel ls`: both commits were on GitHub but Vercel's most recent deploy was 5 hours old. The GitHub webhook had stalled after an Error deploy earlier in the day. **Fix:** Manual `npx vercel --prod` from the linked project directory. The 2-minute build went green, the alias updated, and production now serves all Round 4 markers.
+2. **The admin had confusing dead code.** User quote: "why can she upload a picture to gallery? what is gallery? what happens to a picture if she uploads there — why not just create a product?" This triggered a full audit of every admin surface through the lens of a 65-year-old non-technical merchant.
+
+### What Round 5 shipped
+
+- **Media collection hidden from sidebar + gallery dashboard tile removed.** Yarit no longer has a standalone "gallery" entry point that invites orphan uploads. Inline image pickers on product/category forms still work exactly as before (Payload pattern: hide collection from sidebar, keep relationship uploads functional).
+- **Tags collection hidden from sidebar + `tags` field hidden on Products.** Dead code — nothing on the storefront queries tags. Hidden (not deleted) so a future phase can un-hide in one line.
+- **HelpButton changed from external GitHub link to `mailto:`.** Pre-filled with Hebrew subject + body. Yarit clicks help → her email client opens → Nir answers in ~30 min. Real support, no GitHub account required.
+- **WelcomeBanner deleted from dashboard.** Duplicated the SidebarGreeting message, non-dismissible, wasted space above the stats row.
+- **`SidebarGreeting` help link removed.** The help affordance now exists only in `HelpButton` (was previously in 3 places).
+- **🔑 "חשבון, שפה וסיסמה" dashboard tile added.** Deep-links to `/admin/account` so Yarit can find the admin language switcher (Hebrew/English toggle) without discovering Payload's default top-right "Account" action on her own.
+- **Dark-mode elevation ladder flattened.** The previous page bg (`#1E1609`) and card bg (`#2A2012`) differed by 12 units, rendering as near-black strips between field cards on every edit form. Bumped the page bg to match the card bg and shifted every elevation token one step warmer. Also swept `.yarit-tile` + `.yarit-stat` (both had hardcoded `background: #FFFFFF` which broke in dark mode).
+- **Legacy `src/app/(admin-tools)/fulfillment` route group deleted.** Dead code — superseded by `/admin/fulfillment` as the branded view. Also cleaned the middleware matcher.
+- **`docs/ADMIN-SURFACES.md` written.** New canonical map of every admin surface with "what / used for / why" for each, plus rules for adding new surfaces in the future.
+
+### Post-Round-5 state of the admin
+
+Sidebar:
+- 👥 משתמשים
+- 🖼 (empty group — Media hidden)
+- 📦 קטלוג → קטגוריות, מוצרים (Tags hidden)
+- 💰 מכירות → הזמנות
+- 🌿 הגדרות → הגדרות אתר
+
+Dashboard tiles (8):
+1. 📦 ההזמנות החדשות (accent)
+2. 🌿 המוצרים שלי
+3. ➕ הוספת מוצר חדש
+4. 🗂 קטגוריות
+5. ⚙️ פרטי החנות והמשלוחים
+6. 📣 הודעה בראש האתר
+7. 🧾 היסטוריית הזמנות
+8. 🔑 חשבון, שפה וסיסמה
+
+Chrome:
+- `SidebarGreeting` (top) — identity only
+- `SidebarFooter` (bottom) — לאתר החי / ההזמנות החדשות / יציאה
+- `HelpButton` top-right — opens mailto
+- `ViewOnSite` top-right — opens storefront in new tab
+
+Invisible providers:
+- `AdminThemeInit` — light/dark theme sync with storefront
+- `AdminToaster` — react-hot-toast bottom-center
+- `AdminDriftingLeaves` — 5 SVG leaves behind content
+- `OnboardingTour` — 4-step driver.js walkthrough on first visit
+
+### End-to-end verified (Round 5 exit checks)
+
+- `tsc --noEmit` → 0 errors
+- 10/10 CRUD smoke rows: auth, all 6 collections + global GET, Products CREATE → PATCH → DELETE round-trip, all 7 admin routes return 200
+- Preview MCP visual confirmation: dashboard + fulfillment + product edit + site settings all render correctly in dark mode with no "black gap" between cards
+- Production Phase 1 redeploy: `yarit-shop.vercel.app/admin/login` now serves the Shoresh-branded page
+
+### What's next (future phases)
+
+- **Vercel GitHub auto-deploy might still be broken.** The Phase 1 manual deploy worked but I don't know if the webhook self-healed. Next time a commit is pushed, watch whether Vercel auto-builds. If not, re-link the project in Vercel dashboard.
+- **Restore `<details>` field helper on complex Product fields (Round 4 C7 ideal version).** Round 4 pivoted to "richer multi-line Hebrew descriptions with `•` bullets" because Payload 3.x's `admin.components.Description` slot is brittle. If a future Payload release makes component slots robust, upgrade to a true collapsible helper.
+- **Make the Orders `afterChange` hook dev-safe.** Still needs the try/catch wrapper + provider check so creating orders in dev with no email provider doesn't interfere with writes (Round 4 TASKS.md follow-up).
+- **D2 polish items from the Round 4 design review** (all logged in `docs/TASKS.md` under "Round 4 design-review agent findings").
+
+### Old Status header (preserved for history)
 ## Where things stand (2026-04-10, end of Design Round 4)
 
 **Status:** 🚀 Phases A–E + design polish + customer-facing rebrand + cart-fix + product-copy refresh are **complete and deployed to production**. The **admin redesign** + **Design Round 2 Waves 1 + 2** + **Design Round 3 (Night Apothecary palette / Warm Night dark mode / drifting leaves / iridescent hero) Waves 1-4** + **Design Round 4 (Hero light pocket + logo blur fix + 12 admin delight moves)** are **all complete locally**. Nothing is yet pushed to production — the next session should commit + push everything together.

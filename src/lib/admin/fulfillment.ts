@@ -1,11 +1,14 @@
 /**
  * @file fulfillment.ts — shared fulfillment data loader
  * @summary Server-only helper that fetches paid orders and groups
- *          them by `fulfillmentStatus`. Used by both:
- *            - The legacy `/fulfillment` route in (admin-tools)
- *            - The new `/admin/fulfillment` custom Payload view
+ *          them by `fulfillmentStatus`. Used by the
+ *          `/admin/fulfillment` custom Payload view.
  *          The auth gate is the caller's responsibility — inside
  *          /admin/* Payload's view runner already enforces it.
+ *
+ *          (The legacy `/fulfillment` route in `(admin-tools)` was
+ *          deleted in Round 5 — everything lives inside `/admin`
+ *          now so it picks up the branded chrome automatically.)
  *
  *          See: plan Phase 4.2.
  */

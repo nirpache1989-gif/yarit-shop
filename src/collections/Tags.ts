@@ -19,6 +19,15 @@ export const Tags: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title'],
     group: { en: '📦 Catalog', he: '📦 קטלוג' },
+    // Round 5: Tags collection is hidden from Yarit's sidebar because
+    // nothing on the storefront queries `product.tags` — /shop filters
+    // by category only. The Tags collection + the Products.tags
+    // relationship field stay in the data model so we can re-enable
+    // them (in one-line change: flip this to `false`) when tag-based
+    // filters ship in a future phase.
+    //
+    // See: docs/ADMIN-SURFACES.md + Round 5 plan Fix 2.1.
+    hidden: true,
   },
   access: {
     read: () => true,

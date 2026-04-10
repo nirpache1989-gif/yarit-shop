@@ -78,6 +78,18 @@
 - [ ] Remove `@swc-node/register` and `@swc/core` dev deps — we installed them exploring the CLI seed path but ended up not using them.
 - [ ] Consider React Compiler (stable in Next 16) in Phase F for performance.
 
+## Round 5 follow-ups
+
+- [ ] **Verify Vercel GitHub auto-deploy is self-healed.** Round 5 Phase 1 triggered a manual deploy via `npx vercel --prod` because the webhook had stalled after an Error deploy. Next time a commit is pushed to `main`, check whether Vercel auto-builds. If not, re-link the project in the Vercel dashboard to re-issue the webhook.
+- [x] **Hide Tags collection from sidebar and hide `tags` field from product edit form.** Done in Round 5 Fix 2.1.
+- [x] **Hide Media collection from sidebar and remove gallery dashboard tile.** Done in Round 5 Fix 2.2.
+- [x] **Kill the triple help-link redundancy (HelpButton + WelcomeBanner + SidebarGreeting).** Done in Round 5 Fix 2.3.
+- [x] **Delete the duplicated WelcomeBanner from the dashboard.** Done in Round 5 Fix 2.4.
+- [x] **Add `/admin/account` dashboard tile so Yarit can discover the language switcher.** Done in Round 5 Fix 2.5.
+- [x] **Fix the dark-mode "black gap between cards" visual bug.** Done in Round 5 Fix 2.10.
+- [x] **Delete the legacy `src/app/(admin-tools)/fulfillment` route group.** Done in Round 5 Fix 2.13.
+- [x] **Write `docs/ADMIN-SURFACES.md`.** Done in Round 5 Fix 2.6.
+
 ## Design Round 4 follow-ups
 
 - [ ] **Make the Orders `afterChange` hook dev-safe.** `src/collections/Orders.ts:364` tries to send a new-order alert email whenever `paymentStatus` flips to `paid` on create/update. In dev with no email provider configured, the hook can interfere with order creation silently (Round 4 Track B smoke test observed creates returning `doc.id` but subsequent GETs returning `totalDocs: 0` when `paymentStatus: 'paid'` was set at create-time). Wrap the email dispatch in a "do we even have a provider" check and a broader try/catch so failures are logged but never block the write. Log added 2026-04-10 during Round 4 Track B.
