@@ -24,7 +24,7 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'role', 'name'],
-    group: { en: 'Sales', he: 'מכירות' },
+    group: { en: '👥 People', he: '👥 לקוחות' },
   },
   access: {
     // Only admins can see the user list in the admin panel.
@@ -54,6 +54,10 @@ export const Users: CollectionConfig = {
       ],
       admin: {
         position: 'sidebar',
+        description: {
+          en: '"Admin" — full access to the admin panel. "Customer" — regular shopper account.',
+          he: '"מנהל" — גישה מלאה לפאנל הניהול. "לקוח" — חשבון קונה רגיל.',
+        },
       },
     },
     // === Customer-specific fields ===
@@ -71,8 +75,8 @@ export const Users: CollectionConfig = {
       defaultValue: 'he',
       label: { en: 'Preferred language', he: 'שפה מועדפת' },
       options: [
-        { label: 'עברית', value: 'he' },
-        { label: 'English', value: 'en' },
+        { label: { en: 'Hebrew', he: 'עברית' }, value: 'he' },
+        { label: { en: 'English', he: 'אנגלית' }, value: 'en' },
       ],
       admin: {
         condition: (data) => data.role === 'customer',

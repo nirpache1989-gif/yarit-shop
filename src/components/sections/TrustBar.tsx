@@ -2,10 +2,11 @@
  * @file Trust bar — 4 value propositions under the hero
  * @summary Uses the rembg-processed watercolor icons from
  *          `public/brand/ai/icon-*.png` (transparent PNGs). Each
- *          icon is shown at 56px, centered, with its label underneath.
+ *          icon is shown at 64px, centered, with its label underneath.
  *
- *          If you want to swap icons later, replace the PNG files
- *          keeping the same filenames. No code change needed.
+ *          Note: we tried a single 2x2 sprite from `icons-trust-set.jpg`
+ *          (Wave 2 Move B9) but Yarit preferred the previous 4 separate
+ *          PNG icons. See plan §B9.
  */
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -13,12 +14,12 @@ import { Container } from '@/components/ui/Container'
 
 type Item = {
   src: string
-  labelKey: 'natural' | 'authorized' | 'shipping' | 'personal'
+  labelKey: 'natural' | 'curated' | 'shipping' | 'personal'
 }
 
 const items: Item[] = [
   { src: '/brand/ai/icon-natural.png', labelKey: 'natural' },
-  { src: '/brand/ai/icon-certified.png', labelKey: 'authorized' },
+  { src: '/brand/ai/icon-certified.png', labelKey: 'curated' },
   { src: '/brand/ai/icon-shipping.png', labelKey: 'shipping' },
   { src: '/brand/ai/icon-personal.png', labelKey: 'personal' },
 ]
@@ -27,9 +28,9 @@ export function TrustBar() {
   const t = useTranslations('trustBar')
 
   return (
-    <section className="py-12 border-y border-[var(--color-border-brand)] bg-[var(--color-surface)]/40">
+    <section className="py-16 border-y border-[var(--color-border-brand)] bg-[var(--color-surface-warm)]">
       <Container>
-        <ul className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <ul className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {items.map((item) => (
             <li
               key={item.labelKey}
@@ -44,7 +45,7 @@ export function TrustBar() {
                   className="object-contain"
                 />
               </div>
-              <p className="text-sm font-semibold text-[var(--color-primary-dark)]">
+              <p className="text-sm font-semibold text-[var(--color-primary-dark)] tracking-wide">
                 {t(item.labelKey)}
               </p>
             </li>

@@ -15,6 +15,7 @@ import { getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { Link } from '@/lib/i18n/navigation'
 import type { Locale } from '@/lib/i18n/routing'
+import { Eyebrow } from '@/components/ui/Eyebrow'
 
 type Props = {
   locale: Locale
@@ -24,11 +25,11 @@ export async function MeetYarit({ locale }: Props) {
   const t = await getTranslations({ locale, namespace: 'meetYarit' })
 
   return (
-    <section className="py-16">
+    <section className="py-20 md:py-28 bg-[var(--color-surface-warm)]">
       <Container>
-        <div className="grid md:grid-cols-5 gap-8 items-center">
+        <div className="grid md:grid-cols-5 gap-10 md:gap-12 items-center">
           <div className="md:col-span-2">
-            <div className="relative aspect-square rounded-3xl overflow-hidden border border-[var(--color-border-brand)]">
+            <div className="relative aspect-[4/5] rounded-[var(--radius-card)] overflow-hidden border border-[var(--color-border-brand)]">
               <Image
                 src="/brand/ai/about-hero.jpg"
                 alt={t('imageAlt')}
@@ -39,22 +40,25 @@ export async function MeetYarit({ locale }: Props) {
               <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-primary)]/10 via-transparent to-transparent" />
             </div>
           </div>
-          <div className="md:col-span-3 space-y-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-accent)] font-semibold italic">
+          <div className="md:col-span-3 space-y-5">
+            <Eyebrow as="p" tone="accent">
               {t('eyebrow')}
-            </p>
+            </Eyebrow>
             <h2
-              className="text-3xl md:text-4xl text-[var(--color-primary-dark)] leading-tight font-bold"
+              className="text-4xl md:text-5xl text-[var(--color-primary-dark)] leading-tight font-bold"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {t('heading')}
             </h2>
-            <p className="text-base md:text-lg text-[var(--color-muted)] leading-relaxed">
+            <p
+              className="text-lg md:text-xl text-[var(--color-foreground)]/80 leading-relaxed italic"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {t('body')}
             </p>
             <Link
               href="/about"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors"
+              className="inline-flex items-center gap-2 text-sm font-bold tracking-wide text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors uppercase"
             >
               {t('readMore')} <span aria-hidden>→</span>
             </Link>

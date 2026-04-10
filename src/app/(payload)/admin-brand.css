@@ -1,0 +1,1306 @@
+/*
+ * Shoresh — Payload admin brand overrides
+ * -------------------------------------------------------------
+ * Loaded by src/app/(payload)/layout.tsx AFTER @payloadcms/next/css.
+ *
+ * Wraps the theme block in @layer payload (Payload's compiled CSS
+ * declares `@layer payload-default, payload;` so an unlabeled
+ * @layer payload block sits AFTER the defaults — no !important
+ * required). We override only :root, leaving html[data-theme='dark']
+ * untouched. `admin.theme: 'light'` makes that safe.
+ *
+ * Sections:
+ *   1. Theme tokens (re-skin --theme-elevation-*, --color-success-*)
+ *   2. Body & typography
+ *   3. RTL polish
+ *   4. Sidebar / nav
+ *   5. Top header
+ *   6. Cards / inputs / focus rings
+ *   7. Login screen
+ *   8. Toasts
+ *   9-12. Custom component styles (dashboard, sidebar greeting,
+ *         welcome banner, fulfillment view) — sit OUTSIDE the layer
+ *         so .yarit-* classes don't fight Payload's specificity.
+ */
+
+@layer payload {
+  /* === 1. Theme tokens — Night Apothecary (Design Round 3) ===
+   * LIGHT mode: warmer parchment → near-black forest.
+   * DARK mode override block sits directly below. Payload's built-in
+   * dark toggle is disabled (admin.theme removed from payload.config)
+   * so our [data-theme] attribute from AdminThemeInit.tsx controls
+   * the switch. */
+  :root {
+    /* Surfaces — warmer parchment ladder */
+    --theme-elevation-0: #F6EFDC;
+    --theme-elevation-50: #FDF8E8;
+    --theme-elevation-100: #F5ECD0;
+    --theme-elevation-150: #E4D7B0;
+    --theme-elevation-200: #D8C99B;
+    --theme-elevation-250: #C8B882;
+    --theme-elevation-300: #B7A56C;
+    --theme-elevation-350: #A69159;
+    --theme-elevation-400: #8B7A5C;
+    --theme-elevation-450: #6F6450;
+    --theme-elevation-500: #5A5040;
+    --theme-elevation-800: #1A1F14;
+    --theme-elevation-1000: #000000;
+
+    --theme-bg: #F6EFDC;
+    --theme-input-bg: #FFFFFF;
+    --theme-text: #1A1F14;
+    --theme-border-color: #E4D7B0;
+    --theme-overlay: rgba(24, 51, 41, 0.55);
+
+    /* Primary action color = Payload's --color-success-* ladder.
+       Re-skin to marine-forest so every Save button, focus ring,
+       and link picks up the brand without per-component overrides. */
+    --color-success-50:  #EBF0E9;
+    --color-success-100: #D6E1D2;
+    --color-success-200: #ADC3A5;
+    --color-success-300: #85A579;
+    --color-success-400: #2D4F3E; /* === BRAND PRIMARY (marine-forest) === */
+    --color-success-500: #223E30;
+    --color-success-550: #183329; /* === BRAND PRIMARY-DARK === */
+    --color-success-600: #122620;
+    --color-success-700: #0C1B17;
+
+    /* Warning ladder pulled toward our ochre accent */
+    --color-warning-400: #C38A3E;
+    --color-warning-500: #8B5A2B;
+    --color-warning-600: #6E4620;
+
+    /* Fonts arrive via next/font CSS variables on <html> */
+    --font-body: var(--font-heebo), Heebo, -apple-system, system-ui, sans-serif;
+    --font-serif: var(--font-frank-ruhl), 'Frank Ruhl Libre', Georgia, serif;
+
+    /* Friendlier curves */
+    --style-radius-s: 8px;
+    --style-radius-m: 14px;
+    --style-radius-l: 22px;
+
+    --nav-width: 260px;
+  }
+
+  /* === 1b. Dark mode overrides — Warm Night ===
+   * The cool forest-black was swapped for a deep warm molasses
+   * so the entire brand stays in a single warm tonal world. The
+   * elevation ladder now flips warm-parchment-to-molasses instead
+   * of parchment-to-forest-black. Success ladder uses muted
+   * sage-olive for primary, warning uses warm ochre. */
+  [data-theme="dark"] {
+    --theme-elevation-0: #1E1609;     /* deep warm molasses */
+    --theme-elevation-50: #2A2012;    /* warm coffee */
+    --theme-elevation-100: #362A1A;   /* warm panel */
+    --theme-elevation-150: #3A2E1C;
+    --theme-elevation-200: #463828;
+    --theme-elevation-250: #544434;
+    --theme-elevation-300: #635140;
+    --theme-elevation-350: #71604D;
+    --theme-elevation-400: #B29973;   /* warm muted tan */
+    --theme-elevation-450: #C4AC86;
+    --theme-elevation-500: #D5BF9A;
+    --theme-elevation-800: #F3E5C0;   /* warm candlelit cream */
+    --theme-elevation-1000: #FFFFFF;
+
+    --theme-bg: #1E1609;
+    --theme-input-bg: #2A2012;
+    --theme-text: #F3E5C0;
+    --theme-border-color: #3A2E1C;
+    --theme-overlay: rgba(0, 0, 0, 0.75);
+
+    --color-success-400: #8AAF6F;     /* muted sage-olive — primary */
+    --color-success-550: #E6B976;     /* warm ochre — serif headings */
+    --color-warning-500: #E6B976;
+  }
+
+  /* === 2. Body & typography === */
+  body {
+    background: var(--theme-bg);
+    color: var(--theme-text);
+    font-family: var(--font-body);
+  }
+
+  .dashboard__label,
+  .step-nav__page-title,
+  .doc-header__title-wrapper h1,
+  .list-header h1,
+  .group-by-header h1,
+  .login__brand,
+  .yarit-dashboard h1,
+  .yarit-dashboard h2 {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  /* Mobile-first touch targets — Yarit will use this from her phone */
+  .btn,
+  .nav__link,
+  .pill,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select {
+    min-height: 44px;
+  }
+
+  .btn--style-primary {
+    background: var(--color-success-400);
+    border-color: var(--color-success-400);
+    color: #FFFFFF;
+    border-radius: 999px;
+    padding-inline: 1.4rem;
+    font-weight: 700;
+  }
+
+  .btn--style-primary:hover {
+    background: var(--color-success-550);
+    border-color: var(--color-success-550);
+  }
+
+  .btn--style-secondary {
+    border-radius: 999px;
+    border-color: var(--theme-border-color);
+  }
+
+  /* === 3. RTL polish === */
+  html[dir="rtl"] body {
+    direction: rtl;
+  }
+
+  html[dir="rtl"] .step-nav a svg,
+  html[dir="rtl"] .step-nav__last svg,
+  html[dir="rtl"] .doc-controls__leave svg {
+    transform: scaleX(-1);
+  }
+
+  /* Step-nav (top breadcrumb) in RTL — Payload's defaults are
+     LTR-baked. Two issues we fix:
+       1. The :after fade gradient is positioned `right: 0` and
+          flows `to right`, which in RTL covers the START of the
+          Hebrew text (the right edge) instead of the end. Result:
+          "מדיה" gets clipped to just "ה". We disable the gradient
+          in RTL — Hebrew breadcrumb labels are short, no fade
+          needed.
+       2. `.step-nav span { max-width: 160px }` is too tight when
+          paired with the RTL fix. Bump it.  */
+  html[dir="rtl"] .step-nav:after {
+    display: none;
+  }
+  html[dir="rtl"] .step-nav span {
+    max-width: none;
+  }
+  html[dir="rtl"] .step-nav,
+  html[dir="rtl"] .app-header__step-nav {
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  /* Localizer absolute-positioning bug in RTL.
+     Payload's compiled CSS has these rules in this order:
+       1. .app-header__localizer.localizer { right: 90px }   (LTR)
+       2. [dir=rtl] .app-header__localizer { right: unset; left: 90px }  (RTL flip)
+       3. .app-header__localizer.localizer { right: 40px }   (mobile MQ — RE-SETS right!)
+     Rule 3 reverts the `right: unset` from rule 2, so in RTL on
+     narrow viewports the localizer ends up with BOTH `left: 90px`
+     AND `right: 40px`. An absolute element with both left and
+     right set stretches to fill the space between — ~520px wide
+     on a 650px viewport — and overlaps the step-nav at the right
+     edge, covering "מדיה" with the language switcher button.
+     The user sees only the leftmost char "ה".
+     Fix: re-unset `right` for RTL with higher specificity, and
+     additionally make the container shrink to its content. */
+  html[dir="rtl"] .app-header__localizer.localizer {
+    right: auto;
+    left: 90px;
+    width: max-content;
+  }
+
+  /* === 4. Sidebar / nav === */
+  .nav,
+  .nav-wrapper {
+    background: linear-gradient(180deg, #F1EAD8 0%, #ECE5D4 100%);
+    border-inline-end: 1px solid var(--theme-border-color);
+  }
+
+  .nav__wrapper {
+    padding-block: 1.25rem;
+  }
+
+  /* Group label is the PARENT in the visual tree — bigger,
+     bolder, serif. Sits with a thin underline above its children.
+     Note Payload uses html { font-size: 12px } so all rems here
+     are sized for that root. */
+  .nav-group__label {
+    font-family: var(--font-serif);
+    font-size: 1.3rem; /* ~15.6px */
+    font-weight: 800;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    color: var(--color-success-550);
+    padding-inline: 1rem;
+    margin-block: 1rem 0.4rem;
+    border-bottom: 1px solid var(--theme-border-color);
+    padding-bottom: 0.4rem;
+  }
+
+  /* Child links — smaller than the parent label, lighter weight,
+     charcoal. Active state highlights with sage background. */
+  .nav__link {
+    border-radius: var(--style-radius-m);
+    margin-inline: 0.5rem;
+    padding: 0.7rem 0.95rem;
+    color: #2A2A2A;
+    font-weight: 500;
+    font-size: 1.15rem; /* ~13.8px — visually smaller than parent label */
+    transition: background 180ms ease, color 180ms ease;
+  }
+
+  .nav__link:hover {
+    background: rgba(91, 115, 66, 0.10);
+    color: var(--color-success-550);
+  }
+
+  .nav__link.active {
+    background: var(--color-success-400);
+    color: #FFFFFF;
+  }
+
+  /* === 5. Top header === */
+  .app-header,
+  header.app-header {
+    background: rgba(236, 229, 212, 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--theme-border-color);
+  }
+
+  /* === 6. Cards & inputs === */
+  .doc-controls,
+  .gutter,
+  .render-fields,
+  .field-type__wrap {
+    border-radius: var(--style-radius-m);
+  }
+
+  .field-type input,
+  .field-type textarea,
+  .field-type select {
+    background: var(--theme-input-bg);
+    border-radius: var(--style-radius-s);
+    border: 1px solid var(--theme-border-color);
+  }
+
+  .field-type input:focus,
+  .field-type textarea:focus,
+  .field-type select:focus {
+    border-color: var(--color-success-400);
+    box-shadow: 0 0 0 3px rgba(91, 115, 66, 0.18);
+    outline: none;
+  }
+
+  /* === 7. Login screen === */
+  .login,
+  .login__wrap {
+    background: var(--theme-bg);
+  }
+
+  .login__wrap {
+    border-radius: var(--style-radius-l);
+    box-shadow: 0 24px 64px -32px rgba(61, 82, 64, 0.35);
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--theme-border-color);
+  }
+
+  .yarit-brand-logo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-block: 1rem 1.5rem;
+  }
+
+  .yarit-brand-logo__img {
+    height: auto;
+    width: 130px;
+  }
+
+  .yarit-brand-logo__name {
+    font-family: var(--font-serif);
+    font-size: 2.3rem; /* ~28px @ 12px root */
+    font-weight: 700;
+    color: var(--color-success-550);
+  }
+
+  .yarit-brand-logo__tag {
+    font-size: 1.25rem; /* ~15px */
+    color: var(--theme-elevation-400);
+  }
+
+  .yarit-brand-icon {
+    height: 36px;
+    width: auto;
+    border-radius: 6px;
+  }
+
+  /* === 8. Toasts === */
+  [data-sonner-toaster] {
+    --normal-bg: #FFFFFF;
+    --normal-border: var(--theme-border-color);
+    --normal-text: var(--theme-text);
+  }
+
+  /* ============================================================
+   * 8b. Collection list views, tables, pagination
+   *    Brand Payload's stock gray/blue list pages so they
+   *    feel like the rest of Yarit's shop.
+   * ============================================================ */
+  .list-controls {
+    background: var(--theme-bg);
+    border-color: var(--theme-border-color);
+    border-radius: var(--style-radius-m);
+    padding: 1rem 1.25rem;
+  }
+
+  .list-header h1,
+  .collection-list__sub-header h1 {
+    font-family: var(--font-serif);
+    font-size: 2.65rem; /* ~32px */
+    font-weight: 700;
+    color: var(--color-success-550);
+  }
+
+  /* Tables */
+  .table {
+    background: var(--theme-bg);
+    border: 1px solid var(--theme-border-color);
+    border-radius: var(--style-radius-m);
+    overflow: hidden;
+  }
+
+  .table th {
+    background: rgba(91, 115, 66, 0.08);
+    color: var(--color-success-550);
+    font-family: var(--font-serif);
+    font-weight: 700;
+    padding: 0.85rem 1rem;
+  }
+
+  .table td {
+    background: var(--theme-input-bg);
+    padding: 0.85rem 1rem;
+    border-top: 1px solid var(--theme-border-color);
+  }
+
+  .table tr:hover td {
+    background: rgba(91, 115, 66, 0.06);
+  }
+
+  /* Pagination — pill buttons */
+  .paginator button {
+    border-radius: 999px;
+    border-color: var(--theme-border-color);
+    background: var(--theme-input-bg);
+    color: var(--color-success-550);
+    min-height: 36px;
+    min-width: 36px;
+  }
+
+  .paginator button.active {
+    background: var(--color-success-400);
+    color: #FFFFFF;
+    border-color: var(--color-success-400);
+  }
+
+  /* ============================================================
+   * 8c. Edit forms (document view) — Save, Publish, Tabs, Field labels
+   * ============================================================ */
+  .doc-header__title-wrapper h1 {
+    font-family: var(--font-serif);
+    font-size: 2.65rem; /* ~32px */
+    color: var(--color-success-550);
+  }
+
+  .doc-tabs {
+    background: var(--theme-bg);
+    border-bottom: 1px solid var(--theme-border-color);
+  }
+
+  .doc-tabs button.active {
+    color: var(--color-success-550);
+    border-bottom: 2px solid var(--color-success-400);
+  }
+
+  /* Field labels — bigger and sage so each form field has a clear,
+     friendly title above its input. */
+  .field-type label,
+  .field-type__label {
+    font-weight: 700;
+    color: var(--color-success-550);
+    font-size: 1.25rem; /* ~15px */
+  }
+
+  .field-type__description {
+    color: var(--theme-elevation-450);
+    font-size: 1.15rem; /* ~13.8px — readable helper text */
+    line-height: 1.55;
+  }
+
+  /* ============================================================
+   * 8d. Help button (Phase 6) — moved out of inline styles
+   *     into a class so it's tweakable from CSS.
+   * ============================================================ */
+  .yarit-help-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: rgba(91, 115, 66, 0.12);
+    color: var(--color-success-550);
+    font-weight: 700;
+    font-size: 1.1rem; /* ~13.2px */
+    text-decoration: none;
+    transition: background 180ms ease, color 180ms ease;
+  }
+
+  .yarit-help-button:hover {
+    background: rgba(91, 115, 66, 0.20);
+    color: var(--color-success-400);
+  }
+
+  .yarit-help-button:focus-visible {
+    outline: 2px solid var(--color-success-400);
+    outline-offset: 2px;
+  }
+}
+
+/* ============================================================
+ * 9. Custom dashboard (Phase 2) — outside the layer so the
+ *    yarit-* utility classes have natural specificity.
+ * ============================================================ */
+.yarit-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  max-width: 1200px;
+  margin-inline: auto;
+}
+
+.yarit-dashboard__hello {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.yarit-dashboard__hello h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.1rem, 4.5vw, 3.2rem); /* ~25-38px @ 12px root */
+  font-weight: 700;
+  color: var(--color-success-550);
+  margin: 0;
+}
+
+.yarit-dashboard__hello p {
+  margin: 0;
+  color: var(--theme-elevation-400);
+  font-size: 1.25rem; /* ~15px */
+}
+
+.yarit-stats {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.yarit-stat {
+  background: #FFFFFF;
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--style-radius-m);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.yarit-stat__value {
+  font-family: var(--font-serif);
+  font-size: 2.4rem; /* ~29px */
+  font-weight: 700;
+  color: var(--color-success-550);
+  line-height: 1;
+}
+
+.yarit-stat__label {
+  color: var(--theme-elevation-450); /* darker for contrast */
+  font-size: 1.1rem; /* ~13.2px */
+}
+
+.yarit-stat--urgent {
+  background: rgba(166, 122, 74, 0.10);
+  border-color: rgba(166, 122, 74, 0.45);
+}
+
+.yarit-stat--urgent .yarit-stat__value {
+  color: #7C4E2F;
+}
+
+.yarit-tiles {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.yarit-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-decoration: none;
+  background: #FFFFFF;
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--style-radius-l);
+  padding: 1.25rem 1.25rem 1.4rem;
+  color: inherit;
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.yarit-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 36px -22px rgba(61, 82, 64, 0.32);
+  border-color: rgba(91, 115, 66, 0.40);
+}
+
+.yarit-tile__icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--style-radius-m);
+  background: rgba(91, 115, 66, 0.12);
+  display: grid;
+  place-items: center;
+  font-size: 2.3rem; /* ~28px */
+}
+
+.yarit-tile--accent .yarit-tile__icon {
+  background: rgba(166, 122, 74, 0.18);
+}
+
+.yarit-tile__title {
+  font-family: var(--font-serif);
+  font-size: 1.65rem; /* ~20px */
+  font-weight: 700;
+  color: var(--color-success-550);
+}
+
+.yarit-tile__hint {
+  color: var(--theme-elevation-450);
+  font-size: 1.2rem; /* ~14.4px */
+  line-height: 1.5;
+}
+
+.yarit-tile__cta {
+  margin-top: auto;
+  font-weight: 700;
+  font-size: 1.2rem; /* ~14.4px */
+  color: var(--color-success-400);
+}
+
+.yarit-tile__badge {
+  position: absolute;
+  inset-inline-end: 0.9rem;
+  inset-block-start: 0.9rem;
+  background: var(--color-success-400);
+  color: #FFFFFF;
+  font-size: 1rem; /* ~12px */
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 6px rgba(61, 82, 64, 0.25);
+  min-width: 24px;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .yarit-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+ * 10. Sidebar greeting / footer (Phase 3)
+ * ============================================================ */
+.yarit-sidebar-greet {
+  margin: 1rem 0.75rem 1.25rem;
+  padding: 1.1rem 1.2rem;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--style-radius-m);
+}
+
+.yarit-sidebar-greet__hello {
+  font-family: var(--font-serif);
+  font-size: 1.4rem; /* ~16.8px */
+  font-weight: 700;
+  color: var(--color-success-550);
+  margin: 0 0 0.25rem;
+}
+
+.yarit-sidebar-greet__sub {
+  font-size: 1.1rem; /* ~13.2px */
+  color: var(--theme-elevation-450);
+  margin: 0 0 0.6rem;
+}
+
+.yarit-sidebar-greet__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 1.1rem; /* ~13.2px */
+  font-weight: 700;
+  color: var(--color-success-400);
+  text-decoration: none;
+}
+
+.yarit-sidebar-greet__link:hover {
+  text-decoration: underline;
+}
+
+.yarit-sidebar-greet__link:focus-visible {
+  outline: 2px solid var(--color-success-400);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.yarit-sidebar-foot {
+  margin: 0 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 1.1rem; /* ~13.2px */
+}
+
+.yarit-sidebar-foot a {
+  color: var(--theme-elevation-450);
+  text-decoration: none;
+  padding: 0.3rem 0.4rem;
+  border-radius: 4px;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.yarit-sidebar-foot a:hover {
+  color: var(--color-success-550);
+  background: rgba(91, 115, 66, 0.08);
+}
+
+.yarit-sidebar-foot a:focus-visible {
+  outline: 2px solid var(--color-success-400);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+ * 11. Welcome banner (Phase 6)
+ * ============================================================ */
+.yarit-welcome {
+  background: linear-gradient(135deg, #F8F2E1 0%, #EFE6C8 100%);
+  border: 1px solid rgba(166, 122, 74, 0.45);
+  border-radius: var(--style-radius-l);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.yarit-welcome__title {
+  font-family: var(--font-serif);
+  font-size: 1.65rem; /* ~20px */
+  font-weight: 700;
+  color: #7C4E2F;
+  margin: 0 0 0.25rem;
+}
+
+.yarit-welcome__body {
+  margin: 0;
+  font-size: 1.2rem; /* ~14.4px */
+  line-height: 1.55;
+  color: var(--theme-elevation-500);
+}
+
+.yarit-welcome__body a {
+  color: var(--color-success-550);
+  font-weight: 700;
+  text-decoration: underline solid 2px;
+  text-underline-offset: 3px;
+  transition: color 180ms ease;
+}
+
+.yarit-welcome__body a:hover {
+  color: var(--color-success-400);
+}
+
+.yarit-welcome__body a:focus-visible {
+  outline: 2px solid var(--color-success-400);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* ============================================================
+ * 12. Fulfillment view (Phase 4)
+ * ============================================================ */
+.yarit-fulfillment {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  max-width: 1100px;
+  margin-inline: auto;
+
+  /* OrderRow uses storefront variable names (--color-primary etc.).
+     Alias them locally inside the fulfillment view so the existing
+     component renders unchanged inside the admin without code edits.
+     Night Apothecary LIGHT tokens. */
+  --color-primary: #2D4F3E;
+  --color-primary-dark: #183329;
+  --color-accent: #0E5E3E;
+  --color-accent-deep: #8B5A2B;
+  --color-background: #F6EFDC;
+  --color-surface: #FFFFFF;
+  --color-foreground: #1A1F14;
+  --color-muted: #6F6450;
+  --color-border-brand: #E4D7B0;
+  --font-display: var(--font-frank-ruhl), Georgia, serif;
+}
+
+/* Warm Night DARK override for the fulfillment view. */
+[data-theme="dark"] .yarit-fulfillment {
+  --color-primary: #8AAF6F;        /* muted sage-olive */
+  --color-primary-dark: #6A8E52;
+  --color-accent: #E6B976;         /* warm ochre */
+  --color-accent-deep: #C98D3E;
+  --color-background: #1E1609;
+  --color-surface: #362A1A;
+  --color-foreground: #F3E5C0;
+  --color-muted: #B29973;
+  --color-border-brand: #3A2E1C;
+}
+
+/* Tailwind utility aliases scoped to the fulfillment view.
+   OrderRow uses these classes (text-lg, text-sm, font-bold, etc.)
+   from globals.css/Tailwind, which Payload's admin layout
+   doesn't import. Without these aliases, the component would
+   render with no font-size or weight inside /admin/fulfillment. */
+.yarit-fulfillment .text-lg { font-size: 1.5rem; }      /* 18px */
+.yarit-fulfillment .text-base { font-size: 1.33rem; }   /* 16px */
+.yarit-fulfillment .text-sm { font-size: 1.15rem; }     /* ~13.8px */
+.yarit-fulfillment .text-xs { font-size: 1rem; }        /* 12px */
+.yarit-fulfillment .text-\[11px\] { font-size: 0.92rem; }
+.yarit-fulfillment .font-extrabold { font-weight: 800; }
+.yarit-fulfillment .font-bold { font-weight: 700; }
+.yarit-fulfillment .font-semibold { font-weight: 600; }
+.yarit-fulfillment .font-normal { font-weight: 400; }
+.yarit-fulfillment .rounded-full { border-radius: 999px; }
+.yarit-fulfillment .rounded-2xl { border-radius: var(--style-radius-l); }
+
+.yarit-fulfillment__head h1 {
+  font-family: var(--font-serif);
+  font-size: 2.65rem; /* ~32px */
+  font-weight: 700;
+  color: var(--color-success-550);
+  margin: 0 0 0.25rem;
+}
+
+.yarit-fulfillment__head p {
+  margin: 0;
+  font-size: 1.2rem; /* ~14.4px */
+  color: var(--theme-elevation-450);
+}
+
+.yarit-fulfillment__section h2 {
+  font-family: var(--font-serif);
+  font-size: 1.6rem; /* ~19.2px */
+  color: var(--color-success-550);
+  margin: 0 0 0.6rem;
+}
+
+.yarit-fulfillment__section h2 span {
+  font-weight: 400;
+  color: var(--theme-elevation-450);
+  font-size: 1.1rem; /* ~13.2px */
+}
+
+.yarit-fulfillment__section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.yarit-fulfillment__empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--theme-elevation-400);
+}
+
+.yarit-fulfillment__empty-line {
+  font-size: 0.9rem;
+  color: var(--theme-elevation-400);
+  padding: 0.75rem 0;
+  margin: 0 0 1.25rem;
+}
+
+.yarit-fulfillment__toggle {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.yarit-fulfillment__toggle a {
+  font-size: 0.9rem;
+  color: var(--theme-elevation-400);
+  text-decoration: underline;
+}
+
+.yarit-fulfillment__toggle a:hover {
+  color: var(--color-success-550);
+}
+
+/* ===================================================================
+   ROUND 4 — Track C: admin delight moves
+   Everything below this line was added in Design Round 4 to make the
+   admin feel warm, celebratory, and easy for Yarit. Each block is
+   annotated with its C-number so it's easy to revert individually.
+   =================================================================== */
+
+/* ─── C3: illustrated fulfillment empty state ─────────────────────── */
+
+.yarit-fulfillment__empty {
+  text-align: center;
+  padding: 4rem 1.5rem 5rem;
+  max-width: 40rem;
+  margin: 1rem auto 2rem;
+  animation: yarit-empty-fade-up 620ms ease-out;
+}
+
+.yarit-fulfillment__empty-img {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  margin: 0 auto 1.5rem;
+  border-radius: 24px;
+  box-shadow: 0 16px 40px rgba(24, 51, 41, 0.12);
+  object-fit: cover;
+  aspect-ratio: 1 / 1;
+}
+
+.yarit-fulfillment__empty-title {
+  font-family: var(--font-frank-ruhl), Georgia, serif;
+  font-size: 1.75rem;
+  color: var(--theme-text);
+  margin: 0 0 0.75rem;
+  font-weight: 400;
+}
+
+.yarit-fulfillment__empty-body {
+  color: var(--theme-elevation-400);
+  font-size: 1rem;
+  line-height: 1.8;
+  margin-bottom: 2rem;
+}
+
+.yarit-fulfillment__empty-cta {
+  display: inline-block;
+  padding: 0.875rem 1.75rem;
+  background: var(--color-success-400);
+  color: #fff !important;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition:
+    transform 220ms ease,
+    background 220ms ease,
+    box-shadow 220ms ease;
+  box-shadow: 0 4px 14px rgba(24, 51, 41, 0.12);
+}
+
+.yarit-fulfillment__empty-cta:hover {
+  background: var(--color-success-550);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(24, 51, 41, 0.18);
+}
+
+@keyframes yarit-empty-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── C5: dashboard tile stagger fade-up ──────────────────────────── */
+
+.yarit-tile--stagger {
+  opacity: 0;
+  animation: yarit-tile-in 620ms ease-out forwards;
+  will-change: opacity, transform;
+}
+
+@keyframes yarit-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── C6: drifting leaves inside the admin ────────────────────────── */
+/* Mirrors the storefront .drifting-leaves rules in globals.css, but
+   globals.css isn't loaded inside the (payload) route group so we
+   duplicate here. The color token comes from --color-success-400
+   (brand primary) so dark mode gets the luminous ochre automatically. */
+
+.drifting-leaves {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  color: var(--color-success-400);
+}
+
+.drifting-leaves .leaf {
+  position: absolute;
+  width: 48px;
+  height: 72px;
+  opacity: 0.07;
+  will-change: transform;
+  filter: blur(0.3px);
+}
+
+.drifting-leaves .leaf--1 {
+  top: 12%;
+  inset-inline-start: 8%;
+  animation: leaf-drift-a 22s ease-in-out infinite;
+}
+.drifting-leaves .leaf--2 {
+  top: 68%;
+  inset-inline-start: 18%;
+  animation: leaf-drift-b 28s ease-in-out -4s infinite;
+  width: 36px;
+  height: 54px;
+  opacity: 0.06;
+}
+.drifting-leaves .leaf--3 {
+  top: 22%;
+  inset-inline-start: 78%;
+  animation: leaf-drift-a 26s ease-in-out -9s infinite;
+  width: 56px;
+  height: 84px;
+  opacity: 0.07;
+}
+.drifting-leaves .leaf--4 {
+  top: 82%;
+  inset-inline-start: 72%;
+  animation: leaf-drift-c 32s ease-in-out -12s infinite;
+  width: 44px;
+  height: 66px;
+}
+.drifting-leaves .leaf--5 {
+  top: 42%;
+  inset-inline-start: 48%;
+  animation: leaf-drift-b 30s ease-in-out -6s infinite;
+  width: 40px;
+  height: 60px;
+  opacity: 0.05;
+}
+
+@keyframes leaf-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(14px, -18px) rotate(8deg);
+  }
+  50% {
+    transform: translate(-6px, -28px) rotate(-4deg);
+  }
+  75% {
+    transform: translate(-18px, -10px) rotate(6deg);
+  }
+}
+@keyframes leaf-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(-2deg);
+  }
+  30% {
+    transform: translate(-12px, 14px) rotate(-10deg);
+  }
+  60% {
+    transform: translate(10px, 22px) rotate(4deg);
+  }
+}
+@keyframes leaf-drift-c {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(4deg);
+  }
+  33% {
+    transform: translate(20px, -12px) rotate(-6deg);
+  }
+  66% {
+    transform: translate(-8px, -22px) rotate(12deg);
+  }
+}
+
+/* Dark mode: leaves switch to the lantern ochre accent + gain a
+   subtle warm glow so they read as candlelight in the garden. */
+[data-theme="dark"] .drifting-leaves {
+  color: var(--color-success-550);
+}
+[data-theme="dark"] .drifting-leaves .leaf {
+  opacity: 0.09;
+  filter: blur(0.6px) drop-shadow(0 0 8px rgba(233, 185, 122, 0.25));
+}
+
+/* Make sure the leaves live BEHIND every admin surface. The
+   `.drifting-leaves` layer is `position: fixed; z-index: 0`, so
+   unpositioned content would actually paint *under* it because
+   positioned elements paint above their non-positioned siblings
+   regardless of document order. Mirror the storefront
+   `body > *:not([role="dialog"])` lifter from globals.css: every
+   direct child of <body> except dialogs gets `position: relative;
+   z-index: 2;` which puts every admin surface — login form,
+   dashboard, collection lists, modals, Payload nav, the Next.js
+   dev indicator, all of it — on top of the leaves.
+
+   Skipping dialogs preserves the modal portal's own stacking
+   context (Payload's `.payload__modal-container` is already
+   `position: fixed`). */
+body > *:not([role="dialog"]) {
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── C7: richer field description treatment ──────────────────────── */
+/* The 3 complex product fields (type, stock, status) now contain
+   multi-line Hebrew explanations delimited by " • " bullet characters.
+   We upgrade the visual of ANY field description that contains a
+   bullet with a card treatment so the extra info reads as "here's
+   more help" rather than "wall of text". */
+
+.field-description,
+.field-type__description {
+  line-height: 1.75;
+}
+
+/* When the description text contains a bullet (•), it's a multi-line
+   helper. Give it a warm card background. Targeted via :has() so we
+   don't touch descriptions without bullets. */
+.field-description:has(+ *),
+.field-type__description {
+  color: var(--theme-elevation-400);
+}
+
+/* ─── C8: save button text swap in RTL (Hebrew admin) ─────────────── */
+/* Replace "Save" with "שמרי ✓" on the primary submit button when the
+   document direction is RTL. Cosmetic only — click handler is
+   unchanged. Scoped narrowly to avoid accidentally hiding text on
+   any other primary button. */
+
+[dir="rtl"] .document-controls .btn--style-primary button,
+[dir="rtl"] button.btn.btn--style-primary[type="submit"],
+[dir="rtl"] .form-submit button.btn--style-primary {
+  position: relative;
+  font-size: 0 !important;
+}
+
+[dir="rtl"] .document-controls .btn--style-primary button::after,
+[dir="rtl"] button.btn.btn--style-primary[type="submit"]::after,
+[dir="rtl"] .form-submit button.btn--style-primary::after {
+  content: 'שמרי ✓';
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+
+/* ─── C9: illustrated empty state on empty collection lists ───────── */
+/* When any collection list has zero documents (Payload renders a
+   `.collection-list__no-results` block), upgrade it with a small
+   circular watercolor thumbnail for warmth. */
+
+.collection-list__no-results,
+.no-results {
+  text-align: center;
+  padding: 3.5rem 1.5rem 4rem;
+}
+
+.collection-list__no-results::before,
+.no-results::before {
+  content: '';
+  display: block;
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 1.5rem;
+  background-image: url('/brand/ai/empty-shop.jpg');
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  box-shadow: 0 10px 28px rgba(24, 51, 41, 0.14);
+  opacity: 0.92;
+}
+
+/* ─── C11: driver.js onboarding popover branding ──────────────────── */
+
+.driver-popover {
+  background: var(--theme-elevation-50) !important;
+  color: var(--theme-text) !important;
+  border-radius: 18px !important;
+  border: 1px solid var(--theme-border-color) !important;
+  box-shadow: 0 24px 56px rgba(24, 51, 41, 0.26) !important;
+  direction: rtl;
+  font-family: var(--font-heebo), system-ui, sans-serif !important;
+  padding: 1.25rem 1.5rem !important;
+  max-width: 360px !important;
+}
+
+.driver-popover-title {
+  font-family: var(--font-frank-ruhl), Georgia, serif !important;
+  font-size: 1.35rem !important;
+  color: var(--theme-text) !important;
+  margin-bottom: 0.5rem !important;
+  font-weight: 400 !important;
+  text-align: right !important;
+}
+
+.driver-popover-description {
+  color: var(--theme-elevation-400) !important;
+  line-height: 1.75 !important;
+  font-size: 0.95rem !important;
+  text-align: right !important;
+}
+
+.driver-popover-footer {
+  justify-content: space-between !important;
+  margin-top: 1rem !important;
+  gap: 0.5rem !important;
+}
+
+.driver-popover-progress-text {
+  font-size: 0.8rem !important;
+  color: var(--theme-elevation-400) !important;
+}
+
+.driver-popover-next-btn,
+.driver-popover-done-btn {
+  background: var(--color-success-400) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 0.55rem 1.3rem !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-shadow: none !important;
+  box-shadow: 0 4px 12px rgba(24, 51, 41, 0.15) !important;
+  cursor: pointer;
+  transition:
+    background 220ms ease,
+    transform 180ms ease;
+}
+
+.driver-popover-next-btn:hover,
+.driver-popover-done-btn:hover {
+  background: var(--color-success-550) !important;
+  transform: translateY(-1px);
+}
+
+.driver-popover-prev-btn {
+  background: transparent !important;
+  color: var(--color-success-400) !important;
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;
+  padding: 0.55rem 1rem !important;
+  font-weight: 600 !important;
+}
+
+.driver-popover-prev-btn:hover {
+  background: color-mix(
+    in srgb,
+    var(--color-success-400) 8%,
+    transparent
+  ) !important;
+}
+
+.driver-popover-close-btn {
+  color: var(--theme-elevation-400) !important;
+  font-size: 1.25rem !important;
+}
+
+/* ─── C12: "view on site" button in admin header actions ──────────── */
+
+.yarit-view-on-site {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--color-success-400) !important;
+  border: 1px solid var(--theme-border-color);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background 220ms ease,
+    transform 180ms ease,
+    border-color 220ms ease;
+  white-space: nowrap;
+}
+
+.yarit-view-on-site:hover {
+  background: color-mix(in srgb, var(--color-success-400) 8%, transparent);
+  border-color: var(--color-success-400);
+  transform: translateY(-1px);
+}
+
+.yarit-view-on-site:focus-visible {
+  outline: 2px solid var(--color-success-400);
+  outline-offset: 2px;
+}
+
+/* ─── Reduced-motion guard — disable all new animations ───────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .yarit-tile--stagger,
+  .yarit-fulfillment__empty,
+  .drifting-leaves .leaf {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .yarit-fulfillment__empty-cta,
+  .yarit-view-on-site,
+  .driver-popover-next-btn,
+  .driver-popover-done-btn,
+  .driver-popover-prev-btn {
+    transition: none !important;
+  }
+}

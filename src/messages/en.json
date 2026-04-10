@@ -6,6 +6,10 @@
     "loading": "Loading...",
     "close": "Close"
   },
+  "theme": {
+    "switchToDark": "Switch to dark mode",
+    "switchToLight": "Switch to light mode"
+  },
   "nav": {
     "home": "Home",
     "shop": "Shop",
@@ -18,9 +22,11 @@
     "language": "Language"
   },
   "home": {
+    "heroEyebrow": "Est. 2026 · Tel Aviv",
     "heroHeadline": "Rooted in wellness",
     "heroSubheadline": "Natural wellness products, hand-picked by Yarit",
-    "heroCta": "Shop now",
+    "heroPoetic": "A small shop of products I actually love — chosen by one hand, for a gentle ritual and a quiet routine.",
+    "heroCta": "Discover the shop",
     "heroSecondaryCta": "Our story",
     "sectionsComingSoon": "The shop is opening soon",
     "featuredEyebrow": "Hand-picked",
@@ -142,6 +148,7 @@
   },
   "footer": {
     "allRightsReserved": "All rights reserved",
+    "brandBlurb": "A small shop of natural wellness, carefully chosen and sent directly from Yarit.",
     "shop": "Shop",
     "customerService": "Customer service",
     "information": "Information",
@@ -150,6 +157,10 @@
     "shipping": "Shipping",
     "returns": "Returns",
     "privacy": "Privacy",
-    "terms": "Terms"
+    "terms": "Terms",
+    "newsletterHeading": "Join the list",
+    "newsletterBody": "Occasional notes from Yarit — a new product, a recommendation. No noise, no spam.",
+    "newsletterPlaceholder": "Your email",
+    "newsletterCta": "Join"
   }
 }

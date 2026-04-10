@@ -7,6 +7,10 @@
  *          (public/brand/ai/hero-bg-wash.jpg) layered at low opacity
  *          behind the content. The wash is placed in an absolutely
  *          positioned container so it doesn't affect layout.
+ *
+ *          Note: we tried an editorial 2-column layout with a still-life
+ *          photograph on the right (Wave 2 Move B4) but Yarit preferred
+ *          keeping the Shoresh logo as the centerpiece. See plan §B4.
  */
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -18,7 +22,7 @@ export function Hero() {
   const t = useTranslations('home')
 
   return (
-    <section className="relative overflow-hidden py-12 md:py-20">
+    <section className="hero-section relative overflow-hidden py-12 md:py-20">
       {/* Background wash — absolute, behind content */}
       <div className="absolute inset-0 -z-0 opacity-40" aria-hidden>
         <Image
@@ -34,17 +38,19 @@ export function Hero() {
       </div>
 
       <Container className="relative flex flex-col items-center text-center gap-8 md:gap-10">
-        <Image
-          src="/brand/logo.png"
-          alt={brand.name.en}
-          width={400}
-          height={600}
-          priority
-          className="h-56 md:h-72 w-auto object-contain animate-fade-up"
-        />
+        <div className="logo-halo relative animate-fade-up">
+          <Image
+            src="/brand/logo.png"
+            alt={brand.name.en}
+            width={400}
+            height={600}
+            priority
+            className="h-56 md:h-72 w-auto object-contain relative z-10"
+          />
+        </div>
         <div className="space-y-4 animate-fade-up" style={{ animationDelay: '120ms' }}>
           <h1
-            className="text-5xl md:text-7xl text-[var(--color-primary-dark)] leading-[1.05] max-w-3xl font-bold"
+            className="iridescent-heading text-5xl md:text-7xl leading-[1.05] max-w-3xl font-bold"
             style={{ fontFamily: 'var(--font-display)' }}
           >
             {t('heroHeadline')}

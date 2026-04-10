@@ -31,10 +31,10 @@ export const Products: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'price', 'category', 'status'],
-    group: { en: 'Catalog', he: 'קטלוג' },
+    group: { en: '📦 Catalog', he: '📦 קטלוג' },
     description: {
       en: 'All products in the shop — both Forever Living and independent.',
-      he: 'כל המוצרים בחנות — מוצרי Forever ומוצרים עצמאיים.',
+      he: 'כאן נמצאים כל המוצרים בחנות. לחצי על מוצר כדי לערוך אותו, או על "צרי חדש" כדי להוסיף מוצר חדש לחנות.',
     },
     listSearchableFields: ['title', 'sku', 'foreverProductCode'],
   },
@@ -63,7 +63,7 @@ export const Products: CollectionConfig = {
         position: 'sidebar',
         description: {
           en: 'Forever items are ordered from Forever per-order; independent items are stocked at home.',
-          he: 'מוצרי Forever נרכשים מפוראבר עם כל הזמנה; מוצרים עצמאיים נמצאים במלאי בבית.',
+          he: 'Forever — כל הזמנה נרכשת מפוראבר ונשלחת ישירות, אין צורך במלאי. • עצמאי — המוצר שוכב אצלך בבית, חשוב לעדכן את שדה "מלאי". • בספק? תמיד אפשר להתחיל עם Forever ולשנות אחר כך.',
         },
       },
     },
@@ -75,6 +75,12 @@ export const Products: CollectionConfig = {
       required: true,
       localized: true,
       label: { en: 'Title', he: 'שם המוצר' },
+      admin: {
+        description: {
+          en: 'Shown on the product card and detail page in the storefront.',
+          he: 'השם שיופיע על כרטיס המוצר ובדף המוצר באתר. למשל: "ג׳ל אלוורה רכה".',
+        },
+      },
     },
     {
       name: 'slug',
@@ -82,7 +88,7 @@ export const Products: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
-      label: { en: 'Slug', he: 'מזהה כתובת' },
+      label: { en: 'Slug', he: 'כתובת באתר' },
       admin: {
         position: 'sidebar',
         // Auto-generated via the beforeValidate hook below; hidden
@@ -90,7 +96,7 @@ export const Products: CollectionConfig = {
         hidden: true,
         description: {
           en: 'URL-safe identifier (auto-filled from title).',
-          he: 'מזהה לכתובת האינטרנט. מתמלא לבד מהשם.',
+          he: 'הכתובת באינטרנט של דף המוצר. נוצרת אוטומטית לפי שם המוצר — אין צורך לגעת.',
         },
       },
       hooks: {
@@ -129,6 +135,12 @@ export const Products: CollectionConfig = {
       type: 'richText',
       localized: true,
       label: { en: 'Full description', he: 'תיאור מלא' },
+      admin: {
+        description: {
+          en: 'The long description shown on the product page in the storefront. Cover the benefits, ingredients, and how to use it.',
+          he: 'התיאור הארוך שמופיע בדף המוצר באתר. כתבי כאן את כל מה שחשוב — תועלות, מרכיבים, איך להשתמש. אפשר להשתמש בכפתורים שמעל כדי להדגיש, להוסיף כותרת, או רשימה.',
+        },
+      },
     },
 
     // ─── Pricing (always shown, ILS for everyone) ────────────────
@@ -153,7 +165,7 @@ export const Products: CollectionConfig = {
       admin: {
         description: {
           en: 'Optional — shown as a strike-through for sale items.',
-          he: 'אופציונלי — מוצג כמחיר מחוק למוצרי מבצע.',
+          he: 'המחיר לפני המבצע. אם תכניסי כאן ערך, באתר יופיע מחיר מחוק לידו.',
         },
       },
     },
@@ -171,12 +183,18 @@ export const Products: CollectionConfig = {
           relationTo: 'media',
           required: true,
           label: { en: 'Image', he: 'תמונה' },
+          admin: {
+            description: {
+              en: 'Drag a file in or click to choose from your device. JPG/PNG up to 10MB.',
+              he: 'גררי תמונה לכאן או לחצי לבחור מהמחשב/הטלפון. JPG או PNG עד 10MB.',
+            },
+          },
         },
       ],
       admin: {
         description: {
-          en: 'First image is the main image shown on product cards.',
-          he: 'התמונה הראשונה תופיע ככרטיס המוצר.',
+          en: 'First image is the main one shown on product cards. Add more for the gallery on the product page.',
+          he: 'התמונה הראשונה תופיע ככרטיס המוצר באתר. אפשר להוסיף עוד תמונות עם "Add Image" — כולן יוצגו בגלריה בדף המוצר.',
         },
       },
     },
@@ -189,6 +207,10 @@ export const Products: CollectionConfig = {
       label: { en: 'Category', he: 'קטגוריה' },
       admin: {
         position: 'sidebar',
+        description: {
+          en: 'Pick the category customers can browse to find this product.',
+          he: 'באיזו קטגוריה הקונים ימצאו את המוצר באתר. בחרי אחת מהרשימה.',
+        },
       },
     },
     {
@@ -199,6 +221,10 @@ export const Products: CollectionConfig = {
       label: { en: 'Tags', he: 'תגיות' },
       admin: {
         position: 'sidebar',
+        description: {
+          en: 'Optional — tags help with filtering. You can pick more than one or leave it empty.',
+          he: 'אופציונלי — תגיות מסייעות לסינון באתר. אפשר לבחור כמה תגיות או להשאיר ריק.',
+        },
       },
     },
 
@@ -207,13 +233,25 @@ export const Products: CollectionConfig = {
       name: 'isFeatured',
       type: 'checkbox',
       label: { en: 'Featured on homepage', he: 'מוצג בעמוד הבית' },
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        description: {
+          en: 'Show in the "Hand-picked" carousel on the homepage.',
+          he: 'אם מסומן, המוצר יופיע בקרוסלת "מוצרים נבחרים" בעמוד הבית.',
+        },
+      },
     },
     {
       name: 'isNew',
       type: 'checkbox',
       label: { en: 'Mark as new', he: 'מוצר חדש' },
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        description: {
+          en: 'Adds a colourful "New" tag to the product card.',
+          he: 'אם מסומן, יופיע על כרטיס המוצר תג צבעוני "חדש".',
+        },
+      },
     },
 
     // ─── Conditional: FOREVER products only ──────────────────────
@@ -247,9 +285,13 @@ export const Products: CollectionConfig = {
     {
       name: 'sku',
       type: 'text',
-      label: { en: 'SKU', he: 'מק״ט' },
+      label: { en: 'SKU', he: 'מספר קטלוגי (מק״ט)' },
       admin: {
         condition: (data) => data.type === 'independent',
+        description: {
+          en: 'Optional internal product code, only for independent items.',
+          he: 'קוד פנימי של המוצר אצלך, אם יש לך אחד. אופציונלי.',
+        },
       },
     },
     {
@@ -262,7 +304,7 @@ export const Products: CollectionConfig = {
         condition: (data) => data.type === 'independent',
         description: {
           en: 'Number of units currently in your inventory.',
-          he: 'כמות היחידות הנמצאות כרגע במלאי שלך.',
+          he: 'כמות היחידות שיש לך בבית עכשיו. • מתעדכן אוטומטית כשהזמנה נסגרת. • כשהכמות יורדת מתחת ל-5, המוצר מופיע ב"מלאי נמוך" בעמוד הבית של פאנל הניהול. • חשוב לעדכן ידנית אם קיבלת משלוח חדש.',
         },
       },
     },
@@ -286,13 +328,17 @@ export const Products: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'published',
-      label: { en: 'Status', he: 'מצב' },
+      label: { en: 'Status', he: 'מצב פרסום' },
       options: [
         { label: { en: 'Draft', he: 'טיוטה' }, value: 'draft' },
         { label: { en: 'Published', he: 'פורסם' }, value: 'published' },
       ],
       admin: {
         position: 'sidebar',
+        description: {
+          en: '"Draft" — saved but hidden. "Published" — visible on the store.',
+          he: '"טיוטה" — המוצר נשמר אצלך אבל לא מוצג באתר. טוב לעבודה בשלבים. • "פורסם" — גלוי לכל המבקרים באתר. • אפשר לשנות בין טיוטה לפורסם מתי שרוצים — שמירה מחלצת את השינוי מיד.',
+        },
       },
     },
   ],

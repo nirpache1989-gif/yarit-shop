@@ -1,0 +1,273 @@
+/**
+ * @file YaritDashboard — replaces Payload's default /admin view
+ * @summary Server component that renders a warm Hebrew welcome,
+ *          a stats row (open orders / urgent / products / drafts /
+ *          low-stock / customers), and a tile grid pointing at the
+ *          most common Yarit tasks.
+ *
+ *          Wired via `admin.components.views.dashboard.Component`
+ *          in payload.config.ts. Receives `AdminViewServerProps`
+ *          which exposes `payload: Payload` directly — we use it
+ *          for parallel `payload.count()` queries with no extra
+ *          HTTP roundtrip.
+ *
+ *          Styles live in `.yarit-dashboard / .yarit-stats / .yarit-tile`
+ *          rules in `src/app/(payload)/admin-brand.css`.
+ *
+ *          See: plan Phase 2.
+ */
+import type { AdminViewServerProps, Payload } from 'payload'
+import Link from 'next/link'
+import { WelcomeBanner } from './WelcomeBanner'
+
+type Stats = {
+  openOrders: number
+  awaitingForever: number
+  publishedProducts: number
+  draftProducts: number
+  lowStock: number
+  customers: number
+}
+
+/**
+ * Time-synced Hebrew greeting for Yarit. Uses Asia/Jerusalem so it
+ * matches her local day-of-time regardless of where the server runs.
+ * The emoji decorates the phrase; a modern Hebrew screen reader will
+ * still read it gracefully ("בוקר טוב ירית שמש").
+ */
+function greet(): { hello: string; emoji: string; subtitle: string } {
+  const hour = new Date().toLocaleString('he-IL', {
+    timeZone: 'Asia/Jerusalem',
+    hour: '2-digit',
+    hour12: false,
+  })
+  const h = parseInt(hour, 10)
+  if (h < 6)
+    return {
+      hello: 'לילה טוב ירית',
+      emoji: '🌙',
+      subtitle: 'קצת עבודה לילית? כאן הכל מחכה לך.',
+    }
+  if (h < 12)
+    return {
+      hello: 'בוקר טוב ירית',
+      emoji: '☀️',
+      subtitle: 'בוקר חדש, חנות חדשה. בחרי מה לעדכן היום.',
+    }
+  if (h < 18)
+    return {
+      hello: 'צהריים טובים ירית',
+      emoji: '🌿',
+      subtitle: 'נעים לראות אותך. מה מעדכנים היום בחנות?',
+    }
+  return {
+    hello: 'ערב טוב ירית',
+    emoji: '🌸',
+    subtitle: 'הגיע הזמן לסגירת יום. יש משהו שצריך לטפל בו?',
+  }
+}
+
+async function getStats(payload: Payload): Promise<Stats> {
+  const [openOrders, awaitingForever, published, draft, lowStock, customers] =
+    await Promise.all([
+      payload.count({
+        collection: 'orders',
+        where: {
+          and: [
+            { paymentStatus: { equals: 'paid' } },
+            { fulfillmentStatus: { not_equals: 'delivered' } },
+          ],
+        },
+      }),
+      payload.count({
+        collection: 'orders',
+        where: { fulfillmentStatus: { equals: 'awaiting_forever_purchase' } },
+      }),
+      payload.count({
+        collection: 'products',
+        where: { status: { equals: 'published' } },
+      }),
+      payload.count({
+        collection: 'products',
+        where: { status: { equals: 'draft' } },
+      }),
+      payload.count({
+        collection: 'products',
+        where: {
+          and: [
+            { type: { equals: 'independent' } },
+            { stock: { less_than: 5 } },
+          ],
+        },
+      }),
+      payload.count({
+        collection: 'users',
+        where: { role: { equals: 'customer' } },
+      }),
+    ])
+
+  return {
+    openOrders: openOrders.totalDocs,
+    awaitingForever: awaitingForever.totalDocs,
+    publishedProducts: published.totalDocs,
+    draftProducts: draft.totalDocs,
+    lowStock: lowStock.totalDocs,
+    customers: customers.totalDocs,
+  }
+}
+
+type Tile = {
+  href: string
+  icon: string
+  title: string
+  hint: string
+  cta: string
+  accent?: boolean
+  badge?: number
+}
+
+function buildTiles(stats: Stats): Tile[] {
+  return [
+    {
+      href: '/admin/fulfillment',
+      icon: '📦',
+      title: 'ההזמנות החדשות',
+      hint: 'כל הזמנה משולמת שמחכה לטיפול — ממוין לפי דחיפות.',
+      cta: 'לטיפול בהזמנות',
+      accent: true,
+      badge: stats.openOrders > 0 ? stats.openOrders : undefined,
+    },
+    {
+      href: '/admin/collections/products',
+      icon: '🌿',
+      title: 'המוצרים שלי',
+      hint: 'עריכה של כל המוצרים בחנות.',
+      cta: 'פתיחת רשימת המוצרים',
+    },
+    {
+      href: '/admin/collections/products/create',
+      icon: '➕',
+      title: 'הוספת מוצר חדש',
+      hint: 'מוסיפים מוצר חדש לחנות.',
+      cta: 'התחלה',
+    },
+    {
+      href: '/admin/collections/categories',
+      icon: '🗂',
+      title: 'קטגוריות',
+      hint: 'איך המוצרים מקובצים בחנות.',
+      cta: 'ניהול קטגוריות',
+    },
+    {
+      href: '/admin/collections/media',
+      icon: '🖼',
+      title: 'תמונות וגלריה',
+      hint: 'כל התמונות שעלו לאתר.',
+      cta: 'פתיחת הגלריה',
+    },
+    {
+      href: '/admin/globals/site-settings',
+      icon: '⚙️',
+      title: 'פרטי החנות והמשלוחים',
+      hint: 'טלפון, וואטסאפ, כתובת, תעריפי משלוח.',
+      cta: 'עריכת ההגדרות',
+    },
+    {
+      href: '/admin/globals/site-settings#field-announcementBar',
+      icon: '📣',
+      title: 'הודעה בראש האתר',
+      hint: 'טקסט קצר שמופיע מעל כל עמוד באתר.',
+      cta: 'עריכת ההודעה',
+    },
+    {
+      href: '/admin/collections/orders',
+      icon: '🧾',
+      title: 'היסטוריית הזמנות',
+      hint: 'רשימת כל ההזמנות, גם הישנות.',
+      cta: 'פתיחת הרשימה',
+    },
+  ]
+}
+
+export async function YaritDashboard(props: AdminViewServerProps) {
+  const stats = await getStats(props.payload)
+  const tiles = buildTiles(stats)
+  const { hello, emoji, subtitle } = greet()
+
+  return (
+    <div className="yarit-dashboard" dir="rtl">
+      {/* WelcomeBanner is rendered inline because Payload's
+          `beforeDashboard` slot only fires when DefaultDashboard
+          is in use; we replaced it with YaritDashboard. */}
+      <WelcomeBanner />
+
+      <header className="yarit-dashboard__hello">
+        <h1>
+          {hello} {emoji}
+        </h1>
+        <p>{subtitle}</p>
+      </header>
+
+      <section className="yarit-stats" aria-label="סטטיסטיקה">
+        <Stat
+          label="הזמנות פתוחות"
+          value={stats.openOrders}
+          urgent={stats.openOrders > 0}
+        />
+        <Stat
+          label="לטיפול דחוף"
+          value={stats.awaitingForever}
+          urgent={stats.awaitingForever > 0}
+        />
+        <Stat label="מוצרים פורסמו" value={stats.publishedProducts} />
+        <Stat label="טיוטות" value={stats.draftProducts} />
+        <Stat
+          label="מלאי נמוך"
+          value={stats.lowStock}
+          urgent={stats.lowStock > 0}
+        />
+        <Stat label="לקוחות רשומים" value={stats.customers} />
+      </section>
+
+      <section className="yarit-tiles" aria-label="פעולות מהירות">
+        {tiles.map((t, i) => (
+          <Link
+            key={t.href}
+            href={t.href}
+            className={`yarit-tile yarit-tile--stagger${t.accent ? ' yarit-tile--accent' : ''}`}
+            style={{ animationDelay: `${i * 60}ms` }}
+          >
+            {t.badge !== undefined && (
+              <span className="yarit-tile__badge">{t.badge}</span>
+            )}
+            <div className="yarit-tile__icon" aria-hidden>
+              {t.icon}
+            </div>
+            <div className="yarit-tile__title">{t.title}</div>
+            <div className="yarit-tile__hint">{t.hint}</div>
+            <div className="yarit-tile__cta">{t.cta} ←</div>
+          </Link>
+        ))}
+      </section>
+    </div>
+  )
+}
+
+function Stat({
+  label,
+  value,
+  urgent,
+}: {
+  label: string
+  value: number
+  urgent?: boolean
+}) {
+  return (
+    <div
+      className={`yarit-stat${urgent && value > 0 ? ' yarit-stat--urgent' : ''}`}
+    >
+      <div className="yarit-stat__value">{value}</div>
+      <div className="yarit-stat__label">{label}</div>
+    </div>
+  )
+}

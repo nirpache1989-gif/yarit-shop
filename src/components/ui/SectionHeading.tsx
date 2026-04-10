@@ -13,6 +13,7 @@
  */
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { Eyebrow } from '@/components/ui/Eyebrow'
 
 type Props = {
   title: string
@@ -40,9 +41,9 @@ export function SectionHeading({
       )}
     >
       {eyebrow && (
-        <p className="text-xs md:text-sm uppercase tracking-[0.2em] text-[var(--color-accent)] font-semibold italic">
+        <Eyebrow as="p" tone="accent" className="mb-1">
           {eyebrow}
-        </p>
+        </Eyebrow>
       )}
       <h2
         className="flex items-center gap-3 font-[var(--font-display)] font-bold text-3xl md:text-4xl lg:text-5xl text-[var(--color-primary-dark)] leading-tight"

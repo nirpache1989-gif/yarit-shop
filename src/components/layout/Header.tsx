@@ -14,13 +14,14 @@ import { brand } from '@/brand.config'
 import { Container } from '@/components/ui/Container'
 import { CartIcon } from '@/components/cart/CartIcon'
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher'
+import { ThemeToggle } from '@/components/layout/ThemeToggle'
 
 export function Header() {
   const t = useTranslations('nav')
 
   return (
-    <header className="sticky top-0 z-30 bg-[var(--color-background)]/90 backdrop-blur-sm border-b border-[var(--color-border-brand)]">
-      <Container className="py-3 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-30 bg-[var(--color-surface-warm)]/92 backdrop-blur-sm border-b border-[var(--color-primary)]/15">
+      <Container className="h-16 flex items-center justify-between gap-4">
         <Link href="/" className="flex items-center gap-3">
           <Image
             src="/brand/logo.png"
@@ -28,27 +29,31 @@ export function Header() {
             width={64}
             height={96}
             priority
-            className="h-12 w-auto object-contain"
+            className="h-10 w-auto object-contain"
           />
-          <span className="text-xl md:text-2xl font-bold text-[var(--color-primary-dark)] hidden sm:inline">
+          <span
+            className="text-xl md:text-2xl font-bold text-[var(--color-primary-dark)] hidden sm:inline"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             {brand.name.he}
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm font-semibold">
-          <Link href="/shop" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors">
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold">
+          <Link href="/shop" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
             {t('shop')}
           </Link>
-          <Link href="/about" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors">
+          <Link href="/about" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
             {t('about')}
           </Link>
-          <Link href="/contact" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors">
+          <Link href="/contact" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
             {t('contact')}
           </Link>
         </nav>
 
         <div className="flex items-center gap-2 md:gap-3">
           <LanguageSwitcher />
+          <ThemeToggle />
           <CartIcon />
         </div>
       </Container>

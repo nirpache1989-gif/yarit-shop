@@ -26,19 +26,19 @@ export async function Testimonials({ locale }: Props) {
   ]
 
   return (
-    <section className="py-16 bg-[var(--color-surface)]/40">
+    <section className="py-20 md:py-24 bg-[var(--color-surface-warm)]">
       <Container>
         <SectionHeading
           eyebrow={t('eyebrow')}
           title={t('heading')}
           subheading={t('subheading')}
-          className="mb-10"
+          className="mb-12"
         />
         <ul className="grid md:grid-cols-3 gap-6">
           {quotes.map((q, i) => (
             <li
               key={i}
-              className="relative rounded-2xl border border-[var(--color-border-brand)] bg-[var(--color-background)] p-6 flex flex-col gap-4"
+              className="relative rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-background)] p-7 flex flex-col gap-4"
             >
               {/* corner sprig flourish */}
               <svg
@@ -71,7 +71,10 @@ export async function Testimonials({ locale }: Props) {
                   </svg>
                 ))}
               </div>
-              <blockquote className="text-base text-[var(--color-foreground)] leading-relaxed">
+              <blockquote
+                className="text-lg italic text-[var(--color-foreground)] leading-relaxed"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
                 &ldquo;{q.quote}&rdquo;
               </blockquote>
               <div className="mt-auto pt-2 border-t border-[var(--color-border-brand)]">

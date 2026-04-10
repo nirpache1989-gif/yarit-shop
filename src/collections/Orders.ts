@@ -44,10 +44,10 @@ export const Orders: CollectionConfig = {
       'fulfillmentStatus',
       'createdAt',
     ],
-    group: { en: 'Sales', he: 'מכירות' },
+    group: { en: '💰 Sales', he: '💰 מכירות' },
     description: {
-      en: 'All orders — both Forever and independent products.',
-      he: 'כל ההזמנות — גם מוצרי Forever וגם מוצרים עצמאיים.',
+      en: 'Full history of every order. To handle active orders, use the Fulfillment Dashboard from the homepage tile — it groups them by urgency.',
+      he: 'היסטוריה מלאה של כל ההזמנות. לטיפול שוטף בהזמנות פעילות, השתמשי בדף "ניהול הזמנות" שמופיע ככרטיס בעמוד הבית של פאנל הניהול — הוא ממיין אותן לפי דחיפות.',
     },
     listSearchableFields: ['orderNumber'],
   },
@@ -87,6 +87,10 @@ export const Orders: CollectionConfig = {
       label: { en: 'Customer', he: 'לקוח' },
       admin: {
         position: 'sidebar',
+        description: {
+          en: 'The customer who placed the order. Created automatically at checkout.',
+          he: 'הלקוח/ה שביצע/ה את ההזמנה. נוצר אוטומטית בקופה.',
+        },
       },
     },
 
@@ -250,7 +254,13 @@ export const Orders: CollectionConfig = {
         { label: { en: 'Failed', he: 'נכשל' }, value: 'failed' },
         { label: { en: 'Refunded', he: 'הוחזר' }, value: 'refunded' },
       ],
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        description: {
+          en: 'Payment status only — set automatically by the gateway.',
+          he: 'סטטוס התשלום בלבד. נקבע אוטומטית על ידי מערכת הסליקה.',
+        },
+      },
     },
     {
       name: 'paymentProvider',
@@ -300,22 +310,22 @@ export const Orders: CollectionConfig = {
       options: [
         { label: { en: 'Pending', he: 'ממתין' }, value: 'pending' },
         {
-          label: { en: 'Awaiting Forever purchase', he: 'לשלם לפוראבר' },
+          label: { en: 'Awaiting Forever purchase', he: 'להזמין מפוראבר' },
           value: 'awaiting_forever_purchase',
         },
         {
           label: { en: 'Forever purchased', he: 'נרכש מפוראבר' },
           value: 'forever_purchased',
         },
-        { label: { en: 'Packed', he: 'נארז' }, value: 'packed' },
-        { label: { en: 'Shipped', he: 'נשלח' }, value: 'shipped' },
-        { label: { en: 'Delivered', he: 'הושלם' }, value: 'delivered' },
+        { label: { en: 'Packed', he: 'ארוז ומוכן' }, value: 'packed' },
+        { label: { en: 'Shipped', he: 'בדרך ללקוח' }, value: 'shipped' },
+        { label: { en: 'Delivered', he: 'נמסר ללקוח' }, value: 'delivered' },
       ],
       admin: {
         position: 'sidebar',
         description: {
           en: 'Tracks physical goods — independent of payment status.',
-          he: 'מעקב אחר תנועת הסחורה — נפרד מסטטוס התשלום.',
+          he: 'שלב הטיפול בהזמנה — נפרד לחלוטין מהתשלום. הכפתורים בלוח ההזמנות מקדמים את השלב הזה אוטומטית.',
         },
       },
     },

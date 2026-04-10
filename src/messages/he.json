@@ -17,10 +17,16 @@
     "search": "חיפוש",
     "language": "שפה"
   },
+  "theme": {
+    "switchToDark": "עבור למצב כהה",
+    "switchToLight": "עבור למצב בהיר"
+  },
   "home": {
+    "heroEyebrow": "מאז 2026 · תל אביב",
     "heroHeadline": "שורשים של בריאות",
     "heroSubheadline": "מוצרי טבע ובריאות, נבחרו בקפידה על ידי ירית",
-    "heroCta": "לחנות",
+    "heroPoetic": "חנות קטנה של מוצרים שאני באמת אוהבת — נבחרים ביד אחת, לטיפוח רך ושגרה נינוחה.",
+    "heroCta": "הכניסה לחנות",
     "heroSecondaryCta": "קרא/י עלינו",
     "sectionsComingSoon": "החנות תיפתח בקרוב",
     "featuredEyebrow": "הבחירות שלי",
@@ -142,6 +148,7 @@
   },
   "footer": {
     "allRightsReserved": "כל הזכויות שמורות",
+    "brandBlurb": "חנות קטנה של מוצרי טבע שנבחרים באהבה ונשלחים אליך ישירות מירית.",
     "shop": "חנות",
     "customerService": "שירות לקוחות",
     "information": "מידע",
@@ -150,6 +157,10 @@
     "shipping": "משלוחים",
     "returns": "החזרות",
     "privacy": "פרטיות",
-    "terms": "תקנון"
+    "terms": "תקנון",
+    "newsletterHeading": "הצטרפי לרשימה",
+    "newsletterBody": "קבלי מדי פעם מייל עם מוצר חדש או המלצה של ירית — בלי ספאם, בלי רעש.",
+    "newsletterPlaceholder": "האימייל שלך",
+    "newsletterCta": "הצטרפי"
   }
 }

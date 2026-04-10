@@ -32,7 +32,7 @@ export function CartIcon() {
     <button
       type="button"
       onClick={open}
-      className="relative inline-flex items-center justify-center rounded-full p-2 text-[var(--color-primary-dark)] hover:bg-[var(--color-surface)] transition-colors"
+      className="relative inline-flex items-center justify-center rounded-full p-2 text-[var(--color-primary-dark)] hover:bg-[var(--color-surface-warm)] transition-colors"
       aria-label={t('cart')}
     >
       <svg

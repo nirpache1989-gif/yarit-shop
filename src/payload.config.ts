@@ -89,8 +89,74 @@ const plugins =
 export default buildConfig({
   admin: {
     user: Users.slug,
+    // Design Round 3: unlock Payload's built-in light/dark handling
+    // so our [data-theme] attribute from AdminThemeInit.tsx + the
+    // shared shoresh-theme localStorage key can drive the admin
+    // between Night Apothecary light + dark. We re-skin both modes
+    // via admin-brand.css elevation + success ladders.
+    theme: 'all',
+    // <html dir="rtl"> would otherwise warn under Next 16's stricter
+    // hydration check.
+    suppressHydrationWarning: true,
     meta: {
-      titleSuffix: '— Shoresh Admin',
+      titleSuffix: '— ניהול שורש',
+      icons: [{ rel: 'icon', url: '/brand/logo.png' }],
+    },
+    components: {
+      // Brand graphics — replace Payload defaults on login + nav
+      graphics: {
+        Logo: { path: '@/components/admin/payload/BrandLogo#BrandLogo' },
+        Icon: { path: '@/components/admin/payload/BrandIcon#BrandIcon' },
+      },
+      // Custom views: replace the default dashboard with YaritDashboard,
+      // and register /admin/fulfillment as a branded custom view.
+      views: {
+        dashboard: {
+          Component: '@/components/admin/payload/YaritDashboard#YaritDashboard',
+        },
+        fulfillment: {
+          Component: '@/components/admin/payload/FulfillmentView#FulfillmentView',
+          path: '/fulfillment',
+          exact: true,
+          meta: {
+            title: 'הזמנות חדשות',
+            description: 'ניהול הזמנות בהליך אספקה',
+          },
+        },
+      },
+      // Sidebar augmentations
+      beforeNavLinks: [
+        { path: '@/components/admin/payload/SidebarGreeting#SidebarGreeting' },
+      ],
+      afterNavLinks: [
+        { path: '@/components/admin/payload/SidebarFooter#SidebarFooter' },
+      ],
+      // Permanent help button + "view on site" link in the top-right
+      // of the admin. ViewOnSite opens the storefront in a new tab so
+      // Yarit can jump between editing and the live preview without
+      // losing her admin position.
+      actions: [
+        { path: '@/components/admin/payload/HelpButton#HelpButton' },
+        { path: '@/components/admin/payload/ViewOnSite#ViewOnSite' },
+      ],
+      // Admin providers. Order matters — AdminThemeInit must run
+      // first so `data-theme` is on <html> before downstream
+      // providers (AdminToaster, AdminDriftingLeaves, OnboardingTour)
+      // read the palette tokens.
+      providers: [
+        {
+          path: '@/components/admin/payload/AdminThemeInit#AdminThemeInit',
+        },
+        {
+          path: '@/components/admin/payload/AdminToaster#AdminToaster',
+        },
+        {
+          path: '@/components/admin/payload/AdminDriftingLeaves#AdminDriftingLeaves',
+        },
+        {
+          path: '@/components/admin/payload/OnboardingTour#OnboardingTour',
+        },
+      ],
     },
   },
   collections: [Users, Media, Tags, Categories, Products, Orders],

@@ -1,21 +1,32 @@
 /**
  * @file ProductCard — grid card for a single product
- * @summary Rendered from /shop grid and homepage featured carousel.
- *          Features:
- *          - watercolor sprig flourish in the top-start corner
- *          - hover lift + shadow (via .product-card class in globals.css)
- *          - type-aware badge (accent for Forever, primary for in-stock)
- *          - image viewport is pure white so the product pops out of the
- *            warmer parchment card body
- *          - serif (Frank Ruhl Libre) price for a hand-curated feel
- *          - "New" indicator badge
+ * @summary Wave 2 of the design round: rebuilt as a "museum-label"
+ *          card inspired by Aesop / Le Labo / Augustinus Bader —
+ *          quiet, understated, editorial restraint instead of
+ *          aggressive e-commerce styling.
  *
- *          See: docs/DECISIONS.md ADR-010 (design uplift), punchlist
- *               D1 (bg invert), D2 (corner sprig), D3 (serif price).
+ *          The card:
+ *            - Sits on the lighter parchment `--color-surface-warm`
+ *            - 4:5 image viewport (was 1:1) — taller, more editorial
+ *            - Image backdrop is pure white so transparent product
+ *              PNGs pop out of the warm card
+ *            - Tiny uppercase eyebrow with the category (if present)
+ *              or brand mark
+ *            - Serif product name (Frank Ruhl Libre)
+ *            - 1-line italic serif descriptor
+ *            - Price next to the name separated by a thin sage rule
+ *              (tabular, not bold, smaller than the name)
+ *            - Quiet "ADD TO BAG" / "להוסיף לסל" ghost-link CTA that
+ *              reveals on hover — no filled button
+ *            - `isNew` → tiny italic eyebrow "new arrival" at top-left
+ *              (was a pill badge)
+ *            - 2px square corners (from --radius-card) — editorial
+ *              print feel, not SaaS rounded
+ *
+ *          See: plan §Track B Move 5.
  */
 import Image from 'next/image'
 import { Link } from '@/lib/i18n/navigation'
-import { Badge } from '@/components/ui/Badge'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { cn } from '@/lib/cn'
 import { resolveProductImage } from '@/lib/product-image'
@@ -56,79 +67,80 @@ export function ProductCard({ product, locale, className }: Props) {
   return (
     <article
       className={cn(
-        'product-card group relative flex flex-col h-full rounded-2xl border border-[var(--color-border-brand)]/70 bg-[var(--color-background)] overflow-hidden',
+        'product-card group relative flex flex-col h-full rounded-[var(--radius-card)] border border-[var(--color-border-brand)]/70 bg-[var(--color-surface-warm)] overflow-hidden',
         className,
       )}
     >
-      {/* Corner sprig flourish — sits on top of the image viewport */}
-      <svg
-        className="absolute top-2.5 start-2.5 z-10 text-[var(--color-primary)]/50"
-        width="22"
-        height="22"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        <path d="M4 20 C 8 14, 14 10, 20 8" />
-        <path d="M8 17 q 2 -4, 6 -5" />
-        <path d="M12 14 q 2 -4, 6 -4" />
-      </svg>
-
       <Link
         href={`/product/${product.slug}`}
-        className="block relative aspect-square bg-[var(--color-surface)]"
+        className="block relative aspect-[4/5] bg-[var(--color-surface-warm)]"
       >
         <Image
           src={imageUrl}
           alt={imageAlt}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-[1.05]"
+          className="object-contain p-6 transition-transform duration-700 ease-out group-hover:scale-[1.04]"
         />
 
-        {/* Badges — top-end (opposite corner from the sprig).
-            Post-rebrand: no longer reveals Forever vs independent
-            to the customer. Only the "New" flag is shown when set. */}
-        <div className="absolute top-3 end-3 flex flex-col gap-1 items-end">
-          {product.isNew && (
-            <Badge tone="accent">{locale === 'he' ? 'חדש' : 'New'}</Badge>
-          )}
-        </div>
+        {/* "new arrival" eyebrow — replaces the old filled badge.
+            Only shown when `isNew` is set. Tiny italic, top-start. */}
+        {product.isNew && (
+          <div className="absolute top-4 start-4 z-10">
+            <span
+              className="italic text-[11px] tracking-[0.1em] text-[var(--color-accent-deep)]"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              {locale === 'he' ? 'חדש בחנות' : 'new arrival'}
+            </span>
+          </div>
+        )}
       </Link>
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <Link href={`/product/${product.slug}`} className="flex-1">
-          <h3 className="text-base font-bold text-[var(--color-primary-dark)] line-clamp-2 leading-snug group-hover:text-[var(--color-primary)] transition-colors">
+      <div className="flex flex-1 flex-col gap-3 p-5">
+        <Link href={`/product/${product.slug}`} className="flex-1 space-y-2">
+          <h3
+            className="text-xl font-bold text-[var(--color-primary-dark)] leading-snug line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             {product.title}
           </h3>
           {product.shortDescription && (
-            <p className="mt-1 text-sm text-[var(--color-muted)] line-clamp-2">
+            <p
+              className="text-sm text-[var(--color-muted)] italic leading-relaxed line-clamp-2"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {product.shortDescription}
             </p>
           )}
         </Link>
 
-        <div className="flex items-baseline gap-2 justify-between">
-          <div className="flex items-baseline gap-2">
-            <span
-              className="text-2xl font-bold text-[var(--color-primary-dark)] leading-none"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              {priceText}
+        {/* Price row — tabular, small, NOT bold. Sits next to a thin
+            sage divider so it reads like a museum label. */}
+        <div className="flex items-baseline gap-3 pt-2 border-t border-[var(--color-primary)]/15">
+          <span
+            className="text-base text-[var(--color-primary-dark)] tabular-nums"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
+            {priceText}
+          </span>
+          {compareText && (
+            <span className="text-xs text-[var(--color-muted)] line-through italic tabular-nums">
+              {compareText}
             </span>
-            {compareText && (
-              <span className="text-sm text-[var(--color-muted)] line-through italic">
-                {compareText}
-              </span>
-            )}
-          </div>
-        </div>
+          )}
 
-        <AddToCartButton product={product} className="mt-2" />
+          {/* Quiet ghost-link CTA — text only, underlined on hover.
+              Reveals on group-hover. On touch devices (where :hover
+              is weak) we still show it at 70% opacity so it's
+              discoverable. */}
+          <AddToCartButton
+            product={product}
+            variant="ghost-link"
+            className="ms-auto"
+            label={locale === 'he' ? 'להוסיף לסל' : 'Add to bag'}
+          />
+        </div>
       </div>
     </article>
   )

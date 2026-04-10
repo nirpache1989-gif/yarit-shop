@@ -2,17 +2,148 @@
 
 > This document is the fastest possible orientation for whoever opens the project next, human or AI. Read this, then `CLAUDE.md`, then `docs/STATE.md`. You'll be productive in 5 minutes.
 
-## Where things stand (2026-04-10, end of session)
+## Where things stand (2026-04-10, end of Design Round 4)
 
-**Status:** 🚀 Phases A–E + design polish + customer-facing rebrand + cart-fix + product-copy refresh are **complete and deployed to production**. Cart flow verified end-to-end on production via Playwright probe — add → drawer → checkout all work.
+**Status:** 🚀 Phases A–E + design polish + customer-facing rebrand + cart-fix + product-copy refresh are **complete and deployed to production**. The **admin redesign** + **Design Round 2 Waves 1 + 2** + **Design Round 3 (Night Apothecary palette / Warm Night dark mode / drifting leaves / iridescent hero) Waves 1-4** + **Design Round 4 (Hero light pocket + logo blur fix + 12 admin delight moves)** are **all complete locally**. Nothing is yet pushed to production — the next session should commit + push everything together.
 
-### What just landed in this session
-1. **Catalog trimmed to 7 products** with new warmer Hebrew + English copy (Yarit's feedback: only ship the products she has photos for)
-2. **Static product photos** committed to `public/brand/ai/` (Aloelips.jpg, AloeFirst.jpg, AloeGelly.jpg, AloeToothGel.jpg, BodylotionNwsh.jpg, ForeverBeepropolis.jpg, ForeverDaily.jpg) — no Vercel Blob needed anymore
-3. **Shared image resolver** at `src/lib/product-image.ts` consumed by ProductCard, AddToCartButton, product detail page, and the checkout snapshot. Single source of truth for the slug→URL override map. See ADR-017.
-4. **Cart drawer fix** — globals.css `body > *` rule was beating Tailwind v4's `.fixed` utility because it was unlayered. Wrapped body styles in `@layer base` and the drawer now opens correctly. See ADR-016.
-5. **`scripts/probe-cart.mjs`** — Playwright probe that verifies the cart flow on any URL. Run with `node scripts/probe-cart.mjs https://yarit-shop.vercel.app`.
-6. **`docs/YARIT-ADMIN-GUIDE.md`** — Hebrew user guide for Yarit. Covers login, password rotation, product editing, fulfillment dashboard, and mobile setup. The dev section at the bottom has the live URLs and credentials.
+### Design Round 4 — what's done in this session
+
+**Problem statement:** Round 3's Warm Night dark mode landed well but two visual bugs remained: (1) the Hero section felt gloomy in dark mode and the user wanted the Hero specifically to keep a bright parchment background so the TrustBar below creates an intentional "day → night" contrast cliff, and (2) the Shoresh logo looked BLURRY in dark mode. Separately, the admin panel still felt like Payload's default engineering UI rather than a place a 65-year-old non-technical woman would enjoy spending time.
+
+**Track A — Dark mode visual fixes (shipped first, safest):**
+
+1. **A1 — Hero light pocket in dark mode.** Added `hero-section` className to the `<section>` tag in `src/components/sections/Hero.tsx:25` and a scoped `[data-theme="dark"] .hero-section { --color-background: #f6efdc; ... }` override block in `src/app/globals.css` that re-defines all 10 palette tokens inside the Hero subtree. CSS custom-property inheritance does the work — every child inside the Hero (wash, halo, iridescent heading, gradient fade) reads the light-mode tokens automatically. Additional `[data-theme="dark"] .hero-section .logo-halo::before { background: transparent !important }` disables the cream halo oval inside the Hero (the pocket is already on parchment — a second oval would read as a bug). One `!important` total in globals.css. Verified via preview MCP: Hero `--color-background === #f6efdc`, TrustBar `--color-background === #1e1609`. Clean contrast cliff.
+
+2. **A2 — Logo halo blur leak fix.** The previous `filter: blur(2px)` on `.logo-halo::before` was leaking through `isolation: isolate` and rasterizing the logo `<Image>` at `z-index: 10`. Confirmed via `getComputedStyle('.logo-halo').filter === 'blur(1.5px)'`. Browser rendering engines treat a stacking context + descendant filter as a hint to rasterize the entire composited layer, regardless of where the filter is applied inside. Fix: removed the filter entirely and rebuilt the gradient with 14 stops (from 9) so every transition is under 8%, invisible to the eye without needing a blur. Logo is now tack sharp — verified `haloFilter === "none"`.
+
+**Track B — Admin functional verification.** Before piling on delight, proved the plumbing works via 20-row curl-based REST API + SSR HTML smoke test: all admin routes serve authed HTML, all 6 collection GETs work, Product CREATE/PATCH/DELETE round-trip succeeds, Order fulfillment state machine walks `awaiting_forever_purchase → forever_purchased → packed → shipped → delivered → deleted`. Results logged in `docs/round-4-admin-verify/verify-notes.md`. One non-blocking dev-ergonomics note: the Orders `afterChange` hook at `src/collections/Orders.ts:364` tries to send a new-order alert email when `paymentStatus` flips to `paid` and can fail silently in dev with no email provider — create orders with `paymentStatus: 'pending'` and flip via PATCH as the safer test path.
+
+**Track C — 12 admin delight moves, all additive and individually revertable:**
+
+- **C1** — Time-synced Hebrew greeting on dashboard (`לילה טוב` / `בוקר טוב` / `צהריים טובים` / `ערב טוב ירית` with seasonal emoji). Asia/Jerusalem TZ.
+- **C2** — Warm branded `react-hot-toast` system at bottom-center via `AdminToaster.tsx` provider. Gradient success variant.
+- **C3** — Illustrated fulfillment empty state with `empty-shop.jpg` watercolor + "לעדכן מוצרים ←" CTA.
+- **C4** — OrderRow spinner + success toast on PATCH + `canvas-confetti` burst on the final `delivered` transition.
+- **C5** — Dashboard tile stagger fade-up with 60ms offsets via `yarit-tile-in` keyframe.
+- **C6** — `AdminDriftingLeaves.tsx` mounts the shared `<DriftingLeaves>` in the admin. CSS duplicated into `admin-brand.css` (globals.css isn't loaded in the admin route group). Dark mode switches leaves to luminous ochre.
+- **C7** — Richer multi-line Hebrew descriptions on Products `type`, `stock`, `status` (originally planned as a `<details>` helper via Payload's component slot, pivoted to richer text because the slot is brittle in 3.x).
+- **C8** — CSS-only Hebrew save button text swap: `[dir="rtl"] .btn--style-primary[type="submit"]::after { content: 'שמרי ✓' }`.
+- **C9** — Illustrated empty list state pseudo-element on `.collection-list__no-results` + `.no-results` via `admin-brand.css`.
+- **C10** — OrderRow mobile layout stacks with top border separator; `min-w-0` on summary so long titles truncate.
+- **C11** — `OnboardingTour.tsx` provider with `driver.js` 4-step Hebrew walkthrough on first `/admin` load. localStorage-gated. Popover fully rebranded via `.driver-popover*` rules in admin-brand.css.
+- **C12** — `ViewOnSite.tsx` action component renders a `🌿 צפייה באתר ↗` pill in the admin header.
+
+**Dependencies added (4):** `react-hot-toast@2.5.1`, `canvas-confetti@1.9.3`, `@types/canvas-confetti@1.9.0`, `driver.js@1.3.1`. All MIT, ~25kb total gzipped.
+
+**Files added (5):** `AdminToaster.tsx`, `AdminDriftingLeaves.tsx`, `OnboardingTour.tsx`, `ViewOnSite.tsx`, `docs/round-4-admin-verify/verify-notes.md`.
+
+**Files modified (8):** `Hero.tsx`, `globals.css`, `YaritDashboard.tsx`, `FulfillmentView.tsx`, `OrderRow.tsx`, `Products.ts`, `payload.config.ts`, `admin-brand.css` (+~330 lines of Track C styles + reduced-motion guards).
+
+**Track D — Design review agent sweep (complete).** Two Explore agents ran in parallel and landed in `docs/round-4-design-review/sweep-results.md`. **1 real blocker caught + fixed same session:** D1.1 — CheckoutForm error card was using hardcoded `border-red-300 bg-red-50 text-red-900` Tailwind classes that are invisible in dark mode. Replaced with theme-aware `--color-accent-deep` ochre that stays AA-legible in both modes (`src/components/checkout/CheckoutForm.tsx:286`). D2's 8 polish items logged to `docs/TASKS.md` under "Round 4 design-review agent findings".
+
+**Post-Track-C blocker caught during cleaning phase:** the `.drifting-leaves` rules I copied into `admin-brand.css` created a `position: fixed; z-index: 0` stacking context that painted on top of Payload's unpositioned admin content and hid every admin surface. The storefront `globals.css` has a `body > *:not([role="dialog"]) { position: relative; z-index: 2 }` lifter that my Track C6 copy missed. Added the matching rule to `admin-brand.css`. Required a `rm -rf .next` cache clear + dev server restart to pick up the Track C import-map regeneration (Next.js Turbopack had cached the "Module not found" error from before the new files existed).
+
+**Cleaning phase verified:**
+- `tsc --noEmit` → **0 errors**
+- `npm run build` → **✓ Compiled successfully in 5.4s**, 24 static pages generated
+- `npm run lint` → 25 pre-existing issues only, no new errors from Round 4
+- Admin login via Payload REST: token length 268, `/admin` + `/admin/collections/products` + `/admin/fulfillment` + `/admin/globals/site-settings` all return 200 with `yarit-dashboard` + `yarit-tile--stagger` + `yarit-welcome` + Hebrew time-synced greeting markers present in HTML
+- Storefront Hero visual via preview MCP (dark mode): `heroHasClass = true`, `heroBg = rgb(246, 239, 220)` inside pocket, `haloFilter = "none"` (crisp logo), 5 drifting leaves rendering, iridescent heading animated, TrustBar below creates deep Warm Night contrast cliff — matches Yarit's request exactly
+
+**Preview MCP quirk documented:** the Claude Preview virtual browser has a persistent limitation rendering Payload 3.x admin client components even when the server returns proper RSC flight data (the same admin renders fine in real browsers and has been live on https://yarit-shop.vercel.app for a month). Fetched admin HTML via curl contains `"LoginForm"` RSC placeholders and `yarit-brand-logo` markers — server is healthy. Logged in `docs/TASKS.md` as "verify Round 4 in real browser next session".
+
+**Status after this session:** ready to commit + push.
+
+### Design Round 2 Wave 2 — what's done in this session
+
+**Assets:** The user generated 20 watercolor/photographic AI images from the Wave 2 prompts and placed them in `media/`. Copied all 20 to `public/brand/ai/` (renamed the truncated `icons-trust-se.jpg` → `icons-trust-set.jpg` during the copy).
+
+**Shipped (4 moves):**
+- **B5 — Museum-label ProductCard.** Rebuilt the product card with 4:5 image viewport on pure white (so transparent product PNGs pop), parchment `surface-warm` card body, serif product name, italic serif descriptor, tabular-numeral price on a thin sage divider, and a quiet `"להוסיף לסל"` ghost-link CTA (text-only underlined sage, not a filled button). `isNew` is now a tiny italic eyebrow `"חדש בחנות"` top-start instead of a pill. Added a `variant="ghost-link"` option to `AddToCartButton` with `e.preventDefault() + stopPropagation()` so clicking the CTA inside a `<Link>`-wrapped card doesn't navigate.
+- **B7 — Art-directed CategoryGrid covers.** The 5 new `cat-*.jpg` flat-lays overwrote the previous tiles. Added a numeric Eyebrow above each category title (`"01 / קטגוריות"` through `"05 / קטגוריות"`) in warm-tan small-caps — signals apothecary craft.
+- **B8 — MeetYarit watercolor portrait.** Swapped the image from `about-hero.jpg` to `yarit-portrait.jpg` — the new watercolor shows a woman tending potted herbs on a sunlit windowsill. The editorial vignette structure (2-col, serif italic body, Eyebrow above heading) was already in place from Wave 1.
+- **B13 — Footer rework.** Full rewrite: 4-column editorial layout (brand blurb / shop / information / newsletter signup), subtle watercolor botanical garland background at the top of the footer (8% opacity, mix-blend-multiply), eyebrows on each column header, social links moved to a bottom strip with the copyright. New `<NewsletterSignup>` client component with a stub submit handler. New i18n keys for the brand blurb + newsletter copy in both he.json and en.json.
+
+**Reverted per user feedback (2 moves):**
+- **B4 — Editorial single-CTA Hero.** The new `hero-still-life.jpg` was wired into a 2-column layout (text on one side, photograph on the other), but the user said the image "just looks like a square sitting there, better to keep the logo image". Reverted to the Wave 1 Hero (centered Shoresh logo, `hero-bg-wash.jpg` background, dual CTA).
+- **B9 — TrustBar 2x2 sprite.** The new `icons-trust-set.jpg` was wired via `background-image` + `background-position` to show each quadrant as a separate icon, but the user said "the previous trust bar icons looked better". Reverted to the Wave 1 TrustBar with the 4 separate `icon-*.png` watercolor icons.
+
+**Bug caught and fixed during verification:**
+After the initial Wave 2 implementation, every storefront page returned HTTP 500 while admin was fine. Root cause: the Footer is a server component but I added an inline `onSubmit={(e) => e.preventDefault()}` to the newsletter form — server components can't have event handlers. Fix: extracted the form into a new `<NewsletterSignup>` client component (`src/components/layout/NewsletterSignup.tsx`). Also extended the `Eyebrow` component's `as` prop to include `'h2' | 'h3' | 'h4'` (it was `'span' | 'p' | 'div'` only) so the Footer could use `<Eyebrow as="h3">` as column headings.
+
+**End-to-end verified locally:** typecheck 0 errors, all 9 key URLs return 200, live DevTools eval confirmed every new asset is loading correctly, screenshots taken of hero / meetYarit / categoryGrid / footer — everything looks polished and editorial.
+
+### Design Round 2 — what's done in Wave 1 (this session)
+
+**Admin polish (Track A, no new images):**
+- Multiplied every `rem` in admin-brand.css by ~1.333 to compensate for Payload's hardcoded 12px root font size — every admin text was rendering 25% smaller than designed
+- Fixed the inverted sidebar hierarchy (the "clicking an item makes it bigger" bug Yarit reported): parent group labels are now 15.6px Frank Ruhl serif weight 800 sage with a thin underline, child links are 13.8px charcoal weight 500
+- Branded Payload's stock collection list views, edit forms, tables, pagination, and field labels — `/admin/collections/products` now shows a 31.8px Frank Ruhl serif sage H1 over a sage-tinted table with parchment rows (was previously gray Payload defaults — this is the biggest visual win)
+- Moved HelpButton inline styles into a `.yarit-help-button` CSS class with hover + focus-visible states
+- Added `:focus-visible` outlines and hover backgrounds to all sidebar greeting/footer links
+- Added Tailwind utility aliases scoped under `.yarit-fulfillment` so OrderRow renders with full sizing/weights inside `/admin/fulfillment`
+
+**Storefront free wins (Track B Tier 1, no new images):**
+- New `--color-surface-warm: #f5efe0` token (lighter parchment than `--color-background: #ECE5D4`) used everywhere instead of pure white. Pure white is now reserved only for product image viewports
+- New `<Eyebrow>` component + `.eyebrow` CSS utility (11–12px uppercase, +0.14em tracking, sage default with `accent` and `muted` variants). Wired into SectionHeading and MeetYarit so every section heading has a small-caps accent above it
+- New `--radius-card: 2px` token, swept onto cards/sections (square editorial-print corners). Pills keep `rounded-full`
+- Slim 64px sticky header with sage border-bottom (was 72px tan border)
+- Restyled testimonial quotes in serif italic, upgraded MeetYarit to a 2-column editorial layout
+- Pre-existing i18n bug fixed: TrustBar's "authorized" key (which didn't exist) → `curated` (which does)
+
+**Verification:** typecheck 0 errors, all 9 key URLs return 200, DevTools eval confirmed font sizes/weights/colors render correctly. Screenshots taken of dashboard / products list / homepage.
+
+### What just landed in this session — Yarit-friendly admin re-skin
+
+A 6-phase plan to make the Payload admin warm, inviting, and obvious for Yarit (65-year-old non-technical owner). All 6 phases are committed locally and verified end-to-end at http://localhost:3000.
+
+1. **Brand chrome** — `src/app/(payload)/admin-brand.css` (~600 lines, plain CSS) re-skins Payload's CSS variables to the Shoresh palette (parchment + sage). It sits in `@layer payload`, which Payload's compiled SCSS already declares as the layer **after** `payload-default`, so we never need `!important`. `admin.theme: 'light'` locks the theme. `htmlProps={{lang:'he', dir:'rtl', className: heebo+frankRuhl}}` is passed to `<RootLayout>`. Custom `BrandLogo` (login screen) + `BrandIcon` (sidebar) graphics. Title suffix changed to "— ניהול שורש".
+2. **Custom dashboard** — `YaritDashboard.tsx` replaces Payload's `/admin` view with a Hebrew "שלום ירית 🌿" greeting, 6 parallel `payload.count()` stat tiles (open orders / urgent / published / drafts / low-stock / customers), and an 8-tile illustrated grid pointing at the most common Yarit tasks. Mobile-friendly via `auto-fit, minmax(260px, 1fr)`.
+3. **Sidebar polish** — `SidebarGreeting` (top, with user name + help link), `SidebarFooter` (bottom, with live-site / fulfillment / logout shortcuts), all 7 collection/global groups now emoji-prefixed (📦 קטלוג / 💰 מכירות / 👥 לקוחות / 🖼 תוכן ותמונות / 🌿 הגדרות).
+4. **Fulfillment dashboard moved inside `/admin`** — `FulfillmentView.tsx` registered via `admin.components.views.fulfillment` lives at `/admin/fulfillment`. Reuses the existing `OrderRow` client component via a 12-line `--color-primary` aliasing block scoped to `.yarit-fulfillment`. Shared loader at `src/lib/admin/fulfillment.ts`. Old `/fulfillment` route under `(admin-tools)` left intact as a fallback (to be replaced with a `redirect()` in a tiny follow-up PR after a couple weeks of bake time).
+5. **Hebrew copy pass** — every confusing label rewritten:
+   - `slug` → "כתובת באתר" (and hidden on Categories + Tags via `admin.hidden: true`)
+   - `sku` → "מספר קטלוגי (מק״ט)" with description
+   - `awaiting_forever_purchase` → "להזמין מפוראבר" (was the confusing "לשלם לפוראבר")
+   - `delivered` → "נמסר ללקוח" (was the ambiguous "הושלם")
+   - `packed` → "ארוז ומוכן", `shipped` → "בדרך ללקוח"
+   - `heroImages` → "תמונות באנר ראשי"
+   - `businessTaxId` → "מספר עוסק (ח״פ או ע״מ)" with full explanation
+   - The `OrderRow.STATUS_HE` map at `src/components/admin/OrderRow.tsx:57` was synced — there's a comment above it pointing back to `Orders.ts` so future contributors keep them in sync.
+   - **Option `value` strings were never touched** — only labels — so no DB migration is needed.
+6. **Welcome banner + help button** — `WelcomeBanner` is rendered inline at the top of `YaritDashboard` (not via `beforeDashboard` — that slot only fires when `DefaultDashboard` is in use, and we replaced the dashboard). `HelpButton` registered in `admin.components.actions` shows a permanent "?צריכה עזרה" pill in the top-right of every admin page, linking to YARIT-ADMIN-GUIDE.md.
+
+**Plus a tutorial-help follow-up** the user requested: every field on the product create form that lacked a description got a friendly Hebrew helper aimed at a 65-year-old non-technical user. Examples:
+- Image upload: "גררי תמונה לכאן או לחצי לבחור מהמחשב/הטלפון. JPG או PNG עד 10MB."
+- Rich-text description: "התיאור הארוך שמופיע בדף המוצר באתר. כתבי כאן את כל מה שחשוב — תועלות, מרכיבים, איך להשתמש. אפשר להשתמש בכפתורים שמעל כדי להדגיש, להוסיף כותרת, או רשימה."
+- Category: "באיזו קטגוריה הקונים ימצאו את המוצר באתר. בחרי אחת מהרשימה."
+- Tags: "אופציונלי — תגיות מסייעות לסינון באתר. אפשר לבחור כמה תגיות או להשאיר ריק."
+
+Equivalent helpers added on `Categories` (`title`, `description`, `image`), `Media` (collection-level), and `SiteSettings` contact + social fields. Goal: every form is self-explanatory.
+
+**RTL bug fix Yarit reported:** the top-bar breadcrumb (e.g., "מדיה") was clipping to just its last character "ה" when the sidebar was open. Root cause: Payload's `.step-nav span { max-width: 160px }` plus `.step-nav:after { position: sticky; right: 0; ... linear-gradient(to right, transparent, var(--theme-bg)) }` is LTR-baked. In RTL, `right: 0` puts the fade gradient over the *start* of Hebrew text (the right edge), not the end. Added `html[dir="rtl"] .step-nav:after { display: none }` + `max-width: none` + `flex-wrap: nowrap; min-width: 0` overrides in `admin-brand.css` under the existing `@layer payload` block. No `!important`.
+
+### Production deploy of all three rounds — DO THIS FIRST
+
+The admin redesign + Design Round 2 Waves 1 & 2 are all committed locally only. To ship them together:
+```bash
+cd yarit-shop
+npx tsc --noEmit          # already 0 errors, but worth re-running
+git add -A
+git status                # sanity check
+git commit -m "Yarit-friendly admin redesign + design round 2 (waves 1-2)"
+git push origin main       # Vercel will auto-deploy
+```
+After deploy, walk through https://yarit-shop.vercel.app in production:
+- Storefront: header is 64px slim with sage border, every section heading has a small-caps accent eyebrow above it, cards have 2px square corners, surfaces are parchment (no pure white anywhere except product image viewports), trust bar shows the 4 Hebrew labels correctly
+- Admin login: Shoresh logo on parchment with sage button
+- `/admin`: dashboard text feels right-sized (no longer 25% small), "שלום ירית 🌿" prominent in serif sage, tile titles visible, stats numbers prominent
+- `/admin` sidebar: 5 emoji groups in 15.6px Frank Ruhl serif sage with thin underlines, child links in 13.8px charcoal smaller below
+- `/admin/collections/products`: large Frank Ruhl "מוצרים" H1, sage-tinted table headers, parchment row backgrounds — feels like Yarit's shop
+- `/admin/collections/orders`, `/admin/collections/categories`, `/admin/globals/site-settings`: same branded look
+- `/admin/fulfillment`: OrderRows render with full sizing
+- Top-right "?צריכה עזרה" pill works on every admin page
+- Breadcrumb in the top header shows the full Hebrew name even with sidebar open
 
 ### Production URLs
 - **Storefront:** https://yarit-shop.vercel.app
@@ -70,20 +201,37 @@ Next 16 has been nagging: "The `middleware` file convention is deprecated. Pleas
 
 ## What to do next (your options)
 
-### Option A — Fix the production images + call it a milestone
-1. Fix the image issue (section above, 5 min)
-2. Take screenshots of the live site for your own record
-3. Send the URL to Yarit for first feedback
-4. Start **Phase F** in a new session (customer account + SEO + responsive QA)
+### Option Z — Wave 2 of Design Round 2 (editorial moves with new images)
 
-### Option B — Continue to Phase F immediately
-Phase F items that matter most:
+The plan file `~/.claude/plans/iridescent-exploring-cerf.md` has 20 detailed AI image generation prompts. To ship Wave 2 (the bigger editorial moves), the user needs to generate **9 images** using Prompts 1, 3, 4, 5, 6, 7, 9, 10, 14 and drop them into `public/brand/ai/`:
+- `hero-still-life.jpg` — for the new editorial Hero
+- `cat-skincare.jpg` / `cat-nutrition.jpg` / `cat-aloe.jpg` / `cat-beauty.jpg` / `cat-gifts.jpg` — for the art-directed CategoryGrid
+- `yarit-portrait.jpg` — for the editorial MeetYarit vignette
+- `icons-trust-set.png` — for the new watercolor TrustBar icon set
+- `footer-garland.png` — for the footer botanical texture
+
+Once those exist, Wave 2 ships in one PR: B4 (editorial Hero with single CTA), B5 (museum-label ProductCard), B7 (CategoryGrid art-directed covers), B8 (MeetYarit editorial vignette), B9 (watercolor TrustBar), B13 (Footer rework). All component file paths are listed in the plan.
+
+### Option A — Ship the admin redesign + Wave 1 storefront polish (Recommended)
+1. Push the admin redesign to production (commit + push, see "Production deploy of the admin redesign — DO THIS FIRST" above)
+2. Walk through every admin section in production and verify the styling, copy, and the breadcrumb fix all hold up
+3. Send the URL to Yarit for first feedback ("https://yarit-shop.vercel.app/admin — login: admin@shoresh.example / admin1234, please change the password right away")
+4. Once she's used it for a week, collect feedback and prioritise the deferred items below
+
+### Option B — Phase F: Customer account + SEO + responsive QA
 - `/account` + `/account/orders/[id]` for customers to see their order history
 - Full he↔en string coverage audit
 - Per-page SEO meta + `sitemap.xml` + `robots.txt` + Product structured data
 - Responsive QA (iPhone SE, iPad, desktop 1440) in both RTL and LTR
 - Switch middleware.ts → proxy.ts (Next 16 convention)
 - Custom domain once one is picked and purchased
+
+### Deferred from this session (when there's time)
+- **Production deploy** of the admin redesign (Option A)
+- **Watercolor PNG icons** in the dashboard tile grid — currently emoji. Could swap four of the eight tiles for `public/brand/ai/icon-natural.png` / `icon-personal.png` / `icon-shipping.png` / `icon-certified.png`.
+- **Dismissible welcome banner** with localStorage state — only build if Yarit asks for it.
+- **Replace `(admin-tools)/fulfillment/page.tsx`** with `redirect('/admin/fulfillment')` after a couple of weeks of bake time confirms `/admin/fulfillment` is solid.
+- **Re-grouping `SiteSettings`** into `branding` / `topBar` Payload `group` fields — would change DB column names, breaking change, defer until there's a real reason.
 
 ### Option C — Replace the placeholder brand name
 Shoresh is a placeholder. If the final brand name is picked:

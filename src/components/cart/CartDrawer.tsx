@@ -64,7 +64,7 @@ export function CartDrawer() {
             type="button"
             onClick={close}
             aria-label={tCommon('close')}
-            className="rounded-full p-2 hover:bg-[var(--color-surface)] transition-colors"
+            className="rounded-full p-2 hover:bg-[var(--color-surface-warm)] transition-colors"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
           </button>
@@ -106,7 +106,7 @@ export function CartDrawer() {
                         onClick={() =>
                           updateQuantity(item.productId, item.quantity - 1)
                         }
-                        className="w-7 h-7 rounded-full border border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:bg-[var(--color-surface)]"
+                        className="w-7 h-7 rounded-full border border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:bg-[var(--color-surface-warm)]"
                         aria-label="-"
                       >
                         −
@@ -119,7 +119,7 @@ export function CartDrawer() {
                         onClick={() =>
                           updateQuantity(item.productId, item.quantity + 1)
                         }
-                        className="w-7 h-7 rounded-full border border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:bg-[var(--color-surface)]"
+                        className="w-7 h-7 rounded-full border border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:bg-[var(--color-surface-warm)]"
                         aria-label="+"
                       >
                         +

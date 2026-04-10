@@ -47,23 +47,24 @@ export async function CategoryGrid({ locale }: Props) {
   if (categories.length === 0) return null
 
   return (
-    <section className="py-16">
+    <section className="py-20 md:py-24">
       <Container>
         <SectionHeading
           eyebrow={t('categoriesEyebrow')}
           title={t('categoriesHeadline')}
-          className="mb-10"
+          className="mb-12"
         />
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {categories.map((c) => {
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
+          {categories.map((c, i) => {
             const payloadImg =
               typeof c.image === 'object' && c.image ? c.image : null
             const imgUrl = payloadImg?.url ?? AI_CATEGORY_TILES[c.slug] ?? null
+            const num = String(i + 1).padStart(2, '0')
             return (
               <Link
                 key={c.id}
                 href={`/shop?category=${c.slug}`}
-                className="group relative aspect-square rounded-2xl border border-[var(--color-border-brand)] bg-[var(--color-surface)] overflow-hidden flex items-end p-5 transition-shadow hover:shadow-lg"
+                className="group relative aspect-[4/5] rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] overflow-hidden flex flex-col justify-end p-5 transition-shadow hover:shadow-lg"
               >
                 {imgUrl && (
                   <Image
@@ -71,16 +72,24 @@ export async function CategoryGrid({ locale }: Props) {
                     alt={c.title}
                     fill
                     sizes="(max-width: 640px) 50vw, 20vw"
-                    className="object-cover transition-transform group-hover:scale-105"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                   />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                <h3
-                  className="relative text-xl font-extrabold text-white drop-shadow-md"
-                  style={{ fontFamily: 'var(--font-display)' }}
-                >
-                  {c.title}
-                </h3>
+                {/* Soft cream-to-transparent gradient at the bottom only —
+                    lighter than the previous black overlay so the tiles
+                    feel airy rather than heavy. */}
+                <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[var(--color-background)]/95 via-[var(--color-background)]/40 to-transparent" />
+                <div className="relative flex flex-col gap-1">
+                  <span className="eyebrow eyebrow--accent">
+                    {num} / {t('categoriesHeadline')}
+                  </span>
+                  <h3
+                    className="text-lg md:text-xl font-bold text-[var(--color-primary-dark)] leading-tight"
+                    style={{ fontFamily: 'var(--font-display)' }}
+                  >
+                    {c.title}
+                  </h3>
+                </div>
               </Link>
             )
           })}

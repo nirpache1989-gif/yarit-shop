@@ -21,15 +21,31 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Heebo, Frank_Ruhl_Libre } from 'next/font/google'
+import { Heebo, Bellefair } from 'next/font/google'
 
 import { routing } from '@/lib/i18n/routing'
 import { brand } from '@/brand.config'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { CartDrawer } from '@/components/cart/CartDrawer'
+import { DriftingLeaves } from '@/components/ui/DriftingLeaves'
 
 import '@/app/globals.css'
+
+/*
+ * Design Round 3 — theme bootstrap.
+ * Runs synchronously in <head> BEFORE React hydration so the
+ * correct data-theme is on <html> before the first paint. This
+ * prevents a flash of light mode for dark-mode users.
+ *
+ *   1. Check localStorage for a user preference (`shoresh-theme`)
+ *   2. Fall back to the OS preference (`prefers-color-scheme`)
+ *   3. Fall back to light mode if localStorage is blocked
+ *
+ * Must stay a plain string (not a template literal that references
+ * runtime values) so Next.js can serialise it into the server HTML.
+ */
+const themeBootstrap = `(function(){try{var s=localStorage.getItem('shoresh-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=s||(d?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -38,9 +54,20 @@ const heebo = Heebo({
   display: 'swap',
 })
 
-const frankRuhl = Frank_Ruhl_Libre({
+/*
+ * Display font — swapped from Frank Ruhl Libre to Bellefair
+ * (Design Round 3 follow-up). Bellefair is a higher-contrast
+ * Hebrew+Latin serif inspired by Bodoni, with more editorial
+ * character than Frank Ruhl Libre's classical restraint.
+ * Used by Hebrew fashion/wellness brands that want a more
+ * distinctive display face. Single weight (400) is all Bellefair
+ * ships — its character comes from the letterforms, not weight.
+ * We keep the --font-frank-ruhl variable name for backwards
+ * compatibility with admin-brand.css which references it.
+ */
+const bellefair = Bellefair({
   subsets: ['hebrew', 'latin'],
-  weight: ['500', '700'],
+  weight: ['400'],
   variable: '--font-frank-ruhl',
   display: 'swap',
 })
@@ -89,9 +116,16 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
     <html
       lang={locale}
       dir={dir}
-      className={`${heebo.variable} ${frankRuhl.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${heebo.variable} ${bellefair.variable} h-full antialiased`}
     >
+      <head>
+        {/* Synchronous theme bootstrap — must run before React hydrates
+            so the data-theme attribute is set before the first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
       <body className="min-h-full flex flex-col bg-[var(--color-background)] text-[var(--color-foreground)]">
+        <DriftingLeaves />
         <NextIntlClientProvider>
           <Header />
           <main className="flex-1">{children}</main>

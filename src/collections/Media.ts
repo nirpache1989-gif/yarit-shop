@@ -24,7 +24,11 @@ export const Media: CollectionConfig = {
     plural: { en: 'Media', he: 'מדיה' },
   },
   admin: {
-    group: { en: 'Content', he: 'תוכן' },
+    group: { en: '🖼 Content', he: '🖼 תוכן ותמונות' },
+    description: {
+      en: 'Every image uploaded to the site lives here. You can upload directly from this page, or from inside a product/category form.',
+      he: 'כל התמונות שעלו לאתר נמצאות כאן. אפשר להעלות תמונות חדשות ישירות מהדף הזה, או מתוך טופס עריכת מוצר/קטגוריה — שתי הדרכים שומרות את התמונה לאותה ספרייה.',
+    },
   },
   access: {
     read: () => true, // Public — media URLs are used in the storefront.

@@ -19,6 +19,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import toast from 'react-hot-toast'
 import { cn } from '@/lib/cn'
 
 type Item = {
@@ -54,13 +55,17 @@ export type OrderRowData = {
   customerEmail?: string
 }
 
+// Hebrew labels for the fulfillment status chip. These mirror the
+// Hebrew option labels on `Orders.fulfillmentStatus` in
+// src/collections/Orders.ts — keep both in sync. The values
+// (keys here) are the database enum and must NOT be changed.
 const STATUS_HE: Record<OrderRowData['fulfillmentStatus'], string> = {
   pending: 'ממתין',
-  awaiting_forever_purchase: 'לרכוש מפוראבר',
+  awaiting_forever_purchase: 'להזמין מפוראבר',
   forever_purchased: 'נרכש מפוראבר',
-  packed: 'נארז, מוכן למשלוח',
-  shipped: 'נשלח ללקוח',
-  delivered: 'הושלם',
+  packed: 'ארוז ומוכן',
+  shipped: 'בדרך ללקוח',
+  delivered: 'נמסר ללקוח',
 }
 
 const STATUS_TONE: Record<OrderRowData['fulfillmentStatus'], string> = {
@@ -130,13 +135,37 @@ export function OrderRow({ order }: Props) {
       })
       if (!res.ok) {
         const text = await res.text()
+        toast.error(`שגיאה בעדכון: ${res.status}`)
         setError(`${res.status}: ${text.slice(0, 200)}`)
         return
       }
+
+      // Delivered = celebrate. Dynamic import keeps canvas-confetti
+      // (~6kb) out of the main admin bundle — only loaded when a
+      // user actually hits the final transition, which is rare
+      // relative to the earlier state changes.
+      if (next.to === 'delivered') {
+        try {
+          const { default: confetti } = await import('canvas-confetti')
+          confetti({
+            particleCount: 80,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#2D4F3E', '#8AAF6F', '#E6B976', '#F3E5C0'],
+          })
+        } catch {
+          /* confetti is a cherry on top; failure is not user-facing */
+        }
+        toast.success('🌸 ההזמנה הושלמה! כל הכבוד')
+      } else {
+        toast.success(`✓ ${next.label}`)
+      }
+
       startTransition(() => {
         router.refresh()
       })
     } catch (err) {
+      toast.error('שגיאה בחיבור לשרת')
       setError(err instanceof Error ? err.message : 'שגיאה')
     }
   }
@@ -145,9 +174,10 @@ export function OrderRow({ order }: Props) {
 
   return (
     <li className="rounded-2xl border border-[var(--color-border-brand)] bg-[var(--color-surface)] overflow-hidden">
-      <div className="p-5 grid md:grid-cols-[1fr_auto] gap-4 items-start">
-        {/* Left: summary */}
-        <div className="space-y-3">
+      <div className="p-5 grid gap-4 items-start md:grid-cols-[1fr_auto]">
+        {/* Left: summary — min-w-0 lets long product titles truncate
+            cleanly on mobile instead of overflowing the grid cell */}
+        <div className="space-y-3 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span
               className="text-lg font-extrabold text-[var(--color-primary-dark)]"
@@ -226,16 +256,28 @@ export function OrderRow({ order }: Props) {
           </div>
         </div>
 
-        {/* Right: action button */}
-        <div className="flex flex-col items-stretch md:items-end gap-2 md:min-w-[220px]">
+        {/* Right: action button. On mobile the button stacks below the
+            summary with a subtle top border; on md+ it sits to the left
+            (RTL) of the summary with its own minimum width. */}
+        <div className="flex flex-col items-stretch gap-2 pt-3 border-t border-[var(--color-border-brand)] md:items-end md:min-w-[220px] md:pt-0 md:border-t-0">
           {next ? (
             <button
               type="button"
               onClick={advance}
               disabled={isPending}
-              className="btn-lift inline-flex items-center justify-center rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--color-primary-dark)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-lift inline-flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--color-primary-dark)] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {isPending ? 'מעדכן...' : next.label}
+              {isPending ? (
+                <>
+                  <span
+                    className="inline-block h-4 w-4 rounded-full border-2 border-white/35 border-t-white animate-spin"
+                    aria-hidden
+                  />
+                  <span>מעדכן...</span>
+                </>
+              ) : (
+                next.label
+              )}
             </button>
           ) : (
             <span className="text-sm text-[var(--color-muted)] text-center">—</span>

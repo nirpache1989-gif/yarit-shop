@@ -20,7 +20,7 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: { en: 'Site settings', he: 'הגדרות אתר' },
   admin: {
-    group: { en: 'Content', he: 'תוכן' },
+    group: { en: '🌿 Settings', he: '🌿 הגדרות' },
   },
   access: {
     read: () => true,
@@ -43,7 +43,13 @@ export const SiteSettings: GlobalConfig = {
     {
       name: 'heroImages',
       type: 'array',
-      label: { en: 'Hero images', he: 'תמונות הירו' },
+      label: { en: 'Hero images', he: 'תמונות באנר ראשי' },
+      admin: {
+        description: {
+          en: 'Large images at the top of the homepage. At least one required.',
+          he: 'התמונות הגדולות שבראש עמוד הבית. תמונה אחת לפחות.',
+        },
+      },
       fields: [
         {
           name: 'image',
@@ -87,25 +93,46 @@ export const SiteSettings: GlobalConfig = {
           name: 'email',
           type: 'email',
           label: { en: 'Public email', he: 'מייל ציבורי' },
+          admin: {
+            description: {
+              en: 'Used in the footer + as the recipient for new-order alerts.',
+              he: 'מופיע ב-footer של האתר וגם המייל שאליו יישלחו ההתראות על הזמנות חדשות.',
+            },
+          },
         },
         {
           name: 'phone',
           type: 'text',
           label: { en: 'Phone', he: 'טלפון' },
+          admin: {
+            description: {
+              en: 'Shown in the footer and contact page.',
+              he: 'מופיע ב-footer ובדף "צור קשר".',
+            },
+          },
         },
         {
           name: 'address',
           type: 'textarea',
           label: { en: 'Business address', he: 'כתובת העסק' },
+          admin: {
+            description: {
+              en: 'Shown on the contact page only.',
+              he: 'מופיע בדף "צור קשר".',
+            },
+          },
         },
         {
           name: 'businessTaxId',
           type: 'text',
-          label: { en: 'Business tax ID (ח״פ / ע״מ)', he: 'ח״פ / ע״מ' },
+          label: {
+            en: 'Business tax ID (ח״פ / ע״מ)',
+            he: 'מספר עוסק (ח״פ או ע״מ)',
+          },
           admin: {
             description: {
-              en: 'Required for invoices and receipts.',
-              he: 'נדרש עבור חשבוניות וקבלות.',
+              en: 'Your business number — company (ח״פ) or sole trader (ע״מ). Shown on invoices and receipts.',
+              he: 'המספר של העסק שלך — חברה (ח״פ) או עוסק מורשה/פטור (ע״מ). מופיע על חשבוניות וקבלות.',
             },
           },
         },
@@ -117,21 +144,45 @@ export const SiteSettings: GlobalConfig = {
       name: 'social',
       type: 'group',
       label: { en: 'Social links', he: 'קישורים חברתיים' },
+      admin: {
+        description: {
+          en: 'Optional — these links appear as icons in the footer. Leave any field empty to hide the icon.',
+          he: 'אופציונלי — הקישורים מופיעים כאייקונים ב-footer של האתר. השאירי שדה ריק כדי להסתיר את האייקון שלו.',
+        },
+      },
       fields: [
         {
           name: 'instagram',
           type: 'text',
           label: { en: 'Instagram URL', he: 'קישור אינסטגרם' },
+          admin: {
+            description: {
+              en: 'Full URL, e.g. https://instagram.com/yarit',
+              he: 'הקישור המלא, לדוגמה: https://instagram.com/yarit',
+            },
+          },
         },
         {
           name: 'facebook',
           type: 'text',
           label: { en: 'Facebook URL', he: 'קישור פייסבוק' },
+          admin: {
+            description: {
+              en: 'Full URL, e.g. https://facebook.com/yarit',
+              he: 'הקישור המלא, לדוגמה: https://facebook.com/yarit',
+            },
+          },
         },
         {
           name: 'tiktok',
           type: 'text',
           label: { en: 'TikTok URL', he: 'קישור טיקטוק' },
+          admin: {
+            description: {
+              en: 'Full URL, e.g. https://tiktok.com/@yarit',
+              he: 'הקישור המלא, לדוגמה: https://tiktok.com/@yarit',
+            },
+          },
         },
       ],
     },

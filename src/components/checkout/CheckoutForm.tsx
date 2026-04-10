@@ -259,7 +259,7 @@ export function CheckoutForm({ initialRates }: Props) {
                     'flex items-center justify-between gap-4 rounded-xl border p-4 cursor-pointer transition-colors',
                     rateIndex === i
                       ? 'border-[var(--color-primary)] bg-[var(--color-primary)]/5'
-                      : 'border-[var(--color-border-brand)] bg-[var(--color-surface)] hover:border-[var(--color-primary)]/50',
+                      : 'border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] hover:border-[var(--color-primary)]/50',
                   )}
                 >
                   <input
@@ -283,14 +283,19 @@ export function CheckoutForm({ initialRates }: Props) {
         </Section>
 
         {error && (
-          <div className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-900">
+          /* Theme-aware error card. The previous `bg-red-50 text-red-900`
+             was invisible in dark mode (Design Round 4 design-review
+             agent D1 caught this). Using `--color-accent-deep` ties the
+             warning into the brand palette — warm ochre/lantern in light,
+             glowing ochre in dark — and stays AA-legible in both modes. */
+          <div className="rounded-xl border border-[var(--color-accent-deep)]/40 bg-[var(--color-accent-deep)]/10 p-4 text-sm font-medium text-[var(--color-accent-deep)]">
             {error}
           </div>
         )}
       </div>
 
       {/* Summary */}
-      <aside className="lg:col-span-1 h-fit rounded-2xl border border-[var(--color-border-brand)] bg-[var(--color-surface)] p-5 space-y-4">
+      <aside className="lg:col-span-1 h-fit rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] p-6 space-y-4">
         <h2 className="text-xl font-bold text-[var(--color-primary-dark)]">
           {t('orderSummary')}
         </h2>
@@ -350,7 +355,7 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-2xl border border-[var(--color-border-brand)] bg-[var(--color-surface)] p-6 space-y-4">
+    <section className="rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] p-6 space-y-4">
       <h2 className="text-xl font-bold text-[var(--color-primary-dark)]">
         {title}
       </h2>

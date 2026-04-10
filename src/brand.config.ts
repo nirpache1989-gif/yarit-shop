@@ -46,15 +46,26 @@ export const brand = {
    * See: plan §1 (Brand Direction) for the source-of-color mapping.
    */
   colors: {
-    primary: '#5B7342', // Sage green — from the logo leaves
-    primaryDark: '#3D5240', // Forest green — from the "Shoresh" letterforms
-    accent: '#A67A4A', // Warm tan — from the tree trunk
-    accentDeep: '#7C4E2F', // Darker accent — from the roots
-    background: '#ECE5D4', // Parchment cream — sampled directly from the logo's corners (exact match)
+    /*
+     * Night Apothecary palette (Design Round 3).
+     * Light mode tokens — emails reference brand.colors.* and always
+     * render in light mode regardless of the reader's theme. Dark mode
+     * overrides live in globals.css under [data-theme="dark"].
+     */
+    primary: '#2D4F3E',         // Marine-forest — bolder than the old sage
+    primaryDark: '#183329',     // Near-black forest — headings, hover
+    accent: '#0E5E3E',          // JADE JEWEL — used sparingly
+    accentDeep: '#8B5A2B',      // Ochre-deep for secondary accents
+    background: '#F6EFDC',      // Warmer, richer parchment
+    /** Lighter parchment for cards/inputs that need to "lift" off the
+     *  main canvas. Pure white (`surface`) is reserved for product
+     *  image viewports where transparent product PNGs need maximum
+     *  contrast. */
+    surfaceWarm: '#FDF8E8',
     surface: '#FFFFFF',
-    foreground: '#2A2A2A',
-    muted: '#8B7A5C',
-    border: '#E6D9B8',
+    foreground: '#1A1F14',      // Near-black with forest undertone
+    muted: '#6F6450',           // Warm muted text
+    border: '#E4D7B0',          // Warm border
   },
 
   /**

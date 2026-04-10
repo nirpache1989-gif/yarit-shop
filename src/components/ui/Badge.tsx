@@ -17,7 +17,7 @@ type Props = {
 const toneClasses: Record<Tone, string> = {
   primary: 'bg-[var(--color-primary)] text-white',
   accent: 'bg-[var(--color-accent)] text-white',
-  muted: 'bg-[var(--color-surface)] text-[var(--color-muted)] border border-[var(--color-border-brand)]',
+  muted: 'bg-[var(--color-surface-warm)] text-[var(--color-muted)] border border-[var(--color-border-brand)]',
 }
 
 export function Badge({ children, tone = 'primary', className }: Props) {
