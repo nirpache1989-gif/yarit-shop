@@ -1,0 +1,52 @@
+name: CI
+
+# Runs on every push and on every pull request targeting main.
+# Fails the PR if typecheck, lint, or build fail.
+#
+# Zero secrets needed — this workflow never touches the database
+# or the deploy pipeline. Vercel does its own build on push to main
+# (or on manual `npx vercel --prod`), which is its own thing.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: Typecheck + lint + build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: yarit-shop/package-lock.json
+
+      - name: Install deps
+        working-directory: yarit-shop
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: yarit-shop
+        run: npx tsc --noEmit
+
+      - name: Lint
+        working-directory: yarit-shop
+        run: npm run lint
+
+      - name: Build
+        working-directory: yarit-shop
+        run: npm run build
+        env:
+          # Dummy secret so the production-like boot check passes.
+          # NEVER reuse this string — it's only here so CI can run
+          # `next build` which triggers Payload's config module to
+          # load at collect-page-data time.
+          PAYLOAD_SECRET: ci-dummy-secret-do-not-use-in-any-real-environment
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000

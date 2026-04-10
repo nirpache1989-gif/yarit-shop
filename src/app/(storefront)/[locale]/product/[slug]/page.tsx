@@ -7,6 +7,7 @@
  *
  *          404s if the slug doesn't match a published product.
  */
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -18,27 +19,19 @@ import { Badge } from '@/components/ui/Badge'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import type { ProductCardData } from '@/components/product/ProductCard'
 import { STATIC_IMAGE_OVERRIDES } from '@/lib/product-image'
+import { Reveal } from '@/components/motion/Reveal'
+import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
+
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yarit-shop.vercel.app'
+).replace(/\/+$/, '')
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
 }
 
-type Props = {
-  params: Promise<{ locale: string; slug: string }>
-}
-
-type ProductData = ProductCardData & {
-  description?: unknown // Lexical JSON
-}
-
-export default async function ProductPage({ params }: Props) {
-  const { locale, slug } = await params
-  setRequestLocale(locale)
-  const typedLocale = locale as Locale
-
-  const t = await getTranslations({ locale, namespace: 'product' })
+async function loadProduct(locale: Locale, slug: string) {
   const payload = await getPayloadClient()
-
   const res = await payload.find({
     collection: 'products',
     where: {
@@ -49,10 +42,82 @@ export default async function ProductPage({ params }: Props) {
     },
     depth: 2,
     limit: 1,
-    locale: typedLocale,
+    locale,
   })
+  return res.docs[0] as unknown as ProductData | undefined
+}
 
-  const product = res.docs[0] as unknown as ProductData | undefined
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string; slug: string }>
+}): Promise<Metadata> {
+  const { locale, slug } = await params
+  const typedLocale = locale as Locale
+  const product = await loadProduct(typedLocale, slug)
+  if (!product) {
+    return { title: 'Not found' }
+  }
+
+  const description =
+    product.shortDescription ??
+    (locale === 'he'
+      ? 'מוצר מתוך החנות של שורש'
+      : 'A product from the Shoresh shop')
+
+  const staticOverride = STATIC_IMAGE_OVERRIDES[product.slug]
+  const mediaImages =
+    product.images?.map((i) => {
+      const img = i.image
+      if (img && typeof img === 'object' && img.url) return img.url
+      return null
+    }).filter((x): x is string => x !== null) ?? []
+  const imageUrl = staticOverride ?? mediaImages[0]
+  const absoluteImage = imageUrl
+    ? imageUrl.startsWith('http')
+      ? imageUrl
+      : `${SITE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`
+    : undefined
+
+  const canonical =
+    locale === 'he' ? `/product/${slug}` : `/en/product/${slug}`
+
+  return {
+    title: product.title,
+    description,
+    alternates: {
+      canonical,
+      languages: {
+        he: `/product/${slug}`,
+        en: `/en/product/${slug}`,
+      },
+    },
+    openGraph: {
+      title: product.title,
+      description,
+      type: 'website',
+      locale: locale === 'he' ? 'he_IL' : 'en_US',
+      images: absoluteImage ? [{ url: absoluteImage }] : undefined,
+    },
+  }
+}
+
+type Props = {
+  params: Promise<{ locale: string; slug: string }>
+}
+
+type ProductData = ProductCardData & {
+  description?: unknown // Lexical JSON
+  stock?: number | null
+}
+
+export default async function ProductPage({ params }: Props) {
+  const { locale, slug } = await params
+  setRequestLocale(locale)
+  const typedLocale = locale as Locale
+
+  const t = await getTranslations({ locale, namespace: 'product' })
+  const product = await loadProduct(typedLocale, slug)
   if (!product) notFound()
 
   // If this product has a static slug override, use it as the
@@ -77,12 +142,52 @@ export default async function ProductPage({ params }: Props) {
     ? formatPrice(product.compareAtPrice, typedLocale)
     : null
 
+  // schema.org Product JSON-LD — helps Google render rich snippets
+  // (price, availability, image) in search results. Keeping it small
+  // and on-page avoids Next's `script` component and keeps the
+  // hydration footprint zero.
+  const primaryImage = images[0]?.url
+  const absoluteImage = primaryImage
+    ? primaryImage.startsWith('http')
+      ? primaryImage
+      : `${SITE_URL}${primaryImage.startsWith('/') ? '' : '/'}${primaryImage}`
+    : undefined
+  const inStock =
+    product.type === 'forever'
+      ? true // Forever products are sourced on demand
+      : (product.stock ?? 0) > 0
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.shortDescription ?? undefined,
+    image: absoluteImage ? [absoluteImage] : undefined,
+    sku: product.slug,
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'ILS',
+      price: String(product.price),
+      availability: inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url: `${SITE_URL}${
+        typedLocale === 'he' ? '' : '/en'
+      }/product/${product.slug}`,
+    },
+  }
+
   return (
     <Container className="py-12 md:py-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="grid md:grid-cols-2 gap-10">
-        {/* Gallery */}
-        <div className="space-y-4">
-          <div className="relative aspect-square rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border-brand)] overflow-hidden">
+        {/* Gallery — slides in from the start edge, primary image
+            has a slow subtle pan on hover (same .product-image
+            class the card uses). */}
+        <Reveal direction="start" className="space-y-4">
+          <div className="group product-card relative aspect-square rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border-brand)] overflow-hidden">
             {images[0] ? (
               <Image
                 src={images[0].url}
@@ -90,7 +195,7 @@ export default async function ProductPage({ params }: Props) {
                 fill
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
-                className="object-contain p-6"
+                className="product-image object-contain p-6"
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-[var(--color-muted)]">
@@ -103,7 +208,7 @@ export default async function ProductPage({ params }: Props) {
               {images.slice(0, 4).map((img, i) => (
                 <div
                   key={i}
-                  className="relative aspect-square rounded-lg bg-[var(--color-surface)] border border-[var(--color-border-brand)] overflow-hidden"
+                  className="relative aspect-square rounded-lg bg-[var(--color-surface)] border border-[var(--color-border-brand)] overflow-hidden transition-all duration-300 hover:border-[var(--color-primary)]/40 hover:scale-[1.03] cursor-pointer"
                 >
                   <Image
                     src={img.url}
@@ -116,32 +221,42 @@ export default async function ProductPage({ params }: Props) {
               ))}
             </div>
           )}
-        </div>
+        </Reveal>
 
-        {/* Info */}
-        <div className="space-y-5">
+        {/* Info — every piece reveals in order: badges, title, short
+            description, price row, CTA, full description. */}
+        <StaggeredReveal as="div" className="space-y-5" stagger={130}>
           <div className="flex flex-wrap gap-2">
             {product.isNew && (
               <Badge tone="accent">{typedLocale === 'he' ? 'חדש' : 'New'}</Badge>
             )}
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold text-[var(--color-primary-dark)] leading-tight">
+          <h1
+            className="text-3xl md:text-4xl font-extrabold text-[var(--color-primary-dark)] leading-tight"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             {product.title}
           </h1>
 
           {product.shortDescription && (
-            <p className="text-lg text-[var(--color-muted)]">
+            <p
+              className="text-lg text-[var(--color-muted)] italic leading-relaxed"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {product.shortDescription}
             </p>
           )}
 
-          <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-bold text-[var(--color-primary-dark)]">
+          <div className="flex items-baseline gap-3 pt-2 border-t border-[var(--color-primary)]/15">
+            <span
+              className="text-3xl font-bold text-[var(--color-primary-dark)] tabular-nums"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
               {priceText}
             </span>
             {compareText && (
-              <span className="text-lg text-[var(--color-muted)] line-through">
+              <span className="text-lg text-[var(--color-muted)] line-through italic tabular-nums">
                 {compareText}
               </span>
             )}
@@ -152,13 +267,16 @@ export default async function ProductPage({ params }: Props) {
           {/* Full description (lexical richtext) — rendered as plain text */}
           {product.description ? (
             <div className="pt-6 border-t border-[var(--color-border-brand)] mt-6">
-              <h2 className="text-xl font-bold text-[var(--color-primary-dark)] mb-3">
+              <h2
+                className="text-xl font-bold text-[var(--color-primary-dark)] mb-3"
+                style={{ fontFamily: 'var(--font-display)' }}
+              >
                 {t('aboutThisProduct')}
               </h2>
               <LexicalText value={product.description} />
             </div>
           ) : null}
-        </div>
+        </StaggeredReveal>
       </div>
     </Container>
   )

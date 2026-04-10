@@ -10,6 +10,8 @@
 import { getTranslations } from 'next-intl/server'
 import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
+import { Reveal } from '@/components/motion/Reveal'
+import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
 import type { Locale } from '@/lib/i18n/routing'
 
 type Props = {
@@ -28,17 +30,23 @@ export async function Testimonials({ locale }: Props) {
   return (
     <section className="py-20 md:py-24 bg-[var(--color-surface-warm)]">
       <Container>
-        <SectionHeading
-          eyebrow={t('eyebrow')}
-          title={t('heading')}
-          subheading={t('subheading')}
-          className="mb-12"
-        />
-        <ul className="grid md:grid-cols-3 gap-6">
+        <Reveal>
+          <SectionHeading
+            eyebrow={t('eyebrow')}
+            title={t('heading')}
+            subheading={t('subheading')}
+            className="mb-12"
+          />
+        </Reveal>
+        <StaggeredReveal
+          as="ul"
+          className="grid md:grid-cols-3 gap-6"
+          stagger={150}
+        >
           {quotes.map((q, i) => (
             <li
               key={i}
-              className="relative rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-background)] p-7 flex flex-col gap-4"
+              className="relative rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-background)] p-7 flex flex-col gap-4 transition-all duration-300 hover:-translate-y-1 hover:border-[var(--color-primary)]/40 hover:shadow-lg"
             >
               {/* corner sprig flourish */}
               <svg
@@ -85,7 +93,7 @@ export async function Testimonials({ locale }: Props) {
               </div>
             </li>
           ))}
-        </ul>
+        </StaggeredReveal>
       </Container>
     </section>
   )

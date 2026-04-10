@@ -30,6 +30,7 @@ export const mockProvider: PaymentProvider = {
     }
   },
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async verifyWebhook(_request: Request): Promise<VerifyWebhookResult> {
     // Mock provider never dispatches real webhooks. If something POSTs
     // to the webhook route claiming to be the mock provider, reject it.

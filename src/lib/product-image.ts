@@ -13,7 +13,24 @@
  *
  *          See: docs/DECISIONS.md ADR-015 (rebrand + Blob sidestep).
  */
+// Keys match the `slug` field on the corresponding Products row in
+// the database. Filenames in the destination are the case-munged
+// versions already on disk in `public/brand/ai/` (Aloelips.jpg,
+// AloeFirst.jpg, etc.).
+//
+// Defensive aliasing: the seed script in `src/lib/seed.ts` uses one
+// slug convention (`aloe-lip-balm`, `aloe-toothgel`, …) but a live
+// database that was hand-edited through the admin may have drifted
+// to Hebrew-aligned slugs (`aloe-lips`, `forever-bright-toothgel`,
+// …). Rather than guessing which convention is in production, we
+// register BOTH variants for the same 7 product photos so the
+// override fires regardless.
+//
+// Photos NOT covered here fall through to the Media collection URL,
+// then to the placeholder — that's the right behavior for honey,
+// lavender oil, and any product without a dedicated flat-lay photo.
 export const STATIC_IMAGE_OVERRIDES: Record<string, string> = {
+  // ─── Original seed-script slugs (src/lib/seed.ts) ───
   'aloe-lip-balm': '/brand/ai/Aloelips.jpg',
   'aloe-toothgel': '/brand/ai/AloeToothGel.jpg',
   'aloe-soothing-spray': '/brand/ai/AloeFirst.jpg',
@@ -21,6 +38,15 @@ export const STATIC_IMAGE_OVERRIDES: Record<string, string> = {
   'bee-propolis': '/brand/ai/ForeverBeepropolis.jpg',
   'daily-multivitamin': '/brand/ai/ForeverDaily.jpg',
   'aloe-body-duo-gift-set': '/brand/ai/BodylotionNwsh.jpg',
+
+  // ─── Drift aliases for hand-edited databases ───
+  'aloe-lips': '/brand/ai/Aloelips.jpg',
+  'forever-bright-toothgel': '/brand/ai/AloeToothGel.jpg',
+  'aloe-first': '/brand/ai/AloeFirst.jpg',
+  'aloe-vera-gelly': '/brand/ai/AloeGelly.jpg',
+  'forever-bee-propolis': '/brand/ai/ForeverBeepropolis.jpg',
+  'forever-daily': '/brand/ai/ForeverDaily.jpg',
+  'aloe-body-perfect-match': '/brand/ai/BodylotionNwsh.jpg',
 }
 
 export const PRODUCT_PLACEHOLDER = '/brand/ai/product-placeholder.jpg'

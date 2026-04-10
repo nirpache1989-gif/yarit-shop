@@ -6,6 +6,7 @@
  *          ?brand=forever|independent) so it's bookmarkable and
  *          shareable.
  */
+import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import type { Where } from 'payload'
@@ -15,9 +16,34 @@ import { Container } from '@/components/ui/Container'
 import { ProductCard, type ProductCardData } from '@/components/product/ProductCard'
 import { Link } from '@/lib/i18n/navigation'
 import { cn } from '@/lib/cn'
+import { Reveal } from '@/components/motion/Reveal'
+import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'shop' })
+  return {
+    title: t('title'),
+    description: t('description'),
+    alternates: {
+      canonical: locale === 'he' ? '/shop' : '/en/shop',
+      languages: { he: '/shop', en: '/en/shop' },
+    },
+    openGraph: {
+      title: t('title'),
+      description: t('description'),
+      type: 'website',
+      locale: locale === 'he' ? 'he_IL' : 'en_US',
+    },
+  }
 }
 
 type Props = {
@@ -70,18 +96,24 @@ export default async function ShopPage({ params, searchParams }: Props) {
 
   return (
     <Container className="py-12 md:py-16">
-      <header className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--color-primary-dark)]">
+      <Reveal as="header" className="mb-8">
+        <h1
+          className="text-4xl md:text-5xl font-extrabold text-[var(--color-primary-dark)]"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
           {t('title')}
         </h1>
-        <p className="mt-2 text-[var(--color-muted)]">
+        <p className="mt-2 text-[var(--color-muted)] italic" style={{ fontFamily: 'var(--font-display)' }}>
           {t('subtitle', { count: productsRes.totalDocs })}
         </p>
-      </header>
+      </Reveal>
 
       {/* Filter chips — categories only (brand filter removed post-rebrand) */}
       {categories.length > 0 && (
-        <div className="mb-10 flex flex-wrap gap-2">
+        <StaggeredReveal
+          className="mb-10 flex flex-wrap gap-2"
+          stagger={70}
+        >
           <FilterChip
             href="/shop"
             active={!category}
@@ -95,19 +127,24 @@ export default async function ShopPage({ params, searchParams }: Props) {
               label={c.title}
             />
           ))}
-        </div>
+        </StaggeredReveal>
       )}
 
       {products.length === 0 ? (
-        <p className="py-16 text-center text-[var(--color-muted)]">
-          {t('empty')}
-        </p>
+        <Reveal>
+          <p className="py-16 text-center text-[var(--color-muted)] italic" style={{ fontFamily: 'var(--font-display)' }}>
+            {t('empty')}
+          </p>
+        </Reveal>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <StaggeredReveal
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+          stagger={80}
+        >
           {products.map((p) => (
             <ProductCard key={p.id} product={p} locale={typedLocale} />
           ))}
-        </div>
+        </StaggeredReveal>
       )}
     </Container>
   )
@@ -126,10 +163,10 @@ function FilterChip({
     <Link
       href={href}
       className={cn(
-        'rounded-full border px-4 py-2 text-sm font-semibold transition-colors',
+        'group relative rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-300 btn-lift',
         active
-          ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white'
-          : 'bg-[var(--color-surface)] border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:border-[var(--color-primary)]',
+          ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-md'
+          : 'bg-[var(--color-surface)] border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:border-[var(--color-primary)] hover:-translate-y-0.5',
       )}
     >
       {label}

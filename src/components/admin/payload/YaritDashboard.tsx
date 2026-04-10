@@ -18,11 +18,17 @@
  */
 import type { AdminViewServerProps, Payload } from 'payload'
 import Link from 'next/link'
+import { CountUp } from '@/components/motion/CountUp'
 // Round 5 Fix 2.4: WelcomeBanner removed — it duplicated
 // SidebarGreeting's "ברוכה הבאה לפאנל הניהול" message and wasted
 // dashboard space above the stats row. The component file itself
 // is kept on disk for a one-session grace period in case we want
 // it back. See: docs/ADMIN-SURFACES.md + Round 5 plan Fix 2.4.
+//
+// Wave D motion polish: stat values count up from 0 on mount via
+// CountUp (client component). Tile stagger bumped to 90ms to match
+// the storefront vocabulary. Urgent stat tiles + dark-mode
+// background styles live in admin-brand.css.
 
 type Stats = {
   openOrders: number
@@ -83,9 +89,19 @@ async function getStats(payload: Payload): Promise<Stats> {
           ],
         },
       }),
+      // Wave B6: must also filter by paymentStatus=paid to match the
+      // fulfillment dashboard's "actionable" semantics. Previously
+      // counted unpaid forever orders too, which inflated the
+      // "urgent" tile on the dashboard vs. what Yarit actually sees
+      // in the fulfillment view.
       payload.count({
         collection: 'orders',
-        where: { fulfillmentStatus: { equals: 'awaiting_forever_purchase' } },
+        where: {
+          and: [
+            { paymentStatus: { equals: 'paid' } },
+            { fulfillmentStatus: { equals: 'awaiting_forever_purchase' } },
+          ],
+        },
       }),
       payload.count({
         collection: 'products',
@@ -198,7 +214,7 @@ function buildTiles(stats: Stats): Tile[] {
       href: '/admin/account',
       icon: '🔑',
       title: 'חשבון, שפה וסיסמה',
-      hint: 'שינוי שפת פאנל הניהול (עברית / English), הסיסמה והמייל.',
+      hint: 'שינוי שפת פאנל הניהול (עברית / אנגלית), הסיסמה והמייל.',
       cta: 'עדכון פרטי חשבון',
     },
   ]
@@ -245,7 +261,7 @@ export async function YaritDashboard(props: AdminViewServerProps) {
             key={t.href}
             href={t.href}
             className={`yarit-tile yarit-tile--stagger${t.accent ? ' yarit-tile--accent' : ''}`}
-            style={{ animationDelay: `${i * 60}ms` }}
+            style={{ animationDelay: `${i * 90}ms` }}
           >
             {t.badge !== undefined && (
               <span className="yarit-tile__badge">{t.badge}</span>
@@ -276,7 +292,9 @@ function Stat({
     <div
       className={`yarit-stat${urgent && value > 0 ? ' yarit-stat--urgent' : ''}`}
     >
-      <div className="yarit-stat__value">{value}</div>
+      <div className="yarit-stat__value">
+        <CountUp value={value} duration={900} locale="he-IL" />
+      </div>
       <div className="yarit-stat__label">{label}</div>
     </div>
   )

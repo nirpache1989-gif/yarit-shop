@@ -14,13 +14,67 @@
  */
 import type { CollectionConfig } from 'payload'
 
+// Phase F.1 — Hebrew, customer-facing forgot-password email.
+// Payload's default reset URL is `/admin/reset?token=...`, which dumps
+// customers onto an admin login they have no business seeing. We
+// override per-collection so the reset link points at the storefront
+// page at `/reset-password/<token>` (next-intl prefixes English with
+// `/en/` automatically; Hebrew is the default and prefix-less).
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+
 export const Users: CollectionConfig = {
   slug: 'users',
   labels: {
     singular: { en: 'User', he: 'משתמש' },
     plural: { en: 'Users', he: 'משתמשים' },
   },
-  auth: true,
+  auth: {
+    forgotPassword: {
+      generateEmailSubject: () => 'איפוס סיסמה — שורש',
+      generateEmailHTML: (args) => {
+        const token =
+          args && typeof args === 'object' && 'token' in args
+            ? String((args as { token?: string }).token ?? '')
+            : ''
+        const resetUrl = `${SITE_URL}/reset-password/${token}`
+        return `
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>איפוס סיסמה — שורש</title>
+  </head>
+  <body style="font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; background: #f6efdc; padding: 40px 16px; color: #2d2418;">
+    <div style="max-width: 520px; margin: 0 auto; background: #fdf8e8; border: 1px solid #d8c79a; border-radius: 16px; padding: 32px;">
+      <h1 style="margin: 0 0 12px; font-size: 24px; color: #2d4f3e;">איפוס סיסמה</h1>
+      <p style="margin: 0 0 16px; line-height: 1.6;">היי,</p>
+      <p style="margin: 0 0 16px; line-height: 1.6;">
+        קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך באתר שורש. לחצי על הכפתור למטה כדי להגדיר סיסמה חדשה.
+      </p>
+      <p style="margin: 24px 0; text-align: center;">
+        <a href="${resetUrl}" style="display: inline-block; background: #2d4f3e; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: 700;">
+          איפוס סיסמה
+        </a>
+      </p>
+      <p style="margin: 0 0 8px; font-size: 13px; color: #6b5e44;">
+        אם הכפתור לא עובד, העתיקי את הקישור הבא לדפדפן:
+      </p>
+      <p style="margin: 0 0 16px; word-break: break-all; font-size: 12px; color: #6b5e44;">
+        ${resetUrl}
+      </p>
+      <p style="margin: 24px 0 0; font-size: 13px; color: #6b5e44; line-height: 1.6;">
+        אם לא ביקשת איפוס סיסמה, אפשר להתעלם מהמייל הזה — הסיסמה לא תשתנה.
+      </p>
+      <p style="margin: 16px 0 0; font-size: 13px; color: #6b5e44;">
+        — שורש 🌿
+      </p>
+    </div>
+  </body>
+</html>`.trim()
+      },
+    },
+  },
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['email', 'role', 'name'],

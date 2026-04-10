@@ -48,7 +48,11 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Shop column */}
+          {/* Shop column. We used to link to /policies/shipping and
+              /policies/returns here, but those pages don't exist yet
+              (blocked on legal content per docs/NEXT-SESSION.md) and
+              a live 404 in the public footer is worse than no link.
+              Re-add those entries once the pages ship. */}
           <div>
             <Eyebrow as="h3" className="mb-3">
               {t('shop')}
@@ -64,20 +68,12 @@ export function Footer() {
                   {tNav('contact')}
                 </Link>
               </li>
-              <li>
-                <Link href="/policies/shipping" className="hover:text-[var(--color-primary-dark)]">
-                  {t('shipping')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/policies/returns" className="hover:text-[var(--color-primary-dark)]">
-                  {t('returns')}
-                </Link>
-              </li>
             </ul>
           </div>
 
-          {/* Learn column */}
+          {/* Learn column. Same story — /faq, /policies/privacy, and
+              /policies/terms were removed until the content exists.
+              "About" stays because /about is a real page. */}
           <div>
             <Eyebrow as="h3" className="mb-3">
               {t('information')}
@@ -86,21 +82,6 @@ export function Footer() {
               <li>
                 <Link href="/about" className="hover:text-[var(--color-primary-dark)]">
                   {tNav('about')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/faq" className="hover:text-[var(--color-primary-dark)]">
-                  {t('faq')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/policies/privacy" className="hover:text-[var(--color-primary-dark)]">
-                  {t('privacy')}
-                </Link>
-              </li>
-              <li>
-                <Link href="/policies/terms" className="hover:text-[var(--color-primary-dark)]">
-                  {t('terms')}
                 </Link>
               </li>
             </ul>

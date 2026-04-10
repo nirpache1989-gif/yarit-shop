@@ -10,10 +10,9 @@
  */
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
-import { Link } from '@/lib/i18n/navigation'
 import { useCartStore, selectCartSubtotal } from '@/lib/cart/store'
 import { useCartDrawerStore } from '@/components/cart/drawerStore'
 import { Button } from '@/components/ui/Button'
@@ -29,17 +28,52 @@ export function CartDrawer() {
   const isOpen = useCartDrawerStore((s) => s.isOpen)
   const close = useCartDrawerStore((s) => s.close)
 
+  const panelRef = useRef<HTMLDivElement | null>(null)
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  // ESC + body-scroll lock + focus trap + focus restore. One combined
+  // effect so the teardown order is predictable (restore focus AFTER
+  // the panel is hidden, not before).
   useEffect(() => {
+    if (!isOpen) return
+
+    // Remember who opened us so we can return focus there on close.
+    previousFocusRef.current = document.activeElement as HTMLElement | null
+    // Land focus on the close button (first thing in the tab order).
+    closeButtonRef.current?.focus()
+    document.body.style.overflow = 'hidden'
+
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') close()
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        close()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey && active === first) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && active === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
-    if (isOpen) {
-      window.addEventListener('keydown', onKey)
-      document.body.style.overflow = 'hidden'
-    }
+
+    window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
+      previousFocusRef.current?.focus?.()
     }
   }, [isOpen, close])
 
@@ -55,18 +89,22 @@ export function CartDrawer() {
         className="absolute inset-0 bg-black/30"
       />
       {/* panel */}
-      <aside className="absolute top-0 end-0 bottom-0 w-full sm:max-w-md bg-[var(--color-background)] border-s border-[var(--color-border-brand)] shadow-2xl flex flex-col">
+      <aside
+        ref={panelRef}
+        className="absolute top-0 end-0 bottom-0 w-full sm:max-w-md bg-[var(--color-background)] border-s border-[var(--color-border-brand)] shadow-2xl flex flex-col"
+      >
         <header className="flex items-center justify-between p-4 border-b border-[var(--color-border-brand)]">
           <h2 className="text-xl font-bold text-[var(--color-primary-dark)]">
             {tNav('cart')}
           </h2>
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={close}
             aria-label={tCommon('close')}
             className="rounded-full p-2 hover:bg-[var(--color-surface-warm)] transition-colors"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
           </button>
         </header>
 
@@ -107,11 +145,11 @@ export function CartDrawer() {
                           updateQuantity(item.productId, item.quantity - 1)
                         }
                         className="w-7 h-7 rounded-full border border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:bg-[var(--color-surface-warm)]"
-                        aria-label="-"
+                        aria-label={t('decreaseQty', { item: item.title })}
                       >
-                        −
+                        <span aria-hidden>−</span>
                       </button>
-                      <span className="text-sm font-semibold min-w-[20px] text-center">
+                      <span className="text-sm font-semibold min-w-[20px] text-center" aria-live="polite">
                         {item.quantity}
                       </span>
                       <button
@@ -120,14 +158,15 @@ export function CartDrawer() {
                           updateQuantity(item.productId, item.quantity + 1)
                         }
                         className="w-7 h-7 rounded-full border border-[var(--color-border-brand)] text-[var(--color-primary-dark)] hover:bg-[var(--color-surface-warm)]"
-                        aria-label="+"
+                        aria-label={t('increaseQty', { item: item.title })}
                       >
-                        +
+                        <span aria-hidden>+</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => removeItem(item.productId)}
                         className="ms-auto text-xs text-[var(--color-muted)] hover:text-[var(--color-accent-deep)]"
+                        aria-label={t('removeFromCart', { item: item.title })}
                       >
                         {t('remove')}
                       </button>

@@ -14,6 +14,8 @@ import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { ProductCard, type ProductCardData } from '@/components/product/ProductCard'
 import { Button } from '@/components/ui/Button'
+import { Reveal } from '@/components/motion/Reveal'
+import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
 import type { Locale } from '@/lib/i18n/routing'
 
 type Props = {
@@ -55,23 +57,28 @@ export async function FeaturedProducts({ locale }: Props) {
       </div>
 
       <Container className="relative">
-        <div className="flex items-end justify-between mb-10">
-          <SectionHeading
-            eyebrow={t('featuredEyebrow')}
-            title={t('featuredHeadline')}
-            subheading={t('featuredSubheadline')}
-            align="start"
-          />
-          <Button href="/shop" variant="ghost" size="md" className="hidden sm:inline-flex">
-            {t('seeAll')} →
-          </Button>
-        </div>
+        <Reveal>
+          <div className="flex items-end justify-between mb-10">
+            <SectionHeading
+              eyebrow={t('featuredEyebrow')}
+              title={t('featuredHeadline')}
+              subheading={t('featuredSubheadline')}
+              align="start"
+            />
+            <Button href="/shop" variant="ghost" size="md" className="hidden sm:inline-flex">
+              {t('seeAll')} →
+            </Button>
+          </div>
+        </Reveal>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+        <StaggeredReveal
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
+          stagger={110}
+        >
           {products.map((p) => (
             <ProductCard key={p.id} product={p} locale={locale} />
           ))}
-        </div>
+        </StaggeredReveal>
       </Container>
     </section>
   )

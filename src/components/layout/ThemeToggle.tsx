@@ -22,33 +22,66 @@
  */
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/cn'
+import { useHasMounted } from '@/lib/useHasMounted'
 
 type Theme = 'light' | 'dark'
 
+/**
+ * Subscribe to `<html data-theme="...">` changes via a
+ * MutationObserver. Instead of mirroring the attribute into React
+ * state with a `useEffect(setState)` we treat the DOM attribute as
+ * the source of truth and `useSyncExternalStore` keeps the render
+ * in sync. This avoids the `react-hooks/set-state-in-effect`
+ * anti-pattern entirely.
+ */
+function subscribeToTheme(callback: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const observer = new MutationObserver(callback)
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme'],
+  })
+  return () => observer.disconnect()
+}
+
+function getThemeSnapshot(): Theme {
+  if (typeof document === 'undefined') return 'light'
+  const attr = document.documentElement.getAttribute('data-theme')
+  return attr === 'dark' ? 'dark' : 'light'
+}
+
+function getThemeServerSnapshot(): Theme {
+  return 'light'
+}
+
 export function ThemeToggle() {
   const t = useTranslations('theme')
-  const [theme, setTheme] = useState<Theme>('light')
-  const [mounted, setMounted] = useState(false)
-
-  // Read whatever the bootstrap script set on first paint
-  useEffect(() => {
-    const current =
-      (document.documentElement.getAttribute('data-theme') as Theme) ?? 'light'
-    setTheme(current)
-    setMounted(true)
-  }, [])
+  const mounted = useHasMounted()
+  const theme = useSyncExternalStore(
+    subscribeToTheme,
+    getThemeSnapshot,
+    getThemeServerSnapshot,
+  )
 
   const toggle = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark'
-    setTheme(next)
     document.documentElement.setAttribute('data-theme', next)
     try {
       localStorage.setItem('shoresh-theme', next)
     } catch {
       /* localStorage blocked (private mode) — fall through */
+    }
+    // Wave D — mirror the choice into the `payload-theme` cookie so
+    // when the user hops to /admin, Payload's server-side theme
+    // detection reads the same value and renders the first paint
+    // in the correct palette (no flash of light → dark).
+    try {
+      document.cookie = `payload-theme=${next};path=/;max-age=31536000;samesite=lax`
+    } catch {
+      /* cookie blocked — storefront still works, admin may flash */
     }
   }
 

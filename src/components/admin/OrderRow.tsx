@@ -21,6 +21,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/cn'
+import { getFulfillmentStatusLabel } from '@/lib/orders/statusLabels'
 
 type Item = {
   title: string
@@ -55,18 +56,9 @@ export type OrderRowData = {
   customerEmail?: string
 }
 
-// Hebrew labels for the fulfillment status chip. These mirror the
-// Hebrew option labels on `Orders.fulfillmentStatus` in
-// src/collections/Orders.ts — keep both in sync. The values
-// (keys here) are the database enum and must NOT be changed.
-const STATUS_HE: Record<OrderRowData['fulfillmentStatus'], string> = {
-  pending: 'ממתין',
-  awaiting_forever_purchase: 'להזמין מפוראבר',
-  forever_purchased: 'נרכש מפוראבר',
-  packed: 'ארוז ומוכן',
-  shipped: 'בדרך ללקוח',
-  delivered: 'נמסר ללקוח',
-}
+// Hebrew labels for the fulfillment status chip live in
+// `src/lib/orders/statusLabels.ts` (single source of truth shared
+// with the customer-facing /account pages). Don't redeclare them here.
 
 const STATUS_TONE: Record<OrderRowData['fulfillmentStatus'], string> = {
   pending: 'bg-[var(--color-border-brand)] text-[var(--color-primary-dark)]',
@@ -191,11 +183,11 @@ export function OrderRow({ order }: Props) {
                 STATUS_TONE[order.fulfillmentStatus],
               )}
             >
-              {STATUS_HE[order.fulfillmentStatus]}
+              {getFulfillmentStatusLabel(order.fulfillmentStatus, 'he')}
             </span>
             {hasForever && (
               <span className="inline-flex items-center rounded-full bg-[var(--color-accent)]/15 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-accent-deep)]">
-                🌿 Forever
+                🌿 פוראבר
               </span>
             )}
             <span className="ms-auto text-xs text-[var(--color-muted)]">

@@ -45,6 +45,7 @@ import { Categories } from './collections/Categories'
 import { Products } from './collections/Products'
 import { Orders } from './collections/Orders'
 import { SiteSettings } from './globals/SiteSettings'
+import { shoreshEmailAdapter } from './lib/payload/emailAdapter'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -162,7 +163,50 @@ export default buildConfig({
   collections: [Users, Media, Tags, Categories, Products, Orders],
   globals: [SiteSettings],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || 'dev-only-secret-change-in-production',
+  // PAYLOAD_SECRET gate — hard-fail in production, dev-friendly fallback
+  // otherwise. We used to silently fall back to `'dev-only-secret-...'`
+  // in ALL environments, which meant a prod deploy with a missing env
+  // var would quietly sign JWTs + HMAC tokens with a secret anyone with
+  // access to the source code could forge. That's the kind of mistake
+  // you only notice after someone exploits it. Now: if NODE_ENV is
+  // production (or "production-like") and PAYLOAD_SECRET is unset or
+  // too short, the module throws at load time with a loud error, which
+  // bubbles up as a failed build / failed deploy. Local dev still
+  // works with an empty .env.local because we only throw outside of
+  // development mode.
+  secret: (() => {
+    const secret = process.env.PAYLOAD_SECRET
+    const isProdLike =
+      process.env.NODE_ENV === 'production' ||
+      process.env.VERCEL_ENV === 'production' ||
+      process.env.VERCEL_ENV === 'preview'
+    if (!secret || secret.length < 16) {
+      if (isProdLike) {
+        throw new Error(
+          [
+            '',
+            '❌  PAYLOAD_SECRET is missing or too short in a production-like environment.',
+            '',
+            '    Set a strong secret (>= 16 chars) in the deploy environment:',
+            '        Vercel → Settings → Environment Variables → PAYLOAD_SECRET',
+            '',
+            '    NEVER use the hardcoded dev fallback in production — it can be read',
+            '    from source and would let an attacker forge auth tokens.',
+            '',
+            '    ❌  חסרה מחרוזת PAYLOAD_SECRET או שהיא קצרה מדי בסביבת פרודקשן.',
+            '        יש להגדיר מחרוזת חזקה (לפחות 16 תווים) ב־Vercel → Settings.',
+            '',
+          ].join('\n'),
+        )
+      }
+      // Dev fallback — loud warning but don't block local work.
+      console.warn(
+        '⚠️  PAYLOAD_SECRET is unset — using dev fallback. DO NOT ship this to prod.',
+      )
+      return 'dev-only-secret-change-in-production'
+    }
+    return secret
+  })(),
 
   // Content localization — per-field translations for fields marked
   // `localized: true`. Hebrew is default; English is the fallback.
@@ -190,6 +234,14 @@ export default buildConfig({
 
   db,
   plugins,
+
+  // Phase F.1 — bridge Payload's email layer (auth flows: forgot
+  // password, etc.) into our existing storefront EmailProvider so
+  // dev runs print the rendered HTML to the console and prod runs
+  // can swap to Resend via EMAIL_PROVIDER. Without this, the
+  // forgot-password endpoint would silently log to payload.logger
+  // and customers would never see their reset URL.
+  email: shoreshEmailAdapter,
 
   // Sharp enables Payload's image processing (resizing, format conversion).
   sharp,

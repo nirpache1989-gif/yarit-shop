@@ -436,7 +436,6 @@ export const Orders: CollectionConfig = {
             text: rendered.text,
           })
         } catch (err) {
-          // eslint-disable-next-line no-console
           console.error('new-order alert email failed (non-fatal):', err)
         }
         return doc

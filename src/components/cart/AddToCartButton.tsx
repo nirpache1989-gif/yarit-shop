@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/Button'
 import type { ProductCardData } from '@/components/product/ProductCard'
 import { resolveProductImage } from '@/lib/product-image'
 import { cn } from '@/lib/cn'
+import { fireConfetti } from '@/components/motion/ConfettiTrigger'
 
 type Props = {
   product: ProductCardData
@@ -70,6 +71,19 @@ export function AddToCartButton({
       quantity,
     )
     setJustAdded(true)
+
+    // Brand confetti burst — 'subtle' for the ghost-link (product
+    // card grid) variant, 'cta' for the bigger primary button on
+    // the product detail page. Fire from the click location so it
+    // feels physically connected. No-ops under reduced-motion.
+    if (e && (e.clientX || e.clientY)) {
+      const x = e.clientX / window.innerWidth
+      const y = e.clientY / window.innerHeight
+      void fireConfetti(variant === 'primary' ? 'cta' : 'subtle', { x, y })
+    } else {
+      void fireConfetti(variant === 'primary' ? 'cta' : 'subtle')
+    }
+
     // Briefly open the drawer so the customer sees the item land
     setTimeout(() => openDrawer(), 150)
     setTimeout(() => setJustAdded(false), 1400)
@@ -98,7 +112,7 @@ export function AddToCartButton({
       variant="primary"
       size={size}
       onClick={() => handleClick()}
-      className={cn(className, justAdded && 'animate-pulse-added')}
+      className={cn(className, justAdded && 'animate-pulse-added', 'btn-lift')}
     >
       {displayLabel}
     </Button>

@@ -11,20 +11,16 @@
  */
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useCartStore, selectCartCount } from '@/lib/cart/store'
 import { useCartDrawerStore } from '@/components/cart/drawerStore'
+import { useHasMounted } from '@/lib/useHasMounted'
 
 export function CartIcon() {
   const t = useTranslations('nav')
   const count = useCartStore(selectCartCount)
   const open = useCartDrawerStore((s) => s.open)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useHasMounted()
 
   const displayCount = mounted ? count : 0
 

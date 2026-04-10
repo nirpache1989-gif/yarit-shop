@@ -44,8 +44,16 @@ import '@/app/globals.css'
  *
  * Must stay a plain string (not a template literal that references
  * runtime values) so Next.js can serialise it into the server HTML.
+ *
+ * Wave D — theme-jump fix.
+ * Also mirror the resolved theme into the `payload-theme` cookie so
+ * that when the user navigates from the storefront to the admin
+ * (/admin), Payload's server-side `getRequestTheme` reads the same
+ * value and renders `<html data-theme="dark">` on the first paint,
+ * instead of defaulting to 'light' and then flashing to dark once
+ * the client-side AdminThemeInit provider kicks in.
  */
-const themeBootstrap = `(function(){try{var s=localStorage.getItem('shoresh-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=s||(d?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();`
+const themeBootstrap = `(function(){try{var s=localStorage.getItem('shoresh-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=s||(d?'dark':'light');document.documentElement.setAttribute('data-theme',t);document.cookie='payload-theme='+t+';path=/;max-age=31536000;samesite=lax';}catch(e){}})();`
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],
@@ -125,10 +133,14 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--color-background)] text-[var(--color-foreground)]">
+        {/* Ambient radial gradient layer — shifts focus between two
+            brand accent colors over 18s, very subtly. Lives under
+            everything else (z-index 0) and doesn't intercept clicks. */}
+        <div className="ambient-breathe" aria-hidden />
         <DriftingLeaves />
         <NextIntlClientProvider>
           <Header />
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 relative z-10">{children}</main>
           <Footer />
           <CartDrawer />
         </NextIntlClientProvider>

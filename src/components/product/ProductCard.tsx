@@ -75,18 +75,22 @@ export function ProductCard({ product, locale, className }: Props) {
         href={`/product/${product.slug}`}
         className="block relative aspect-[4/5] bg-[var(--color-surface-warm)]"
       >
+        {/* .product-image ties into the CSS hover rule in globals.css
+            that adds a subtle translate to the existing scale —
+            the image now pans slightly instead of just zooming. */}
         <Image
           src={imageUrl}
           alt={imageAlt}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="object-contain p-6 transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+          className="product-image object-contain p-6"
         />
 
         {/* "new arrival" eyebrow — replaces the old filled badge.
-            Only shown when `isNew` is set. Tiny italic, top-start. */}
+            Only shown when `isNew` is set. Tiny italic, top-start.
+            Pops in with the brand badge-pop keyframe. */}
         {product.isNew && (
-          <div className="absolute top-4 start-4 z-10">
+          <div className="absolute top-4 start-4 z-10 animate-badge-pop">
             <span
               className="italic text-[11px] tracking-[0.1em] text-[var(--color-accent-deep)]"
               style={{ fontFamily: 'var(--font-display)' }}

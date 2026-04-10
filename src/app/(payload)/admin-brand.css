@@ -243,7 +243,13 @@
      Keeping the localizer in payload.config.ts (storefront code
      still calls `setRequestLocale`) so content localization still
      works under the hood — this rule just hides the admin-facing
-     control since she'll never use it. */
+     control since she'll never use it.
+
+     ⚠ PAYLOAD INTERNAL: targets `.app-header__localizer`, a class
+     owned by Payload. If Payload changes this class name on
+     upgrade (likely in a major version bump), this rule silently
+     stops hiding the localizer and Yarit starts seeing it again.
+     Re-check after every Payload upgrade. */
   .app-header__localizer,
   .app-header__localizer.localizer {
     display: none !important;
@@ -1154,19 +1160,47 @@
    `.drifting-leaves` layer is `position: fixed; z-index: 0`, so
    unpositioned content would actually paint *under* it because
    positioned elements paint above their non-positioned siblings
-   regardless of document order. Mirror the storefront
-   `body > *:not([role="dialog"])` lifter from globals.css: every
-   direct child of <body> except dialogs gets `position: relative;
+   regardless of document order. Every direct child of <body>
+   except dialogs + modal portals gets `position: relative;
    z-index: 2;` which puts every admin surface — login form,
-   dashboard, collection lists, modals, Payload nav, the Next.js
-   dev indicator, all of it — on top of the leaves.
+   dashboard, collection lists, Payload nav, the Next.js dev
+   indicator, all of it — on top of the leaves.
 
-   Skipping dialogs preserves the modal portal's own stacking
-   context (Payload's `.payload__modal-container` is already
-   `position: fixed`). */
-body > *:not([role="dialog"]) {
+   CRITICAL — we MUST skip .payload__modal-container explicitly.
+   The original version of this rule assumed Payload's modal
+   carried `role="dialog"` and would be excluded by the
+   `:not([role="dialog"])` clause. It doesn't — the modal
+   container is an unroled `<div>`, so the rule was clobbering
+   Payload's `position: fixed; inset: 0;` with `position:
+   relative`. Without position:fixed, `inset: 0` no-ops and the
+   modal dropped into normal flow at the bottom of the body,
+   putting its confirm/cancel buttons OFF-SCREEN (y ≈ 1052 on a
+   1034px viewport). End result: Yarit opens a delete
+   confirmation, sees the backdrop, clicks where she thinks
+   "אישור" should be, and nothing happens — the button is below
+   the fold. This broke every modal in the admin (delete,
+   bulk-edit, publish-drafts, etc.).
+
+   Fix: explicitly whitelist the modal container class so its
+   own `position: fixed` sticks. The :not([role="dialog"]) stays
+   as a defensive second line for any future Payload modal that
+   does carry the role.
+
+   ⚠ PAYLOAD INTERNAL: broadly selects everything under <body>.
+   Any new Payload element that doesn't fit the existing stacking
+   model may flicker when this rule hits. Re-check after every
+   Payload upgrade and after adding any new admin component. */
+body > *:not([role="dialog"]):not(.payload__modal-container) {
   position: relative;
   z-index: 2;
+}
+/* Belt-and-braces: restate Payload's own fixed positioning on
+   the modal so even if the selector above ever drifts, the
+   modal stays where Payload put it. */
+body > .payload__modal-container {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
 }
 
 /* ─── C7: richer field description treatment ──────────────────────── */
@@ -1193,7 +1227,16 @@ body > *:not([role="dialog"]) {
 /* Replace "Save" with "שמרי ✓" on the primary submit button when the
    document direction is RTL. Cosmetic only — click handler is
    unchanged. Scoped narrowly to avoid accidentally hiding text on
-   any other primary button. */
+   any other primary button.
+
+   ⚠ PAYLOAD INTERNAL: the `font-size: 0` + `::after { content: ... }`
+   trick hides Payload's internal button label and replaces it with
+   ours. Three selector variants to cover every place Payload ships
+   a primary submit button. If Payload changes the button markup on
+   upgrade, the Hebrew "שמרי ✓" label disappears and the English
+   default shows through. A more robust approach (Payload admin
+   component hook that intercepts the button at render time) is
+   tracked under Phase H in docs/TASKS.md. */
 
 [dir="rtl"] .document-controls .btn--style-primary button,
 [dir="rtl"] button.btn.btn--style-primary[type="submit"],
@@ -1357,15 +1400,259 @@ body > *:not([role="dialog"]) {
   outline-offset: 2px;
 }
 
+/* ============================================================
+ * Wave D + F + M — admin design sprint polish
+ * ============================================================
+ * - Dashboard dark-mode night-branches background
+ * - Urgent stat tile slow pulse ring
+ * - Fulfillment urgent bucket ring + near-cap slide-down
+ * - Collection form gold focus rings (storefront parity)
+ * - Save button check flourish
+ * - Upload dropzone breathing
+ * ============================================================ */
+
+/* ─── Wave D: dashboard dark-mode background ───
+   In dark mode only, the dashboard page gets a very subtle
+   night-branches photo layered behind everything as a "texture".
+   Uses ::before on .yarit-dashboard so it's scoped to the
+   dashboard view and never bleeds into other admin pages. */
+html[data-theme="dark"] .yarit-dashboard {
+  position: relative;
+}
+html[data-theme="dark"] .yarit-dashboard::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url('/brand/ai/night/night-branches-2.jpg');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.18;
+}
+html[data-theme="dark"] .yarit-dashboard > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Wave D: urgent stat tile slow pulse ring ───
+   Breathes between 0.2 and 0.4 alpha over 3s. Replaces the
+   static border-color with an animated box-shadow ring so the
+   layout doesn't shift. */
+@keyframes yarit-urgent-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #A67A4A 20%, transparent); }
+  50%      { box-shadow: 0 0 0 4px color-mix(in srgb, #A67A4A 40%, transparent); }
+}
+.yarit-stat--urgent {
+  animation: yarit-urgent-pulse 3s ease-in-out infinite;
+}
+
+/* ─── Wave D: count-up number formatter ───
+   Mirrors the storefront .count-up class so CountUp works
+   identically inside the admin route group. */
+.count-up {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Wave F: fulfillment urgent bucket pulse ring ───
+   The "לטיפול דחוף" bucket on /admin/fulfillment gets the same
+   slow pulse ring as the urgent stat tile so Yarit's eye lands
+   on it first. Styled via a modifier on the bucket header. */
+@keyframes yarit-bucket-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 1px color-mix(in srgb, #A67A4A 25%, transparent); }
+  50%      { box-shadow: inset 0 0 0 2px color-mix(in srgb, #A67A4A 55%, transparent); }
+}
+.yarit-fulfillment__bucket--urgent {
+  animation: yarit-bucket-pulse 3.2s ease-in-out infinite;
+  border-radius: 12px;
+}
+
+/* Fulfillment bucket enter — gentle fade-up on first render.
+   Each bucket uses --yarit-bucket-delay to stagger the reveal
+   (set via inline style from React). */
+@keyframes yarit-bucket-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.yarit-fulfillment__bucket--enter {
+  animation: yarit-bucket-in 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--yarit-bucket-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+/* ─── Wave F: near-cap banner slide-down ───
+   The "near cap" warning banner Yarit added in the pre-launch
+   sprint slides down from the top when it first appears. */
+@keyframes yarit-near-cap-slide {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.yarit-near-cap-banner {
+  animation: yarit-near-cap-slide 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  will-change: opacity, transform;
+}
+
+/* ─── Wave M: gold hairline focus ring for admin form fields ───
+   Parity with the storefront checkout/auth form focus style.
+   Uses #A67A4A (ochre deep). Scoped to .template-default (the
+   main admin chrome) so it never touches .template-minimal (the
+   login / create-first-user / forgot-password views which have
+   their own Payload-branded focus ring that we don't want to
+   fight). */
+.template-default .field-type input:focus-visible,
+.template-default .field-type textarea:focus-visible,
+.template-default .field-type select:focus-visible,
+.template-default .field-type .rs__control--is-focused {
+  outline: none !important;
+  border-color: #A67A4A !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, #A67A4A 25%, transparent) !important;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+/* ─── Wave M: field group headers in display serif ───
+   The Payload "group" field uses .group-field__header for its
+   title. Italicize + display-serif it to match the storefront
+   section headings. */
+.field-type.group-field > .group-field__header,
+.group-field__header {
+  font-family: var(--font-frank-ruhl, var(--font-serif), Georgia, serif) !important;
+  font-style: italic;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ─── Wave M: save button check flourish ───
+   When the save button transitions to its "saved" state
+   (.btn--style-primary.btn--icon-style-success,
+    .save-draft-btn--saved, etc. — Payload doesn't expose a
+    stable class for this, so we target the generic sticky
+    "save" control and animate a brief scale-down + back when
+    it's clicked). The keyframe is additive — hook it up by
+    toggling .yarit-save-flourish via a Payload afterChange
+    admin component in a follow-up. For now the keyframe
+    definition lives here so Wave M has a one-line enable path. */
+@keyframes yarit-save-flourish {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(0.96); }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.yarit-save-flourish {
+  animation: yarit-save-flourish 520ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ─── Wave M: upload dropzone breathing ───
+   Payload's image upload dropzone (.dropzone,
+   .upload__dropzone) looks dead when empty. Add a very subtle
+   background pulse so Yarit sees that the area is interactive. */
+@keyframes yarit-dropzone-breathe {
+  0%, 100% { background-color: color-mix(in srgb, var(--theme-elevation-50) 96%, transparent); }
+  50%      { background-color: color-mix(in srgb, var(--theme-elevation-100) 96%, transparent); }
+}
+.dropzone,
+.upload__dropzone,
+.file-field__dropzone {
+  animation: yarit-dropzone-breathe 4.5s ease-in-out infinite;
+}
+
+/* ─── Wave U1: visible bulk-action buttons on list views ───
+   Payload ships the list-selection action bar with every button in
+   `btn--style-none` (no background, no border, 12px text). For a
+   non-technical user this looks like plain text, not a button —
+   Yarit reported that "select a product then click delete in the
+   top-left doesn't work" because the "delete" link was invisible
+   to her. This block gives the three selection-bar buttons
+   (select-all-across-pages / edit / delete) real button affordance:
+   - distinct background + border so they pop out of the parchment
+   - slightly larger padding + font-size so they read as buttons
+   - hover / focus-visible states so clicks feel responsive
+   - delete gets a warm-terracotta tint to signal destructive intent
+     (without screaming red — we keep the warm brand tone)
+
+   Scoped to `.list-selection` so it never touches other `.btn` uses
+   elsewhere in Payload's chrome. */
+.list-selection .list-selection__button {
+  background: #fdf8e8 !important;
+  border: 1px solid #d8c79a !important;
+  border-radius: 999px !important;
+  padding: 6px 14px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #1a1f14 !important;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    transform 140ms ease,
+    box-shadow 180ms ease;
+}
+.list-selection .list-selection__button:hover {
+  background: #f5ecd0 !important;
+  border-color: #b7a56c !important;
+  transform: translateY(-1px);
+}
+.list-selection .list-selection__button:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #A67A4A 25%, transparent) !important;
+  border-color: #A67A4A !important;
+}
+
+/* Delete button — warm terracotta tint for destructive intent.
+   The border stays solid so it reads as a real button rather than
+   a loud warning. On hover the fill deepens. */
+.list-selection .delete-documents__toggle.list-selection__button {
+  background: #fbe7d9 !important;
+  border-color: #c9906a !important;
+  color: #7c4e2f !important;
+}
+.list-selection .delete-documents__toggle.list-selection__button:hover {
+  background: #f5d4bb !important;
+  border-color: #a6694a !important;
+  transform: translateY(-1px);
+}
+.list-selection .delete-documents__toggle.list-selection__button:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, #c9906a 35%, transparent) !important;
+  border-color: #7c4e2f !important;
+}
+
+/* Put a little breathing room between the count / select-all link
+   and the edit/delete action cluster so the bar reads as two halves
+   instead of one mashed blob. */
+.list-selection {
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+.list-selection__actions {
+  display: inline-flex !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+
+/* Shrink the em-dash separators Payload drops between each group —
+   they were fighting the new pill layout visually. */
+.list-selection > span:not([class]) {
+  opacity: 0.4;
+  margin-inline: 2px;
+}
+
 /* ─── Reduced-motion guard — disable all new animations ───────────── */
 
 @media (prefers-reduced-motion: reduce) {
   .yarit-tile--stagger,
   .yarit-fulfillment__empty,
+  .yarit-fulfillment__bucket--enter,
+  .yarit-fulfillment__bucket--urgent,
+  .yarit-stat--urgent,
+  .yarit-near-cap-banner,
+  .yarit-save-flourish,
+  .dropzone,
+  .upload__dropzone,
+  .file-field__dropzone,
   .drifting-leaves .leaf {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+    box-shadow: none !important;
   }
 
   .yarit-fulfillment__empty-cta,

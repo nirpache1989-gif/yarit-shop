@@ -14,6 +14,7 @@ type OrderConfirmationData = {
   locale: 'he' | 'en'
   orderNumber: string
   customerName: string
+  customerEmail: string
   items: Array<{
     title: string
     quantity: number
@@ -29,6 +30,9 @@ type OrderConfirmationData = {
     country: string
   }
   siteUrl: string
+  /** True when this order created a brand-new user (first-time
+   *  customer). Drives the "set your password" onboarding block. */
+  isNewCustomer: boolean
 }
 
 const T = {
@@ -48,6 +52,10 @@ const T = {
     questionsBody: 'אני כאן בשבילך — פשוט תענה/י למייל הזה ואחזור אלייך.',
     footer: 'תודה שבחרת ב-{brand} 🌿',
     dir: 'rtl',
+    claimAccountHeading: 'יצרנו לך חשבון — מתי שתרצי',
+    claimAccountBody:
+      'יצרנו חשבון אישי עם האימייל שהזנת כדי שתוכלי לראות את ההזמנות שלך בכל פעם שתרצי. לחצי על הכפתור כדי להגדיר סיסמה ולהיכנס לחשבון.',
+    claimAccountCta: 'הגדרת סיסמה לחשבון שלי',
   },
   en: {
     greeting: 'Hi',
@@ -65,6 +73,10 @@ const T = {
     questionsBody: "I'm here to help — just reply to this email and I'll get back to you.",
     footer: 'Thank you for choosing {brand} 🌿',
     dir: 'ltr',
+    claimAccountHeading: "We've created your account — whenever you're ready",
+    claimAccountBody:
+      "We set up a personal account with the email you entered so you can see your orders anytime. Click the button to set a password and sign in.",
+    claimAccountCta: 'Set my account password',
   },
 } as const
 
@@ -83,6 +95,12 @@ export function renderOrderConfirmationEmail(
   const surface = brand.colors.surface
   const muted = brand.colors.muted
   const border = brand.colors.border
+
+  // Build the "claim your account" link. The /forgot-password page
+  // accepts an ?email=... query param and prefills the input so the
+  // customer just clicks "send reset link" without retyping.
+  const localePrefix = data.locale === 'he' ? '' : '/en'
+  const claimUrl = `${data.siteUrl.replace(/\/+$/, '')}${localePrefix}/forgot-password?email=${encodeURIComponent(data.customerEmail)}`
 
   const itemsRows = data.items
     .map(
@@ -170,6 +188,21 @@ export function renderOrderConfirmationEmail(
               <p style="margin: 0; font-size: 14px; color: #2a2a2a; line-height: 1.6;">${t.whatsNextBody}</p>
             </td>
           </tr>
+          ${
+            data.isNewCustomer
+              ? `
+          <!-- claim your account (first-time customer only) -->
+          <tr>
+            <td style="padding: 16px 32px;">
+              <div style="border: 1px solid ${border}; border-radius: 12px; padding: 20px; background: ${bg};">
+                <h2 style="margin: 0 0 8px 0; font-size: 16px; color: ${primaryDark};">${t.claimAccountHeading}</h2>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #2a2a2a; line-height: 1.6;">${t.claimAccountBody}</p>
+                <a href="${escapeHtml(claimUrl)}" style="display: inline-block; background: ${primary}; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 999px; font-weight: 700; font-size: 14px;">${t.claimAccountCta}</a>
+              </div>
+            </td>
+          </tr>`
+              : ''
+          }
           <!-- questions -->
           <tr>
             <td style="padding: 8px 32px 32px 32px;">
@@ -212,6 +245,14 @@ export function renderOrderConfirmationEmail(
     t.whatsNext,
     `  ${t.whatsNextBody}`,
     '',
+    ...(data.isNewCustomer
+      ? [
+          t.claimAccountHeading,
+          `  ${t.claimAccountBody}`,
+          `  ${claimUrl}`,
+          '',
+        ]
+      : []),
     t.footer.replace('{brand}', brandName),
   ].join('\n')
 

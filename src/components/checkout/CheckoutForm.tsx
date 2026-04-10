@@ -23,6 +23,7 @@ import {
 } from '@/lib/cart/store'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
+import { useHasMounted } from '@/lib/useHasMounted'
 
 type ShippingRate = {
   region: string
@@ -53,8 +54,7 @@ export function CheckoutForm({ initialRates }: Props) {
   const subtotal = useCartStore(selectCartSubtotal)
   const clearCart = useCartStore((s) => s.clear)
 
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => setMounted(true), [])
+  const mounted = useHasMounted()
 
   // Form state
   const [email, setEmail] = useState('')
@@ -104,10 +104,12 @@ export function CheckoutForm({ initialRates }: Props) {
     setError(null)
     setSubmitting(true)
     try {
+      // NOTE: we deliberately do NOT send `siteUrl` anymore. The
+      // server reads `NEXT_PUBLIC_SITE_URL` from its own env and
+      // ignores anything the client tries to pass for the payment
+      // redirect. See src/lib/checkout.ts :: getServerSiteUrl.
       const payload = {
         locale,
-        siteUrl:
-          typeof window !== 'undefined' ? window.location.origin : '',
         items: items.map((i: CartItem) => ({
           productId: i.productId,
           quantity: i.quantity,
@@ -162,7 +164,7 @@ export function CheckoutForm({ initialRates }: Props) {
     <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
       {/* Form */}
       <div className="lg:col-span-2 space-y-8">
-        <Section title={t('contactInfo')}>
+        <Section title={t('contactInfo')} delay={80}>
           <Field label={t('email')} required>
             <input
               type="email"
@@ -197,7 +199,7 @@ export function CheckoutForm({ initialRates }: Props) {
           </div>
         </Section>
 
-        <Section title={t('shippingAddress')}>
+        <Section title={t('shippingAddress')} delay={200}>
           <Field label={t('street')} required>
             <input
               type="text"
@@ -245,7 +247,7 @@ export function CheckoutForm({ initialRates }: Props) {
           </Field>
         </Section>
 
-        <Section title={t('shippingMethod')}>
+        <Section title={t('shippingMethod')} delay={320}>
           {rates.length === 0 ? (
             <p className="text-sm text-[var(--color-muted)]">
               {t('noShippingForRegion')}
@@ -294,9 +296,17 @@ export function CheckoutForm({ initialRates }: Props) {
         )}
       </div>
 
-      {/* Summary */}
-      <aside className="lg:col-span-1 h-fit rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] p-6 space-y-4">
-        <h2 className="text-xl font-bold text-[var(--color-primary-dark)]">
+      {/* Summary — sticky on desktop so it stays visible as the
+          customer scrolls through the longer form on mobile, and
+          acts as a persistent receipt on desktop. */}
+      <aside
+        className="lg:col-span-1 h-fit lg:sticky lg:top-24 rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] p-6 space-y-4 animate-fade-up"
+        style={{ animationDelay: '440ms' }}
+      >
+        <h2
+          className="text-xl font-bold text-[var(--color-primary-dark)]"
+          style={{ fontFamily: 'var(--font-display)' }}
+        >
           {t('orderSummary')}
         </h2>
         <ul className="divide-y divide-[var(--color-border-brand)]">
@@ -330,7 +340,7 @@ export function CheckoutForm({ initialRates }: Props) {
           type="submit"
           variant="primary"
           size="lg"
-          className="w-full"
+          className="w-full btn-lift"
           disabled={submitting || rates.length === 0}
         >
           {submitting ? t('processing') : t('placeOrder')}
@@ -344,19 +354,30 @@ export function CheckoutForm({ initialRates }: Props) {
 }
 
 // ─── Small presentational helpers ──────────────────────────────────
+// Input styling — gold hairline focus ring tuned to the brand
+// palette. Transition is handled per-property so layout changes
+// (border-width) don't jitter.
 const inputClass =
-  'w-full rounded-xl border border-[var(--color-border-brand)] bg-[var(--color-background)] px-4 py-3 text-[var(--color-foreground)] focus:outline-none focus:border-[var(--color-primary)]'
+  'w-full rounded-xl border border-[var(--color-border-brand)] bg-[var(--color-background)] px-4 py-3 text-[var(--color-foreground)] transition-colors duration-200 focus:outline-none focus:border-[var(--color-accent-deep)] focus:ring-2 focus:ring-[var(--color-accent-deep)]/20'
 
 function Section({
   title,
   children,
+  delay = 0,
 }: {
   title: string
   children: React.ReactNode
+  delay?: number
 }) {
   return (
-    <section className="rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] p-6 space-y-4">
-      <h2 className="text-xl font-bold text-[var(--color-primary-dark)]">
+    <section
+      className="rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] p-6 space-y-4 animate-fade-up"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <h2
+        className="text-xl font-bold text-[var(--color-primary-dark)]"
+        style={{ fontFamily: 'var(--font-display)' }}
+      >
         {title}
       </h2>
       {children}

@@ -2,18 +2,22 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-10, end of Round 6.
+> **Last updated:** 2026-04-10, end of the admin audit + bulk-delete fix + hero image swap. Everything from the past three sprints (pre-launch hardening, Phase F.1 customer accounts, full design + animation sprint, admin bug fixes, new hero background) is committed and pushed. Vercel auto-deploy runs next.
 
 ---
 
 ## TL;DR — where we are right now
 
-- 🚀 **Live on production at `https://yarit-shop.vercel.app`.** Everything through **Round 6** is deployed. Branded Shoresh storefront + branded Yarit-friendly Payload admin panel + Warm Night dark mode + Hero light pocket + all 12 admin delight moves + the purposeful-minimalism pass.
+- 🚀 **Live on production at `https://yarit-shop.vercel.app`.** Phase F.1 (customer accounts, login/forgot/reset, my orders) is shipped. The pre-launch hardening sprint is DONE in code. **The design + animation sprint is also DONE in code as of the end of Session 2** — every per-page wave from `~/.claude/plans/humming-popping-turtle.md` has landed locally. We're now waiting on (a) production deploy of Sessions 1+2 and (b) Yarit unblocking Track A (credentials + content). See the "blocked" list below.
+- **NEW — design + animation sprint, complete.** Both sessions of the per-page motion pass have shipped. Session 1 landed Wave 0 (motion primitives: `useInView`, `Reveal`, `StaggeredReveal`, `KenBurns`, `ConfettiTrigger`, `SplitWords`) + Waves H / S / P / C / K / Y (homepage, shop, product, cart, checkout, success). Session 2 landed Waves L / A / O / B / T / G / 4 / D / F / M (auth, account, order detail, about, contact, legal, 404, admin dashboard, admin fulfillment, admin forms). Every wave kept the minimalist-luxurious language — slow spring/ease, no loud colors, per-keyframe `prefers-reduced-motion` guards. Zero new dependencies. See `docs/STATE.md` for the full per-wave changelog.
+- **NEW — storefront→admin theme-jump fix shipped.** The FOUC was fixed in Session 2 Wave D by having the storefront bootstrap mirror the resolved theme into the `payload-theme` cookie (which Payload's server-side `getRequestTheme` already reads), so `/admin` now renders the right `data-theme` on the first paint instead of flashing light-then-dark. `AdminThemeInit.tsx` downgraded to a safety net. See `STATE.md` Wave D entry for the full root-cause writeup.
 - **Owner:** Yarit, a 65-year-old non-technical Hebrew-speaking merchant selling Forever Living + independent wellness products. She will use the admin panel every day.
-- **Tech stack:** Next.js 16.2.3 + Tailwind v4 + Payload CMS 3.82 + Neon Postgres (prod) / SQLite (dev) + next-intl 4.9 + Vercel.
+- **Tech stack:** Next.js 16.2.3 + Tailwind v4 + Payload CMS 3.82 + SQLite (dev) / Neon Postgres (prod) + next-intl 4.9 + Vercel.
 - **Admin login (dev only):** `admin@shoresh.example` / `admin1234` (created via `POST /api/dev/create-admin`).
 - **Production admin login:** Yarit's own credentials (not in this repo).
-- **Dev server:** `npm run dev` from `C:\AI\YaritShop\yarit-shop` → `http://localhost:3000`. `.vercel/project.json` is already linked to `prj_nog4wxxJHini5jSu9iW5CPGDAuYj` so `npx vercel --prod` triggers a production deploy without extra config.
+- **Dev server:** `npm run dev` from `C:\AI\YaritShop\yarit-shop` → `http://localhost:3000`. Local dev hits `./shoresh-dev.db` (SQLite) because `DATABASE_URI` is commented out in `.env.local`. Production Vercel holds its own `DATABASE_URI` pointing at Neon.
+- **Vercel deploy:** `.vercel/project.json` is already linked. `npx vercel --prod` triggers a production deploy without extra config.
+- **Quality gates:** `npx tsc --noEmit` + `npm run build` + `npm run lint` all pass (only warnings are in three stub files that disappear once Track A credentials land). `npm test` is the one-line shorthand.
 
 ## Critical read-me-first
 
@@ -39,25 +43,63 @@
 - **Round 6** — hide misleading content-locale chip + theme-adaptive admin chrome (nav, header, sidebar greeting, tables)
 - **Infrastructure** — Neon Postgres adapter, Vercel Blob plugin (token-gated), Vercel deploys, custom `yarit-shop.vercel.app` domain
 
-### 🚧 In progress / near-term
+### 🚧 Shipped in the pre-launch hardening sprint (end of session, 2026-04-10)
 
-**This is what the next session should tackle, in priority order:**
+**All code work is done.** Phase F.1 + Wave B1 → B8 + Track A prep all landed in one sprint. Nothing in code is blocking launch.
 
-1. **Phase F customer account** — `/account` page (order history) + `/account/orders/[id]` (order detail visible to the customer). Blocks "launch-ready storefront." Highest user value, no external dependencies.
-2. **Phase F SEO pass** — `sitemap.xml`, `robots.txt`, per-page `<meta>` + Open Graph, Product structured data (JSON-LD). Required for Google indexing.
-3. **Phase F responsive QA** — systematic check at iPhone SE / iPad / 1440px desktop across all storefront pages. Log issues, fix in waves.
-4. **Phase F accessibility pass** — WCAG AA sweep. Start with the audit tools (axe-core or Lighthouse) across `/`, `/shop`, `/product/[slug]`, `/cart`, `/checkout`.
-5. **Phase F string coverage** — grep for any remaining hardcoded Hebrew/English strings in components that should go through `useTranslations`.
-6. **Orders email hook dev-safe** — `src/collections/Orders.ts:364` `afterChange` can silently interfere with order creation when `paymentStatus: 'paid'` is set on create and no email provider is configured. Wrap the dispatch in a provider-check + broader try/catch.
+- **Wave B1 hardening** — `PAYLOAD_SECRET` hard-fails in production-like env instead of falling back to a source-code default; `/api/checkout` reads `siteUrl` from server env only (ignores client); customer passwords use `crypto.randomBytes`; `/api/checkout` body goes through a hand-rolled runtime validator.
+- **Wave B2 mobile nav** — `MobileNav.tsx` hamburger + slide-in panel with focus trap + ESC + scroll lock + focus restore. Wired into `Header.tsx` below the `md` breakpoint.
+- **Wave B3 SEO** — `src/app/sitemap.ts` + `src/app/robots.ts` (Next.js convention routes). Per-page `generateMetadata` on shop/product/about/contact. Product `schema.org/Product` JSON-LD with ILS price + availability.
+- **Wave B4 a11y** — cart quantity buttons now have descriptive aria-labels (`t('cart.increaseQty', { item })`), cart drawer has a real focus trap + focus restore, back links on about/contact have accessible names.
+- **Wave B5 lint + format** — `mounted+setState` anti-pattern replaced with a shared `useHasMounted()` hook (uses `useSyncExternalStore` — the React 19 approved API). `ThemeToggle` now subscribes to the `[data-theme]` attribute via `MutationObserver` + `useSyncExternalStore`. Shared `src/lib/format.ts` for ILS + date formatting. Windows-compatible `scripts/reset-db.mjs` replaces the old `rm -rf …` shell script. Lint is 0 errors + 3 warnings (only in Track A stub files that disappear once credentials are pasted in).
+- **Wave B6 admin hardening** — fulfillment loader bumped to 500 cap with a "near cap" warning, N+1 customer lookup dropped in favor of `depth: 1` population, `YaritDashboard` stats now filter by `paymentStatus: paid` to match fulfillment dashboard's "actionable" semantics. Three fragile CSS overrides in `admin-brand.css` carry ⚠ PAYLOAD INTERNAL guard comments.
+- **Wave B7 post-checkout email** — order confirmation email now includes a "set your account password" CTA for first-time customers with a deep link to `/forgot-password?email=<their email>`. `ForgotPasswordForm` prefills the input from the query param.
+- **Wave B8 docs + CI** — new `docs/INDEX.md` + `docs/ONBOARDING.md`. `.github/workflows/ci.yml` runs tsc + lint + build on every push and PR. `package.json` has a new `test` script.
+
+### 🟢 Track A prep — paste-in-ready (waiting on Yarit to provide the values)
+
+**All the scaffolding is done.** When Yarit hands over the credentials and content, it's literally copy-paste:
+
+- **Email provider (Resend)** — `src/lib/email/resend.ts` is fully implemented. To activate:
+  ```
+  EMAIL_PROVIDER=resend
+  RESEND_API_KEY=re_xxx
+  EMAIL_FROM=shop@shoresh.co.il
+  EMAIL_FROM_NAME=שורש
+  ```
+  That's it. Restart the dev server or redeploy.
+
+- **Payment gateway (Meshulam)** — `src/lib/payments/meshulam.ts` is scaffolded with the full framework: env reading, error handling, HMAC signature verification, status mapping. Two `TODO(meshulam)` hotspots mark the spots where Meshulam's PDF docs dictate exact field names. To activate:
+  ```
+  PAYMENT_PROVIDER=meshulam
+  MESHULAM_API_KEY=xxx
+  MESHULAM_USER_ID=xxx
+  MESHULAM_PAGE_CODE=xxx
+  MESHULAM_WEBHOOK_SECRET=xxx
+  MESHULAM_BASE_URL=https://sandbox.meshulam.co.il/api/light/server/1.0
+  ```
+  Plus ~30-60 min of work to reconcile the two TODO spots against the Meshulam PDF, then a sandbox E2E test before flipping the base URL to live.
+
+- **Legal content** — `src/app/(storefront)/[locale]/legal/[slug]/page.tsx` reads markdown from `content/legal/<slug>/<locale>.md`. Drop the files in:
+  ```
+  content/legal/terms/he.md
+  content/legal/terms/en.md
+  content/legal/privacy/he.md
+  ... etc.
+  ```
+  See `content/legal/README.md` for the exact paths. The four `/legal/*` routes are reachable immediately — they show a "coming soon" fallback until the files land.
+
+- **Real business info** — Yarit fills `/admin/globals/site-settings` directly (phone, WhatsApp, email, address, tax ID, social handles). The admin form is already in Hebrew with per-field help text.
+
+- **Footer legal links** — once the markdown files are in place, add four `<Link>` entries back to `src/components/layout/Footer.tsx` (they were removed in the polish pass because the pages didn't exist yet).
+
+- **Domain name** — register + DNS + add to Vercel. Non-code.
+
+- **Final product catalog copy** — Yarit edits live via `/admin/collections/products`. Non-code.
 
 ### 🔒 Blocked — waiting on Yarit/stakeholder input
 
-- **Payment gateway credentials.** Meshulam is the recommended default but not locked — alternatives are Tranzila / CardCom / Grow / Pelecard. Once a gateway is chosen, wire `src/lib/payments/{gatewayName}.ts` against the existing `PaymentProvider` interface in `src/lib/payments/provider.ts`. The mock provider currently ships in prod; real transactions need the swap.
-- **Business details for SiteSettings.** Phone, WhatsApp, public email, physical address, Israeli tax ID (ח.פ. / ע.מ.). Some placeholder values are seeded but they need to be replaced before launch.
-- **Forever distributor info.** ID + landing URL (even though we don't deep-link, these are needed for footer marketing + compliance).
-- **Legal content.** Terms, Shipping Policy, Returns Policy, Privacy Policy. Each becomes a simple markdown-rendered page under `/legal/[slug]`.
-- **Domain name.** Currently on `yarit-shop.vercel.app`. Yarit wants `shoresh.co.il` or similar. Register + point DNS + add to Vercel.
-- **Final product catalog copy.** The 9 seeded products have placeholder Hebrew + English copy. Yarit will edit via the admin panel once live.
+(Same as Track A prep above — each item is a pure "paste the values" operation because the code is ready.)
 
 ### 🎁 Phase G — post-launch bonuses (after launch, not blockers)
 
@@ -155,5 +197,126 @@ curl -s https://yarit-shop.vercel.app/admin/login | grep -c "yarit-brand-logo"  
 - **Round 4** — Hero dark-light pocket + logo blur fix + 12 admin delight moves + design-review agent sweep
 - **Round 5** — Emergency Vercel redeploy + purposeful-minimalism pass (hide dead code, kill duplicates)
 - **Round 6** — Hide misleading content-locale chip + theme-adaptive admin chrome
+- **Design + animation sprint Session 1** — Wave 0 motion primitives + Waves H / S / P / C / K / Y (homepage, shop, product, cart, checkout, success). Plan file: `~/.claude/plans/humming-popping-turtle.md`.
+- **Design + animation sprint Session 2** — Waves L / A / O / B / T / G / 4 / D / F / M (auth, account, order detail, about, contact, legal, 404, admin dashboard, admin fulfillment, admin forms). Includes the critical storefront→admin theme-jump fix in Wave D.
 
 Full entries are in `docs/STATE.md` under `## Changelog`. Read from the top for reverse-chronological history.
+
+---
+
+## What's next — the path to finishing the project
+
+Everything from the design + animation sprint, Phase F.1 customer
+accounts, the pre-launch hardening sprint, and today's admin audit
+fixes is now pushed to main. Vercel will auto-deploy from the push.
+The project is **functionally complete for launch** — the only things
+left are external dependencies (credentials + content from Yarit) plus
+a handful of nice-to-have polish items that don't block launch.
+
+### 🚀 Immediate (verify the push went through)
+
+1. **Check Vercel auto-deploy.** The push in today's big commit
+   should trigger a Vercel build. Watch `https://yarit-shop.vercel.app`
+   for the new deploy. If auto-deploy is still stalled (it was flaky
+   during Rounds 5-6), run `npx vercel --prod` manually.
+2. **Spot-check the live URLs in a real browser** (Claude Preview
+   can't fully exercise client-side motion — needs a real eye):
+   - `/` — new hero: watercolor botanical frame + big Shoresh logo +
+     headline "שורשים של בריאות" visible in the cream vignette
+   - `/shop` — 7 new flat-lay product photos (BodylotionNwsh.jpg,
+     ForeverDaily.jpg, etc.) on each card
+   - `/admin/collections/products` — select a row, red "מחיקה" pill
+     visible top-left, click it, confirmation modal appears in the
+     CENTER of the viewport, clicking "אישור" actually deletes
+   - `/admin` from a dark-mode storefront visit — should render dark
+     on first paint, not flash light
+   - `/account/orders/[id]` of a paid order — timeline line draws
+     in, total counts up from 0
+
+### 🟢 Launch blockers — waiting on Yarit / external input
+
+These are the only things stopping the shop from being ready for real
+customers. Each is paste-in-ready:
+
+1. **Payment gateway** — Meshulam (recommended) or alternative. Paste
+   `MESHULAM_API_KEY` / `MESHULAM_USER_ID` / `MESHULAM_PAGE_CODE` /
+   `MESHULAM_WEBHOOK_SECRET` into Vercel env, set
+   `PAYMENT_PROVIDER=meshulam`. Scaffolding in `src/lib/payments/` is
+   complete with two `TODO(meshulam)` hotspots for the exact field
+   names from Meshulam's PDF.
+2. **Email provider** — Resend. Paste `RESEND_API_KEY` + `EMAIL_FROM`,
+   set `EMAIL_PROVIDER=resend`. Adapter in `src/lib/email/resend.ts`
+   is complete.
+3. **Legal content** — terms / privacy / shipping / returns. Drop
+   the four markdown files into `content/legal/<slug>/<locale>.md`
+   (placeholders + README already in place). Pages at `/legal/<slug>`
+   go live on the next deploy.
+4. **Real business info** — Yarit fills via `/admin/globals/
+   site-settings` (contact email, WhatsApp, phone, social links,
+   business tax ID, distributor ID).
+5. **Custom domain** — map `yarit-shop.vercel.app` to a real domain
+   (e.g., `shoresh.co.il`) via Vercel DNS.
+6. **Final catalog copy** — Yarit edits the 7 seed products and adds
+   anything else she wants via the admin. The catalog is hers to
+   curate.
+
+### 🟡 Nice-to-have polish (not blocking launch)
+
+These are documented for a future session but no one has asked for
+them and the site ships fine without them:
+
+1. **Wire the `.yarit-save-flourish` CSS animation** to Payload's
+   save button on successful save. Keyframe is already defined in
+   `admin-brand.css`; needs a Payload `afterChange` admin component
+   that toggles the class on the sticky save control. Payload
+   doesn't expose a stable class for "save just succeeded" so this
+   requires touching Payload internals.
+2. **Add descriptions to the Users create form** (email, name,
+   phone, saved addresses). The role + preferredLocale fields
+   already have rich helpers; the rest rely on labels alone. Minor.
+3. **Add a `listSearchableFields: ['email', 'name']`** to the Users
+   collection for better admin search UX. Small QoL win.
+4. **Audit docs consistency** after launch — `docs/TASKS.md`,
+   `docs/ADMIN-SURFACES.md`, `docs/FULFILLMENT.md` might have stale
+   references to the old slug convention or the pre-redesign admin
+   chrome.
+5. **Admin onboarding tour enhancement** — the current OnboardingTour
+   is basic (driver.js with a few steps). Could be expanded to walk
+   Yarit through her first product edit / first order fulfillment
+   end-to-end.
+
+### 📝 Gotchas documented for the next AI session
+
+- **Never use Tailwind-like bracketed class names inside JSX/TSX
+  comments.** Tailwind v4's scanner treats them as real classes and
+  will try to compile them. If the example contains literal `...` or
+  any non-CSS-variable characters, the compiled output will be
+  invalid CSS and will 500 every storefront page at build time.
+  Write examples in plain prose ("arbitrary text color utility")
+  instead.
+- **CountUp takes string props (prefix / suffix / locale), NOT a
+  format function.** React Server Components cannot pass function
+  props to Client Components — Next 16 throws at render time. If you
+  extend CountUp, keep it serializable.
+- **Payload's `.payload__modal-container` is an un-role'd `<div>`,
+  NOT a `[role="dialog"]`.** Any `body > *:not([role="dialog"])`
+  rule in admin-brand.css must explicitly also
+  `:not(.payload__modal-container)` or it will break every modal in
+  the admin (confirm button drops off-screen).
+- **Bulk-delete buttons in Payload list views inherit
+  `btn--style-none`** by default. If you rewrite admin-brand.css,
+  keep the `.list-selection__button` pill treatment around — without
+  it the delete button is invisible against the parchment bg.
+- **Seed script slug convention vs. production DB drift:**
+  `STATIC_IMAGE_OVERRIDES` in `src/lib/product-image.ts` registers
+  TWO key conventions for each photo (seed slugs like `aloe-lip-balm`
+  AND drift slugs like `aloe-lips`). Don't collapse the map without
+  first confirming what's actually in the production Neon DB.
+- **Admin theme-jump:** the storefront's inline `themeBootstrap`
+  script in `(storefront)/[locale]/layout.tsx` mirrors the theme into
+  the `payload-theme` cookie on every page load. If you touch that
+  script, make sure the cookie write stays, or the first paint of
+  `/admin` will flash light then flip to dark.
+
+Full per-wave details are in `docs/STATE.md` — read the changelog
+from the top for reverse-chronological history.

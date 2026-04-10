@@ -1,5 +1,5 @@
 /*
- * Shoresh — global styles
+ * Shoresh - global styles
  * -------------------------------------------------------------
  * Loaded by src/app/(storefront)/[locale]/layout.tsx. NOT loaded
  * by the Payload admin (which uses its own CSS in admin-brand.css).
@@ -298,6 +298,196 @@ html {
 
 .animate-fade-up {
   animation: fade-up 400ms ease-out both;
+}
+
+/* ============================================================
+ * Design sprint — motion primitives
+ * ----
+ * All the new keyframes + utility classes added by the per-page
+ * design sprint. Pair with the React components in
+ * `src/components/motion/*` (Reveal, StaggeredReveal, KenBurns,
+ * SplitWords, ConfettiTrigger) and the hook
+ * `src/lib/motion/useInView.ts`.
+ *
+ * prefers-reduced-motion: every animation below is listed in the
+ * final guard block near the bottom of this file, which zeros
+ * out `animation` and `transition` for users who opt out.
+ * ============================================================ */
+
+/* ─── Ken Burns: slow cinematic zoom + drift ───
+   Four variants so stacked layers can drift in different directions
+   without feeling synchronized. `alternate` direction makes the motion
+   ping-pong rather than hard-reset, which reads smoother. */
+@keyframes ken-burns-tl {
+  0%   { transform: scale(1)     translate(0, 0); }
+  100% { transform: scale(1.08)  translate(-1.5%, -1.5%); }
+}
+@keyframes ken-burns-tr {
+  0%   { transform: scale(1)     translate(0, 0); }
+  100% { transform: scale(1.08)  translate(1.5%, -1.5%); }
+}
+@keyframes ken-burns-bl {
+  0%   { transform: scale(1)     translate(0, 0); }
+  100% { transform: scale(1.08)  translate(-1.5%, 1.5%); }
+}
+@keyframes ken-burns-br {
+  0%   { transform: scale(1)     translate(0, 0); }
+  100% { transform: scale(1.08)  translate(1.5%, 1.5%); }
+}
+.ken-burns {
+  animation: ken-burns-tl 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+.ken-burns--tr { animation-name: ken-burns-tr; }
+.ken-burns--bl { animation-name: ken-burns-bl; }
+.ken-burns--br { animation-name: ken-burns-br; }
+.ken-burns > :first-child {
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Breathing leaf: gentle scale loop for the header logo ───
+   Transform origin is pulled up to the top of the logo so the leaf
+   above the wordmark scales — the wordmark itself stays almost
+   perfectly still, which reads as "the plant is alive" rather than
+   "the logo is bouncing". */
+@keyframes leaf-breathe {
+  0%, 100% { transform: scale(1)     rotate(0deg); }
+  50%      { transform: scale(1.035) rotate(0.4deg); }
+}
+.leaf-breathe {
+  animation: leaf-breathe 5.5s ease-in-out infinite;
+  transform-origin: 50% 78%;
+  display: inline-block;
+}
+
+/* ─── Scroll-triggered reveal ───
+   Paired with <Reveal> / <StaggeredReveal>. The wrapping JSX adds
+   `data-reveal="up|start"` on mount and flips to
+   `data-revealed="true"` when useInView fires. The CSS rules below
+   handle visibility + animation; `--reveal-delay` custom property
+   lets the parent pass a per-child stagger.
+
+   RTL-aware: `translateX` uses a custom property that's set
+   negatively by the default rule and flipped positive for RTL
+   content, so "start" edge always means "the reader-facing start"
+   regardless of direction. */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes reveal-start {
+  from { opacity: 0; transform: translateX(var(--reveal-dx, -24px)); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+html[dir="rtl"] [data-reveal="start"] { --reveal-dx: 24px; }
+
+[data-reveal]:not([data-revealed="true"]) {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+[data-reveal="up"][data-revealed="true"] {
+  animation: reveal-up 720ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal="start"][data-revealed="true"] {
+  animation: reveal-start 720ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* ─── Product image pan on card hover ───
+   Adds a subtle translate to the existing scale so the image feels
+   like it's drifting as much as zooming. The parent .product-card
+   already has its own hover lift + shadow in the existing block
+   further down; this rule is additive. */
+.product-card .product-image {
+  transition: transform 720ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.product-card:hover .product-image {
+  transform: scale(1.06) translate(-0.6%, -0.6%);
+}
+
+/* ─── Badge pop: TrustBar points, hero CTAs, "new arrival" label ───
+   Slight overshoot in the middle so it reads as a gentle bounce
+   without being gimmicky. ~500ms total. */
+@keyframes badge-pop {
+  from { opacity: 0; transform: translateY(6px) scale(0.96); }
+  60%  { opacity: 1; transform: translateY(-1px) scale(1.02); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-badge-pop {
+  animation: badge-pop 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ─── Ambient breathing gradient ───
+   Very subtle radial gradients that shift their focus over ~18s.
+   Mounted once as a `<div class="ambient-breathe">` inside the
+   storefront layout, behind the drifting leaves but above the
+   body background. Zero perceptual cost under reduced-motion
+   because the gradient still displays — only the shift animation
+   stops. */
+@keyframes ambient-breathe {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+.ambient-breathe {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse at 30% 20%, color-mix(in oklab, var(--color-primary) 4%, transparent), transparent 60%),
+    radial-gradient(ellipse at 70% 80%, color-mix(in oklab, var(--color-accent) 4%, transparent), transparent 60%);
+  background-size: 200% 200%;
+  animation: ambient-breathe 18s ease-in-out infinite;
+}
+
+/* ─── Order timeline — Wave O ───
+   The customer order detail page (/account/orders/[id]) shows a
+   4-step progress timeline. These rules animate each completed
+   connector line filling in via a width transition, each
+   completed checkmark drawing itself via stroke-dasharray, and
+   the current step gently pulsing.
+
+   The connector uses width instead of stroke-dasharray because it
+   is a flex sibling span, not an SVG path — width animates on the
+   compositor and stays cheap. */
+@keyframes timeline-connector-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+.timeline-connector-fill {
+  animation: timeline-connector-fill 800ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--timeline-delay, 0ms);
+}
+
+@keyframes timeline-check-draw {
+  from { stroke-dashoffset: 24; }
+  to   { stroke-dashoffset: 0; }
+}
+.timeline-check-draw {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  animation: timeline-check-draw 520ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--timeline-delay, 0ms);
+}
+
+@keyframes timeline-current-pulse {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 35%, transparent); }
+  50%      { transform: scale(1.04); box-shadow: 0 0 0 6px color-mix(in oklab, var(--color-primary) 0%, transparent); }
+}
+.timeline-current-pulse {
+  animation: timeline-current-pulse 2.8s ease-in-out infinite;
+}
+
+/* ─── Count-up number — Wave O + D ───
+   The customer order total and admin stat tiles interpolate from
+   0 → real value on mount. Uses tabular-nums so the width doesn't
+   jitter as the digits change. The actual interpolation is owned
+   by a small client component (CountUp) because CSS alone can't
+   animate text content — this class just pins the font features. */
+.count-up {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ===== Nav link underline animation (RTL-aware) ===== */
@@ -635,14 +825,42 @@ html[dir="rtl"] .btn-lift:focus-visible::before {
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse-added,
   .animate-fade-up,
+  .animate-badge-pop,
   .drifting-leaves .leaf,
   .iridescent-heading,
-  .btn-lift::before {
+  .btn-lift::before,
+  .ken-burns,
+  .leaf-breathe,
+  .ambient-breathe,
+  .timeline-connector-fill,
+  .timeline-check-draw,
+  .timeline-current-pulse,
+  [data-reveal][data-revealed="true"] {
     animation: none !important;
+  }
+
+  /* Wave O — under reduced motion the timeline check SVGs must
+     still be visible (no stroke-dashoffset) and the filled
+     connectors must still show their 100% state. */
+  .timeline-check-draw {
+    stroke-dashoffset: 0 !important;
+  }
+  .timeline-connector-fill {
+    width: 100% !important;
+  }
+
+  /* Scroll-triggered reveals also need their opacity reset to 1
+     under reduced motion, otherwise the content stays invisible
+     because useInView's short-circuit path sets inView=true but
+     the keyframe is what actually drives the opacity from 0 → 1. */
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
   }
 
   .nav-link::after,
   .product-card,
+  .product-card .product-image,
   .btn-lift,
   html,
   body {

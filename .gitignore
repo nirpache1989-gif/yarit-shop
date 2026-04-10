@@ -63,3 +63,4 @@ shoresh-dev.db-*
 /src/payload-types.ts
 
 .vercel
+.git-commit-msg.txt

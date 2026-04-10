@@ -11,6 +11,7 @@
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { Container } from '@/components/ui/Container'
+import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
 
 type Item = {
   src: string
@@ -30,11 +31,18 @@ export function TrustBar() {
   return (
     <section className="py-16 border-y border-[var(--color-border-brand)] bg-[var(--color-surface-warm)]">
       <Container>
-        <ul className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {/* Each item is a <li> and StaggeredReveal clones each child
+            with data-reveal + an incremented --reveal-delay. One
+            IntersectionObserver on the <ul> drives the whole set. */}
+        <StaggeredReveal
+          as="ul"
+          className="grid grid-cols-2 md:grid-cols-4 gap-8"
+          stagger={110}
+        >
           {items.map((item) => (
             <li
               key={item.labelKey}
-              className="flex flex-col items-center text-center gap-3"
+              className="flex flex-col items-center text-center gap-3 transition-transform duration-300 hover:-translate-y-0.5"
             >
               <div className="relative w-16 h-16">
                 <Image
@@ -50,7 +58,7 @@ export function TrustBar() {
               </p>
             </li>
           ))}
-        </ul>
+        </StaggeredReveal>
       </Container>
     </section>
   )

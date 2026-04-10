@@ -22,16 +22,47 @@
  *          submit productIds + quantities + customer/address info.
  *          Prices and stock come from Payload.
  */
+import { randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
 import { getPaymentProvider } from '@/lib/payments'
 import { getEmailProvider } from '@/lib/email'
 import { renderOrderConfirmationEmail } from '@/lib/email/templates'
 import { countryToRegion, getShippingRatesForRegion } from '@/lib/shipping'
 import { STATIC_IMAGE_OVERRIDES } from '@/lib/product-image'
+import { signOrderToken } from '@/lib/orderToken'
+
+/**
+ * Server-side source of truth for the storefront's public URL.
+ *
+ * This used to come from `input.siteUrl`, which the browser sent as
+ * `window.location.origin`. A malicious client could have passed a
+ * hostile URL and then followed the payment gateway's redirect into
+ * their own domain, exfiltrating the order token. Trusting a
+ * redirect target to come from the client is always a bad idea.
+ *
+ * We now read `NEXT_PUBLIC_SITE_URL` from the server env (set on
+ * Vercel, and in local `.env.local`). No client input is honored.
+ */
+function getServerSiteUrl(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_SITE_URL
+  if (fromEnv && /^https?:\/\//.test(fromEnv)) {
+    return fromEnv.replace(/\/+$/, '')
+  }
+  return 'http://localhost:3000'
+}
+
+/**
+ * Generate a strong random password for an auto-created customer
+ * account. Customers never see this password — they always arrive
+ * through the forgot-password flow — but we still use a CSPRNG so a
+ * weak password never sits in the database.
+ */
+function generateCustomerPassword(): string {
+  return randomBytes(24).toString('base64url')
+}
 
 export type CheckoutInput = {
   locale: 'he' | 'en'
-  siteUrl: string
   items: Array<{ productId: number | string; quantity: number }>
   customer: { email: string; name: string; phone: string }
   shippingAddress: {
@@ -55,6 +86,127 @@ export type CheckoutResult =
       immediatePaid: boolean
     }
   | { ok: false; error: string }
+
+/**
+ * Runtime validator for the POST /api/checkout body. Hand-rolled
+ * (no zod dep) because the input shape is small and stable. Returns
+ * a narrowed `CheckoutInput` on success, or an error with a short
+ * machine-readable code describing the first failing field.
+ *
+ * This exists because the route handler used to cast the raw JSON
+ * to `CheckoutInput` without checking — a client could omit a
+ * required field and trip a downstream crash. Every defensive check
+ * here protects a specific line in `createOrderFromCheckout`.
+ */
+export function validateCheckoutInput(
+  raw: unknown,
+): { ok: true; input: CheckoutInput } | { ok: false; error: string } {
+  if (!raw || typeof raw !== 'object') {
+    return { ok: false, error: 'INVALID_BODY' }
+  }
+  const obj = raw as Record<string, unknown>
+
+  if (obj.locale !== 'he' && obj.locale !== 'en') {
+    return { ok: false, error: 'INVALID_LOCALE' }
+  }
+
+  if (!Array.isArray(obj.items) || obj.items.length === 0) {
+    return { ok: false, error: 'INVALID_ITEMS' }
+  }
+  const items: CheckoutInput['items'] = []
+  for (const rawItem of obj.items) {
+    if (!rawItem || typeof rawItem !== 'object') {
+      return { ok: false, error: 'INVALID_ITEM' }
+    }
+    const itemObj = rawItem as Record<string, unknown>
+    const pid = itemObj.productId
+    const qty = itemObj.quantity
+    if (typeof pid !== 'number' && typeof pid !== 'string') {
+      return { ok: false, error: 'INVALID_ITEM_PRODUCT_ID' }
+    }
+    if (typeof qty !== 'number' || !Number.isFinite(qty) || qty <= 0 || qty > 999) {
+      return { ok: false, error: 'INVALID_ITEM_QUANTITY' }
+    }
+    items.push({ productId: pid, quantity: qty })
+  }
+
+  const customer = obj.customer as Record<string, unknown> | undefined
+  if (!customer || typeof customer !== 'object') {
+    return { ok: false, error: 'INVALID_CUSTOMER' }
+  }
+  const email = customer.email
+  const name = customer.name
+  const phone = customer.phone
+  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { ok: false, error: 'INVALID_CUSTOMER_EMAIL' }
+  }
+  if (typeof name !== 'string' || name.trim().length === 0) {
+    return { ok: false, error: 'INVALID_CUSTOMER_NAME' }
+  }
+  if (typeof phone !== 'string' || phone.trim().length === 0) {
+    return { ok: false, error: 'INVALID_CUSTOMER_PHONE' }
+  }
+
+  const addr = obj.shippingAddress as Record<string, unknown> | undefined
+  if (!addr || typeof addr !== 'object') {
+    return { ok: false, error: 'INVALID_ADDRESS' }
+  }
+  const recipientName = addr.recipientName
+  const addrPhone = addr.phone
+  const street = addr.street
+  const city = addr.city
+  const postalCode = addr.postalCode
+  const country = addr.country
+  if (typeof recipientName !== 'string' || recipientName.trim().length === 0) {
+    return { ok: false, error: 'INVALID_ADDRESS_RECIPIENT' }
+  }
+  if (typeof addrPhone !== 'string' || addrPhone.trim().length === 0) {
+    return { ok: false, error: 'INVALID_ADDRESS_PHONE' }
+  }
+  if (typeof street !== 'string' || street.trim().length === 0) {
+    return { ok: false, error: 'INVALID_ADDRESS_STREET' }
+  }
+  if (typeof city !== 'string' || city.trim().length === 0) {
+    return { ok: false, error: 'INVALID_ADDRESS_CITY' }
+  }
+  if (postalCode !== undefined && typeof postalCode !== 'string') {
+    return { ok: false, error: 'INVALID_ADDRESS_POSTAL' }
+  }
+  if (
+    typeof country !== 'string' ||
+    !['IL', 'US', 'GB', 'EU', 'CA', 'AU', 'OTHER'].includes(country)
+  ) {
+    return { ok: false, error: 'INVALID_ADDRESS_COUNTRY' }
+  }
+
+  const shippingMethodIndex = obj.shippingMethodIndex
+  if (
+    typeof shippingMethodIndex !== 'number' ||
+    !Number.isInteger(shippingMethodIndex) ||
+    shippingMethodIndex < 0 ||
+    shippingMethodIndex > 20
+  ) {
+    return { ok: false, error: 'INVALID_SHIPPING_METHOD_INDEX' }
+  }
+
+  return {
+    ok: true,
+    input: {
+      locale: obj.locale,
+      items,
+      customer: { email, name, phone },
+      shippingAddress: {
+        recipientName,
+        phone: addrPhone,
+        street,
+        city,
+        postalCode: typeof postalCode === 'string' ? postalCode : undefined,
+        country,
+      },
+      shippingMethodIndex,
+    },
+  }
+}
 
 type ProductSnapshot = {
   productId: number | string
@@ -152,9 +304,14 @@ export async function createOrderFromCheckout(
     limit: 1,
   })
   let customer = existingRes.docs[0] as { id: number | string } | undefined
+  let isNewCustomer = false
   if (!customer) {
-    const randomPassword =
-      Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2)
+    isNewCustomer = true
+    // Cryptographically-random password. Customers never see it —
+    // first-time visitors arrive through the forgot-password flow to
+    // set their own. Using crypto.randomBytes instead of Math.random
+    // so a weak password never hits the database.
+    const randomPassword = generateCustomerPassword()
     const created = await payload.create({
       collection: 'users',
       data: {
@@ -217,9 +374,25 @@ export async function createOrderFromCheckout(
   }
 
   // 7. Kick off payment
+  //
+  // SECURITY: build both the success and cancel URLs from a
+  // server-controlled siteUrl (`NEXT_PUBLIC_SITE_URL`), NOT from a
+  // field on the client's request body. Previously the client sent
+  // `window.location.origin` and we echoed it back — a malicious
+  // client could have pointed the payment gateway's redirect at
+  // their own domain and stolen the signed order token. Any caller
+  // can now spoof their headers and body all they want; the redirect
+  // still lands on yarit-shop.vercel.app (or whatever Vercel env
+  // sets).
+  //
+  // The success URL also carries a signed HMAC token over the order
+  // ID (see src/lib/orderToken.ts); the success page verifies before
+  // reading the order so leaked numeric IDs don't expose summaries.
+  const siteUrl = getServerSiteUrl()
+  const successToken = signOrderToken(order.id)
   const provider = getPaymentProvider()
-  const successUrl = `${input.siteUrl}/${input.locale === 'he' ? '' : 'en/'}checkout/success?order=${order.id}`
-  const cancelUrl = `${input.siteUrl}/${input.locale === 'he' ? '' : 'en/'}checkout`
+  const successUrl = `${siteUrl}/${input.locale === 'he' ? '' : 'en/'}checkout/success?token=${encodeURIComponent(successToken)}`
+  const cancelUrl = `${siteUrl}/${input.locale === 'he' ? '' : 'en/'}checkout`
 
   const payment = await provider.createPayment({
     orderId: order.id,
@@ -264,6 +437,7 @@ export async function createOrderFromCheckout(
       locale: input.locale,
       orderNumber: order.orderNumber,
       customerName: input.customer.name,
+      customerEmail: input.customer.email,
       items: snapshots.map((s) => ({
         title: s.title,
         quantity: s.quantity,
@@ -278,7 +452,8 @@ export async function createOrderFromCheckout(
         city: input.shippingAddress.city,
         country: input.shippingAddress.country,
       },
-      siteUrl: input.siteUrl,
+      siteUrl,
+      isNewCustomer,
     })
     await email.send({
       to: input.customer.email,

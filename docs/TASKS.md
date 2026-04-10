@@ -2,11 +2,26 @@
 
 > **Append new items to the relevant list. Move completed items to the changelog in `docs/STATE.md`.**
 >
-> **Last updated:** 2026-04-10 (end of Round 6).
+> **Last updated:** 2026-04-10 (after the pre-launch hardening sprint + Phase F.1 + design + animation sprint + admin audit bug fixes).
 
 ---
 
-## 🚀 START HERE — next session
+## ⚠️ This file is mostly historical now — read `docs/NEXT-SESSION.md` first
+
+Since the end of Round 6, four more sprints have shipped and the whole section below is out of date:
+
+1. **Pre-launch hardening sprint (Waves B1–B8)** — security, a11y, SEO, mobile nav, CI, email + payment stubs. All done.
+2. **Phase F.1 — customer accounts** — /login, /forgot-password, /reset-password, /account, /account/orders/[id]. All done.
+3. **Design + animation sprint** (plan: `~/.claude/plans/humming-popping-turtle.md`) — every per-page wave shipped (H/S/P/C/K/Y from Session 1, L/A/O/B/T/G/4/D/F/M from Session 2). Full motion primitives library (useInView, Reveal, StaggeredReveal, KenBurns, ConfettiTrigger, SplitWords, CountUp), hero Ken Burns, staggered reveals everywhere, gold focus rings, order timeline SVG draw, admin dashboard pulse rings + count-up, the critical storefront→admin theme-jump fix, and more. All done.
+4. **Admin audit + bulk-delete fix + new hero background** (today's session) — 7 product photo slug aliases, visible delete pill, off-screen modal fix, new hero-bg-2.png with vignette + bigger logo. All done.
+
+**Authoritative next-step file is `docs/NEXT-SESSION.md`.** It lists the only remaining work (all external dependencies waiting on Yarit) plus documented gotchas for the next AI session. Read that first.
+
+The phase-by-phase plan below is kept for historical reference — the items under "Phase F.1", "Phase F.2", "Phase F.3" are all marked done in `docs/STATE.md` and should NOT be re-worked.
+
+---
+
+## 🚀 [HISTORICAL] START HERE — next session (as of Round 6)
 
 Everything through **Round 6** is shipped and live on `https://yarit-shop.vercel.app`. The admin panel is in its final functional form; the next phases are about completing the storefront to launch-ready and wiring the last external integrations.
 

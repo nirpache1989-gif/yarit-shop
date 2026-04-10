@@ -16,6 +16,9 @@ import { Container } from '@/components/ui/Container'
 import { Link } from '@/lib/i18n/navigation'
 import type { Locale } from '@/lib/i18n/routing'
 import { Eyebrow } from '@/components/ui/Eyebrow'
+import { Reveal } from '@/components/motion/Reveal'
+import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
+import { KenBurns } from '@/components/motion/KenBurns'
 
 type Props = {
   locale: Locale
@@ -28,19 +31,31 @@ export async function MeetYarit({ locale }: Props) {
     <section className="py-20 md:py-28 bg-[var(--color-surface-warm)]">
       <Container>
         <div className="grid md:grid-cols-5 gap-10 md:gap-12 items-center">
-          <div className="md:col-span-2">
+          {/* Image column — slides in from the start edge + a slow
+              Ken Burns (br) loop on the photo itself so it drifts
+              even when the viewport is still. */}
+          <Reveal direction="start" as="div" className="md:col-span-2">
             <div className="relative aspect-[4/5] rounded-[var(--radius-card)] overflow-hidden border border-[var(--color-border-brand)]">
-              <Image
-                src="/brand/ai/about-hero.jpg"
-                alt={t('imageAlt')}
-                fill
-                sizes="(max-width: 768px) 100vw, 40vw"
-                className="object-cover"
-              />
+              <KenBurns variant="br">
+                <Image
+                  src="/brand/ai/about-hero.jpg"
+                  alt={t('imageAlt')}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 40vw"
+                  className="object-cover"
+                />
+              </KenBurns>
               <div className="absolute inset-0 bg-gradient-to-tr from-[var(--color-primary)]/10 via-transparent to-transparent" />
             </div>
-          </div>
-          <div className="md:col-span-3 space-y-5">
+          </Reveal>
+
+          {/* Text column — each line reveals one after another
+              (eyebrow → heading → body → link). */}
+          <StaggeredReveal
+            as="div"
+            className="md:col-span-3 space-y-5"
+            stagger={140}
+          >
             <Eyebrow as="p" tone="accent">
               {t('eyebrow')}
             </Eyebrow>
@@ -62,7 +77,7 @@ export async function MeetYarit({ locale }: Props) {
             >
               {t('readMore')} <span aria-hidden>→</span>
             </Link>
-          </div>
+          </StaggeredReveal>
         </div>
       </Container>
     </section>

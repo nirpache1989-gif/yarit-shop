@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsc --noEmit && eslint",
     "seed": "curl -X POST http://localhost:3000/api/dev/seed",
-    "reset-db": "rm -f shoresh-dev.db shoresh-dev.db-journal shoresh-dev.db-shm shoresh-dev.db-wal && rm -rf public/media"
+    "reset-db": "node scripts/reset-db.mjs"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "^3.82.1",
@@ -28,6 +29,7 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hot-toast": "^2.5.1",
+    "resend": "^6.10.0",
     "sharp": "^0.34.5",
     "zustand": "^5.0.12"
   },
