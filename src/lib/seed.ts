@@ -104,44 +104,28 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
       en: 'Aloe & Jojoba Lip Balm',
     },
     shortDescription: {
-      he: "שפתון לחות טבעי עם אלוורה, ג'וג'ובה ושעוות דבורים",
-      en: 'Natural moisturizing lip balm with aloe, jojoba and beeswax',
+      he: "שפתון לחות עשיר עם אלוורה, ג'וג'ובה ושעוות דבורים — תמיד בתיק",
+      en: 'A rich moisturizing balm with aloe, jojoba & beeswax — always in the bag',
     },
     description: {
-      he: "שפתון לחות עשיר המשלב ג'ל אלוורה ורה טהור עם שמן ג'וג'ובה ושעוות דבורים, להזנה והגנה על שפתיים יבשות וסדוקות. מתאים לשימוש יומיומי בכל מזג אוויר ונשאר בתיק בנוחות.",
-      en: 'A rich moisturizing lip balm combining pure aloe vera gel with jojoba oil and beeswax to nourish and protect dry, chapped lips. Suitable for everyday use in any weather and easy to carry.',
+      he: "שפתון לחות בעבודת יד הכולל ג'ל אלוורה ורה, שמן ג'וג'ובה ושעוות דבורים טהורה. הג'וג'ובה חודר לעור בעדינות ודומה בהרכבו לשמנים הטבעיים של השפתיים, האלוורה מרגיעה, והשעווה אוטמת את הלחות לאורך זמן. השילוב יוצר שכבה עדינה שמגנה על שפתיים יבשות מרוח, שמש ומזגן. קל לשימוש, לא דביק, ובגודל מושלם לכיס או לארנק.\n\nהשימוש: למרוח בכל עת שהשפתיים מרגישות יבשות, לפני היציאה לשמש או לרוח, או כשכבה לפני שנת לילה.",
+      en: "A handcrafted lip balm combining aloe vera gel, jojoba oil, and pure beeswax. Jojoba absorbs gently and mirrors the natural oils of your lips; aloe soothes; beeswax seals in moisture for long-lasting hydration. Together they form a delicate protective layer against wind, sun, and air conditioning. Non-sticky, easy to apply, and pocket-sized.\n\nHow to use: apply whenever lips feel dry, before going out in the sun or wind, or as an overnight treatment.",
     },
     categorySlug: 'skincare',
     price: 42,
     foreverProductCode: '022',
   },
   {
-    files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM (1).jpeg'],
-    slug: 'aloe-propolis-creme',
-    title: { he: 'קרם אלוורה פרופוליס', en: 'Aloe Propolis Creme' },
-    shortDescription: {
-      he: 'קרם הזנה עשיר עם אלוורה ופרופוליס דבורים',
-      en: 'Rich nourishing cream with aloe vera and bee propolis',
-    },
-    description: {
-      he: 'קרם גוף ופנים עשיר המשלב אלוורה ורה, פרופוליס דבורים, קמומיל וויטמינים A ו-E. מסייע בשמירה על לחות העור ומותאם גם לעור יבש, רגיש או מגורה. מושלם לשימוש יומיומי כתוספת לשגרת הטיפוח.',
-      en: 'A rich body and face cream combining aloe vera, bee propolis, chamomile and vitamins A and E. Helps maintain skin moisture and is suitable for dry, sensitive or irritated skin. A perfect daily addition to your skincare routine.',
-    },
-    categorySlug: 'skincare',
-    price: 115,
-    foreverProductCode: '051',
-  },
-  {
     files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM (2).jpeg'],
     slug: 'aloe-toothgel',
     title: { he: 'משחת שיניים אלוורה ופרופוליס', en: 'Aloe & Propolis Toothgel' },
     shortDescription: {
-      he: 'משחת שיניים ללא פלואוריד עם אלוורה ופרופוליס',
-      en: 'Fluoride-free toothgel with aloe vera and bee propolis',
+      he: 'משחת שיניים עדינה ללא פלואוריד — לכל המשפחה',
+      en: 'Gentle fluoride-free toothgel — for the whole family',
     },
     description: {
-      he: 'משחת שיניים ייחודית ללא פלואוריד, המבוססת על אלוורה ורה ופרופוליס דבורים, בטעם מנטה טבעי. מתאימה לכל בני המשפחה כולל ילדים, ושומרת על ניקיון, רעננות וחיוך בריא.',
-      en: 'A unique fluoride-free toothgel based on aloe vera and bee propolis, with a natural mint flavor. Suitable for the whole family including children, keeping teeth clean, fresh and smiles healthy.',
+      he: 'משחת שיניים בטעם מנטה מרענן, מבוססת על ג׳ל אלוורה ורה ופרופוליס דבורים טבעי. ללא פלואוריד וללא שוחקים קשים, מה שעושה אותה מתאימה גם לילדים ולשיניים רגישות. הפרופוליס ידוע כתומך בהיגיינת הפה והאלוורה מסייעת להרגיע חניכיים.\n\nהשימוש: כמו כל משחת שיניים רגילה — פעמיים ביום עם מברשת שיניים רכה. כמות קטנה בגודל אפון מספיקה.',
+      en: "A refreshing mint-flavored toothgel built on pure aloe vera gel and natural bee propolis. Fluoride-free and free of harsh abrasives, making it a good choice for children and sensitive teeth. Propolis is traditionally used to support oral hygiene; aloe helps soothe the gums.\n\nHow to use: brush twice daily with a soft-bristle brush. A pea-sized amount is enough.",
     },
     categorySlug: 'aloe',
     price: 45,
@@ -155,12 +139,12 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     slug: 'aloe-soothing-spray',
     title: { he: 'תרסיס אלוורה מרגיע', en: 'Aloe Soothing Spray' },
     shortDescription: {
-      he: 'ספריי מרגיע ומלחלח לעור עם אלוורה וצמחי מרפא',
-      en: 'Soothing moisturizing spray with aloe and botanical extracts',
+      he: 'תרסיס אלוורה רב-שימושי לעור אחרי שמש, גילוח או גירוי',
+      en: 'All-purpose aloe spray for skin after sun, shaving or irritation',
     },
     description: {
-      he: 'תרסיס רב-שימושי המבוסס על אלוורה ורה טהורה בשילוב 11 תמציות צמחים ופרופוליס. מרגיע ומלחלח את העור לאחר שהייה בשמש, גילוח, או גירוי. מתאים גם לשיער ולקרקפת.',
-      en: 'A versatile spray based on pure aloe vera combined with 11 botanical extracts and bee propolis. Soothes and hydrates skin after sun exposure, shaving or irritation, and can also be used on hair and scalp.',
+      he: 'תרסיס לעור וגם לשיער, המבוסס על אלוורה ורה טהורה בשילוב תערובת של תמציות צמחים (קמומיל, אכילאה, פרופוליס ועוד). מרגיע ומלחלח את העור במהירות אחרי שהייה ממושכת בשמש, אחרי גילוח, או כשהעור מרגיש מגורה. התרסיס מאפשר יישום נקי ומהיר בכל מקום בגוף, ומתאים גם כבסיס לחות לשיער יבש או קרקפת מגורה.\n\nהשימוש: לרסס על אזור נקי ולתת לעור לספוג. חזור לפי הצורך.',
+      en: "A spray for skin and hair built on pure aloe vera with a blend of botanical extracts (chamomile, yarrow, propolis, and more). Quickly soothes and hydrates skin after extended sun exposure, shaving, or when skin feels irritated. The spray makes application clean and effortless anywhere on the body, and also works as a light moisture base for dry hair or an irritated scalp.\n\nHow to use: spray onto a clean area and let absorb. Reapply as needed.",
     },
     categorySlug: 'aloe',
     price: 120,
@@ -171,12 +155,12 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     slug: 'aloe-vera-gel',
     title: { he: "ג'ל אלוורה ורה", en: 'Aloe Vera Gel' },
     shortDescription: {
-      he: "ג'ל אלוורה ורה שקוף להרגעה והזנה של העור",
-      en: 'Clear aloe vera gel for soothing and nourishing the skin',
+      he: 'ג׳ל אלוורה ורה שקוף — המוצר האולטימטיבי לכל קופסת העזרה הראשונה',
+      en: 'Clear aloe vera gel — the ultimate first-aid kit essential',
     },
     description: {
-      he: "ג'ל שקוף עשיר באלוורה ורה טהורה, נספג במהירות ומעניק לעור תחושת רעננות והקלה מיידית. אידיאלי לאחר שיזוף, למריחה על אזורים יבשים או מגורים ולשימוש יומיומי לכל המשפחה.",
-      en: 'A clear gel rich in pure aloe vera that absorbs quickly and provides instant freshness and relief. Ideal after sun exposure, for dry or irritated areas, and for daily family use.',
+      he: 'ג׳ל אלוורה ורה שקוף, קליל ונטול שומניות, שנספג כמעט מיד ומעניק תחושה של רעננות והקלה. שימושי במיוחד אחרי שהייה בשמש, על עקיצות, אחרי גילוח, על עור יבש או גירויים קלים — בקיצור, המוצר שירית שומרת תמיד במגירת האמבטיה.\n\nהשימוש: למרוח בעדינות על עור נקי. בטוח לשימוש יומיומי ולכל בני המשפחה.',
+      en: 'A clear, light, non-greasy aloe vera gel that absorbs almost instantly and leaves an immediate sense of freshness and relief. Especially useful after sun exposure, on bug bites, after shaving, on dry patches, or for mild irritation — the product Yarit keeps in her bathroom drawer at all times.\n\nHow to use: apply gently to clean skin. Safe for daily use by the whole family.',
     },
     categorySlug: 'aloe',
     price: 95,
@@ -185,14 +169,14 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (1).jpeg'],
     slug: 'bee-propolis',
-    title: { he: 'פרופוליס דבורים', en: 'Bee Propolis' },
+    title: { he: 'פרופוליס דבורים — טבליות', en: 'Bee Propolis Tablets' },
     shortDescription: {
-      he: 'תוסף תזונה טבעי על בסיס פרופוליס דבורים 100% טבעי',
-      en: '100% natural bee propolis dietary supplement',
+      he: 'תוסף תזונה טבעי לתמיכה במערכת החיסון',
+      en: 'Natural dietary supplement supporting the immune system',
     },
     description: {
-      he: 'תוסף תזונה בטבליות לעיסה על בסיס פרופוליס דבורים טבעי. פרופוליס ידוע כמקור עשיר לפלבנואידים ומינרלים חיוניים, ותומך במערכת החיסון ובבריאות הכללית. מכיל 60 טבליות.',
-      en: 'A chewable dietary supplement based on 100% natural bee propolis. Propolis is known as a rich source of flavonoids and essential minerals and supports immune function and overall wellness. 60 tablets per bottle.',
+      he: 'טבליות לעיסה המבוססות על פרופוליס דבורים טבעי — החומר שהדבורים יוצרות כדי להגן על הכוורת. פרופוליס עשיר בפלבנואידים, חומצות אמינו ומינרלים, והוא ידוע כעוזר לתמיכה טבעית במערכת החיסון ובבריאות הכללית. הטבליות מעוצבות לטעם נעים ואפשר ללעוס אותן ישירות בלי מים.\n\nהשימוש: לצרוך לפי ההוראות על האריזה. מומלץ להיוועץ ברופא אם יש רגישות לדבש או מוצרי כוורת.',
+      en: "Chewable tablets built on natural bee propolis — the resinous substance bees produce to protect the hive. Propolis is rich in flavonoids, amino acids, and minerals, and is traditionally used to support the immune system and overall wellness. The tablets are designed with a pleasant taste and can be chewed directly without water.\n\nHow to use: follow the dosage on the package. Consult a doctor if you have any sensitivity to honey or bee products.",
     },
     categorySlug: 'nutrition',
     price: 165,
@@ -201,14 +185,14 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (2).jpeg'],
     slug: 'daily-multivitamin',
-    title: { he: 'מולטי ויטמין יומי', en: 'Daily Multivitamin' },
+    title: { he: 'מולטי ויטמין יומי מתקדם', en: 'Advanced Daily Multivitamin' },
     shortDescription: {
-      he: 'מולטי ויטמין יומי עם 55 רכיבים תזונתיים',
-      en: 'Daily multivitamin with 55 nutrients',
+      he: 'תוסף יומי מקיף עם ויטמינים, מינרלים ופיטונוטריאנטים',
+      en: 'A comprehensive daily supplement with vitamins, minerals & phytonutrients',
     },
     description: {
-      he: 'תוסף מולטי ויטמין יומי מתקדם המכיל 55 ויטמינים, מינרלים ופיטונוטריאנטים התומכים בתפקוד תקין של הגוף, במערכת החיסון וברמות האנרגיה. 60 טבליות.',
-      en: 'An advanced daily multivitamin supplement containing 55 vitamins, minerals and phytonutrients that support normal body function, immune health and energy levels. 60 tablets.',
+      he: 'תוסף יומי מקיף המשלב ויטמינים, מינרלים ותמציות צמחים (פיטונוטריאנטים) לכיסוי רחב של הצרכים התזונתיים היומיומיים. מיועד לתמיכה בפעילות הגוף התקינה, במערכת החיסון וברמות האנרגיה. שימושי במיוחד לאנשים עם תזונה לא מגוונת או בתקופות של לחץ וגיוס יתר.\n\nהשימוש: לפי ההוראות על האריזה, בדרך כלל עם ארוחה. לא תחליף לתזונה מאוזנת.',
+      en: "A comprehensive daily supplement combining vitamins, minerals, and botanical extracts (phytonutrients) to cover a broad range of everyday nutritional needs. Designed to support normal body function, immune health, and energy levels. Especially useful for people with a less varied diet or during periods of stress and extra exertion.\n\nHow to use: as directed on the package, typically with a meal. Not a substitute for a balanced diet.",
     },
     categorySlug: 'nutrition',
     price: 140,
@@ -218,16 +202,16 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (3).jpeg'],
     slug: 'aloe-body-duo-gift-set',
     title: {
-      he: 'מארז מתנה אלוורה לגוף — הזוג המושלם',
-      en: "Aloe Body Duo Gift Set",
+      he: 'מארז מתנה אלוורה לגוף',
+      en: 'Aloe Body Duo Gift Set',
     },
     shortDescription: {
-      he: 'מארז מתנה: ג\u2019ל רחצה וקרם גוף על בסיס אלוורה ורה',
-      en: 'Gift set: aloe vera body wash and body lotion duo',
+      he: 'ג׳ל רחצה וקרם גוף — הזוג המושלם למקלחת ואחריה',
+      en: 'Body wash + body lotion — the perfect shower-and-after duo',
     },
     description: {
-      he: 'מארז מתנה יוקרתי הכולל ג\u2019ל רחצה וקרם גוף, שניהם על בסיס אלוורה ורה. הג\u2019ל מנקה בעדינות תוך שמירה על לחות, והקרם נספג במהירות ומעניק הזנה ולחות לאורך היום. מתנה מושלמת לכל אירוע.',
-      en: 'A luxurious gift set including a body wash and body lotion, both based on aloe vera. The wash gently cleanses while retaining moisture, and the lightweight lotion absorbs quickly to nourish and hydrate throughout the day. A perfect gift for any occasion.',
+      he: 'מארז מתנה מלוטש הכולל שני מוצרים שעובדים יחד: ג׳ל רחצה עדין על בסיס אלוורה ורה שמנקה את העור בלי לייבש, וקרם גוף קליל שנספג מהר ומעניק שכבת לחות לכל היום. שניהם ללא צבע מלאכותי, עם ניחוח עדין וטבעי. מתנה מושלמת ליום הולדת, אירוח, או פשוט לפנק את עצמך.\n\nהשימוש: ג׳ל הרחצה במקלחת כמו ג׳ל רגיל. קרם הגוף על עור לח אחרי מקלחת, לספיגה מיטבית.',
+      en: 'A polished gift set of two products designed to work together: a gentle aloe vera body wash that cleanses without drying, and a lightweight body lotion that absorbs quickly and leaves the skin softly hydrated all day. Both free of artificial colors, with a delicate natural scent. A lovely gift for birthdays, hosting, or just treating yourself.\n\nHow to use: the body wash in the shower as usual; the lotion on damp skin right after for best absorption.',
     },
     categorySlug: 'gifts',
     price: 195,
@@ -235,43 +219,22 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
   },
 ]
 
-// ─── Two independent (stocked) products for demo variety ────────────
-const INDEPENDENT_PRODUCTS = [
-  {
-    slug: 'organic-lavender-oil',
-    title: { he: 'שמן לבנדר אורגני', en: 'Organic Lavender Oil' },
-    shortDescription: {
-      he: 'שמן אתרי לבנדר 100% טבעי, מיוצר בישראל',
-      en: '100% natural lavender essential oil, made in Israel',
-    },
-    description: {
-      he: 'שמן אתרי לבנדר בתהליך זיקוק קר, מתאים לאמבט הרפיה, עיסוי, או לשימוש עם מפיץ ריח. המוצר אורגני ומיוצר על ידי משק חקלאי בצפון הארץ.',
-      en: 'Cold-pressed lavender essential oil, perfect for relaxing baths, massage, or with a diffuser. Organic and produced by a farm in northern Israel.',
-    },
-    categorySlug: 'skincare',
-    price: 65,
-    sku: 'YRT-LAV-001',
-    stock: 12,
-    weightGrams: 80,
-  },
-  {
-    slug: 'raw-honey-galilee',
-    title: { he: 'דבש גלעין מהגליל', en: 'Raw Galilee Honey' },
-    shortDescription: {
-      he: 'דבש גולמי בלתי מסונן ממכוורת מקומית',
-      en: 'Unfiltered raw honey from a local apiary',
-    },
-    description: {
-      he: 'דבש טבעי גולמי, בלתי מסונן וללא חימום, המופק במכוורת משפחתית בגליל המערבי. גוון ענברי בהיר וטעם עשיר המשתנה עם העונה.',
-      en: 'Natural raw honey, unfiltered and unheated, sourced from a family apiary in the western Galilee. Amber color and rich flavor that varies by season.',
-    },
-    categorySlug: 'nutrition',
-    price: 58,
-    sku: 'YRT-HON-001',
-    stock: 20,
-    weightGrams: 500,
-  },
-]
+// ─── Independent products ───────────────────────────────────────────
+// Currently empty — per Yarit's feedback on 2026-04-10, the initial
+// catalog is strictly the 7 Forever-sourced products she has photos
+// for. Independent products will be added later as she starts
+// sourcing her own selection.
+const INDEPENDENT_PRODUCTS: Array<{
+  slug: string
+  title: { he: string; en: string }
+  shortDescription: { he: string; en: string }
+  description: { he: string; en: string }
+  categorySlug: string
+  price: number
+  sku: string
+  stock: number
+  weightGrams: number
+}> = []
 
 // ─── Runner ─────────────────────────────────────────────────────────
 // Takes an already-initialized Payload instance (the API route is
