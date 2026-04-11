@@ -25,7 +25,7 @@
  *          which Next 16 cannot propagate out as a real HTTP 307 — it
  *          gets serialized into the streaming RSC response as a
  *          `NEXT_REDIRECT` error digest and the Suspense fallback
- *          (null) is what actually renders. Result: a blank page.
+ *          (null) is what renders. Result: a blank cream page.
  *
  *          Two distinct affected cases:
  *
@@ -33,38 +33,60 @@
  *             `/admin/login`. Payload's login view tries to redirect
  *             them to `/admin` → blank page.
  *
- *          B) Visitor has a STALE / malformed / expired
+ *          B) Visitor has a STALE / malformed / expired / bad-signature
  *             `payload-token` cookie and hits `/admin/login` or
  *             `/admin`. Payload cannot validate the token and tries
- *             to redirect to `/admin/login` → blank page. This traps
- *             the user on a blank page with no way to reach the real
- *             login form (every load re-triggers the failed
- *             redirect). Clearing cookies manually is the only
- *             client-side workaround.
+ *             to redirect to `/admin/login` → blank page. Every
+ *             subsequent load re-triggers the failed redirect so the
+ *             user is trapped until they manually clear cookies.
  *
- *          The fix for both cases is middleware-level pre-emption:
+ *          ===== FIX =====
+ *          Middleware-level pre-emption gated on a FULL JWT
+ *          verification (signature + expiry), not just shape.
  *
- *          • If the request to `/admin/login` carries a cookie AND
- *            the JWT exp field is in the future (i.e. the token is
- *            plausibly valid), issue a 307 → `/admin` ourselves so
- *            Payload's own "already logged in, redirect to dashboard"
- *            branch never fires.
+ *          • /admin/login with a verified-valid cookie
+ *              → 307 → /admin ourselves (skip Payload's buggy path).
  *
- *          • If the cookie is present but expired / malformed /
- *            unparseable, DELETE the cookie at the edge and let the
- *            request through to Payload, which will then render the
- *            real login form (no token = no redirect attempt).
+ *          • /admin/login with any flavour of bad cookie (expired,
+ *            malformed, signature mismatch against the current
+ *            PAYLOAD_SECRET)
+ *              → strip the cookie on the response AND in the
+ *                forwarded request so Payload renders the real login
+ *                form (no token = no redirect attempt).
  *
- *          • If the cookie is missing, fall through untouched.
+ *          • /admin/login with no cookie
+ *              → fall through, Payload renders the login form.
  *
- *          We intentionally do NOT verify the JWT signature in
- *          middleware. The only decision we make is "expired vs not"
- *          — and the only consequence of guessing wrong is one extra
- *          hop (a spoofed-but-shaped JWT sails through and Payload's
- *          downstream auth catches it properly). Validating the
- *          signature here would mean duplicating `PAYLOAD_SECRET` +
- *          Payload's session-store handshake into middleware, which
- *          is brittle against future Payload upgrades.
+ *          • Any other /admin/* with a verified-valid cookie
+ *              → fall through, Payload's own auth takes over.
+ *
+ *          • Any other /admin/* with a bad or missing cookie
+ *              → 307 → /admin/login?redirect=<original-path>,
+ *                stripping any stale cookie on the way.
+ *
+ *          ===== KEY DERIVATION — CRITICAL =====
+ *          Payload 3.82 does NOT sign JWTs with `PAYLOAD_SECRET`
+ *          directly. It derives the HMAC key in `payload/dist/index.js`:
+ *
+ *              this.secret = crypto
+ *                .createHash('sha256')
+ *                .update(this.config.secret)
+ *                .digest('hex')
+ *                .slice(0, 32)
+ *
+ *          Then passes that 32-char hex string into jose's SignJWT as
+ *          the raw-utf8 HMAC key. We reproduce that exact derivation
+ *          here via the Web Crypto API so `crypto.subtle.verify`
+ *          matches Payload's signatures bit-for-bit. Forgetting this
+ *          step cost an entire debug cycle — earlier attempts used
+ *          the raw secret and rejected every valid Payload cookie as
+ *          `bad-signature`.
+ *
+ *          If `PAYLOAD_SECRET` is not available in the middleware
+ *          runtime (it should always be, since `payload.config.ts`
+ *          hard-fails production boots without it), we treat every
+ *          cookie as `bad-signature` — safer than trusting a token
+ *          we can't verify.
  */
 import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
@@ -72,83 +94,222 @@ import { routing } from './lib/i18n/routing'
 
 const intlMiddleware = createMiddleware(routing)
 
+type TokenState = 'valid' | 'expired' | 'malformed' | 'bad-signature'
+
 /**
- * Classify a `payload-token` JWT by parsing the base64url-encoded
- * payload segment (the middle of the `header.payload.signature`
- * triplet) and inspecting the `exp` field.
- *
- *   - `valid`        — shape is a JWT and `exp` is in the future
- *   - `expired`      — shape is a JWT and `exp` is in the past
- *   - `malformed`    — not a JWT (fewer than 3 segments, bad base64,
- *                      or no `exp` field)
- *
- * We never check the signature here — see PAYLOAD_ADMIN_BUG above.
+ * Decode base64url to a fresh `Uint8Array<ArrayBuffer>`. The explicit
+ * `ArrayBuffer` allocation is required so the returned buffer is a
+ * concrete `ArrayBuffer` (not `SharedArrayBuffer`), which is what
+ * `crypto.subtle.verify`'s `BufferSource` parameter expects under
+ * TypeScript's ES2024 lib typings.
  */
-function classifyToken(raw: string): 'valid' | 'expired' | 'malformed' {
+function base64urlToBytes(input: string): Uint8Array<ArrayBuffer> {
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/')
+  const padded =
+    normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+  const bin = atob(padded)
+  const buffer = new ArrayBuffer(bin.length)
+  const bytes = new Uint8Array(buffer)
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+  return bytes
+}
+
+/**
+ * Decode the JWT payload segment (middle of `header.payload.sig`) to
+ * a UTF-8 string for `JSON.parse`.
+ */
+function base64urlToString(input: string): string {
+  const normalized = input.replace(/-/g, '+').replace(/_/g, '/')
+  const padded =
+    normalized + '='.repeat((4 - (normalized.length % 4)) % 4)
+  return atob(padded)
+}
+
+/**
+ * Convert a byte array to a lowercase hex string. Used for replicating
+ * Payload's `crypto.createHash('sha256').update(...).digest('hex')`.
+ */
+function bytesToHex(bytes: Uint8Array): string {
+  let hex = ''
+  for (let i = 0; i < bytes.length; i++) {
+    hex += bytes[i].toString(16).padStart(2, '0')
+  }
+  return hex
+}
+
+/**
+ * Derive Payload's HMAC key from `PAYLOAD_SECRET`. See
+ * `PAYLOAD_ADMIN_BUG > KEY DERIVATION` in the file header for the
+ * full explanation — in short, Payload takes `sha256(secret).hex`,
+ * slices the first 32 chars, and uses THAT string's UTF-8 bytes as
+ * the HMAC key.
+ *
+ * Returns a concrete `Uint8Array<ArrayBuffer>` (not SharedArrayBuffer)
+ * ready to feed into `crypto.subtle.importKey`.
+ */
+async function derivePayloadHmacKey(
+  secret: string,
+): Promise<Uint8Array<ArrayBuffer>> {
+  const enc = new TextEncoder()
+  const hashBuffer = await crypto.subtle.digest('SHA-256', enc.encode(secret))
+  const hashBytes = new Uint8Array(hashBuffer)
+  const derivedHex = bytesToHex(hashBytes).slice(0, 32)
+  const keyBuffer = new ArrayBuffer(derivedHex.length)
+  const keyBytes = new Uint8Array(keyBuffer)
+  for (let i = 0; i < derivedHex.length; i++) {
+    keyBytes[i] = derivedHex.charCodeAt(i)
+  }
+  return keyBytes
+}
+
+/**
+ * Classify a `payload-token` JWT. Four possible states:
+ *
+ *   - `valid`          — HS256 signature verifies against the derived
+ *                        key AND `exp` is in the future
+ *   - `expired`        — signature verifies but `exp` is in the past
+ *   - `bad-signature`  — JWT shape is correct but the signature
+ *                        doesn't verify (stale tokens from a previous
+ *                        deploy, tokens signed with a different
+ *                        secret, or tampering)
+ *   - `malformed`      — not a JWT (fewer than 3 segments, bad
+ *                        base64, no `exp` field, or any parse error)
+ *
+ * Never throws — any unexpected error classifies as `malformed`.
+ */
+async function classifyToken(raw: string): Promise<TokenState> {
   try {
     const parts = raw.split('.')
     if (parts.length !== 3) return 'malformed'
-    // base64url → base64, then decode. `atob` is available in the Next
-    // 16 edge-compatible middleware runtime.
-    const payloadB64 = parts[1]
-      .replace(/-/g, '+')
-      .replace(/_/g, '/')
-      .padEnd(parts[1].length + ((4 - (parts[1].length % 4)) % 4), '=')
-    const json = atob(payloadB64)
-    const parsed = JSON.parse(json) as { exp?: number }
+    const [headerB64, payloadB64, signatureB64] = parts
+
+    const payloadJson = base64urlToString(payloadB64)
+    const parsed = JSON.parse(payloadJson) as { exp?: number }
     if (typeof parsed.exp !== 'number') return 'malformed'
-    // `exp` is seconds since epoch; Date.now() is milliseconds.
-    if (parsed.exp * 1000 <= Date.now()) return 'expired'
+    const isExpired = parsed.exp * 1000 <= Date.now()
+
+    const secret = process.env.PAYLOAD_SECRET
+    if (!secret) return 'bad-signature'
+
+    const keyBytes = await derivePayloadHmacKey(secret)
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify'],
+    )
+
+    const signatureBytes = base64urlToBytes(signatureB64)
+    const enc = new TextEncoder()
+    const messageBytes = enc.encode(`${headerB64}.${payloadB64}`)
+    const signatureOk = await crypto.subtle.verify(
+      'HMAC',
+      cryptoKey,
+      signatureBytes,
+      messageBytes,
+    )
+
+    if (!signatureOk) return 'bad-signature'
+    if (isExpired) return 'expired'
     return 'valid'
   } catch {
     return 'malformed'
   }
 }
 
-export default function middleware(request: NextRequest) {
+/**
+ * Strip the `payload-token` cookie from the forwarded request headers
+ * so that Payload's downstream handler (invoked via
+ * `NextResponse.next({ request: { headers } })`) sees the request as
+ * cookie-less. Without this, Payload still reads the bad cookie from
+ * the original request even when we tell the browser to clear it on
+ * the response, and re-triggers the Suspense-boundary bug.
+ *
+ * Handles both the `cookie` header as a flat string and the rare
+ * multi-valued `cookie` case by parsing individual name/value pairs.
+ */
+function stripPayloadTokenFromRequestHeaders(
+  source: Headers,
+): Headers {
+  const headers = new Headers(source)
+  const cookieHeader = headers.get('cookie')
+  if (!cookieHeader) return headers
+  const preserved = cookieHeader
+    .split(';')
+    .map((entry) => entry.trim())
+    .filter((entry) => {
+      const eqIdx = entry.indexOf('=')
+      const name = eqIdx === -1 ? entry : entry.slice(0, eqIdx)
+      return name !== 'payload-token'
+    })
+    .join('; ')
+  if (preserved.length > 0) {
+    headers.set('cookie', preserved)
+  } else {
+    headers.delete('cookie')
+  }
+  return headers
+}
+
+export default async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // ── /admin/* repair layer (see PAYLOAD_ADMIN_BUG above) ─────────
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     const token = request.cookies.get('payload-token')
-    const state: 'valid' | 'expired' | 'malformed' | 'missing' = token?.value
-      ? classifyToken(token.value)
+    const state: TokenState | 'missing' = token?.value
+      ? await classifyToken(token.value)
       : 'missing'
 
     // ──  /admin/login ──────────────────────────────────────────
     if (pathname === '/admin/login') {
       if (state === 'valid') {
-        // Case A: already logged in. Skip Payload's buggy
-        // redirect-from-Suspense-boundary by issuing the 307 here.
-        return NextResponse.redirect(new URL('/admin', request.url), 307)
+        // Case A: genuinely authenticated. Skip Payload's buggy
+        // "already logged in" redirect-from-Suspense path.
+        return NextResponse.redirect(
+          new URL('/admin', request.url),
+          307,
+        )
       }
-      if (state === 'expired' || state === 'malformed') {
-        // Case B: stale cookie at /admin/login. Strip it so Payload
-        // renders the login form (no token = no redirect attempt).
-        const response = NextResponse.next()
-        response.cookies.delete('payload-token')
-        return response
+      if (state === 'missing') {
+        // Fresh visitor — let Payload render the login form.
+        return NextResponse.next()
       }
-      // state === 'missing' → fresh visitor, let Payload render.
-      return NextResponse.next()
+      // Case B: any flavour of bad cookie. Strip it BOTH from the
+      // response (Set-Cookie clear so the browser forgets it) AND
+      // from the forwarded request headers (so Payload's /admin/login
+      // handler doesn't trip over the stale value before our clear
+      // reaches the client).
+      const cleanHeaders = stripPayloadTokenFromRequestHeaders(
+        request.headers,
+      )
+      const response = NextResponse.next({
+        request: { headers: cleanHeaders },
+      })
+      response.cookies.delete('payload-token')
+      return response
     }
 
     // ──  /admin/* (everything except /admin/login) ────────────
     if (state === 'valid') {
-      // Plausibly-authenticated user. Pass through to Payload; if
-      // the signature is actually forged, Payload's downstream auth
-      // will still reject at the API layer.
+      // Pass through to Payload — this is the only branch that
+      // should reach the dashboard / collections / fulfillment
+      // views.
       return NextResponse.next()
     }
-    // state ∈ {expired, malformed, missing} → user is not
-    // authenticated. Payload's server-side guard would try to
-    // `redirect('/admin/login')`, which hits the same Suspense-
-    // boundary bug → blank page. Pre-empt by redirecting ourselves
-    // and strip any stale cookie on the way. We preserve the
-    // original path in `?redirect=` so the user lands back on it
-    // after logging in (Payload reads this query param).
+    // state ∈ {expired, malformed, bad-signature, missing} → user is
+    // not authenticated. Payload's server-side guard would try to
+    // `redirect('/admin/login')` from inside its Suspense boundary,
+    // which hits the blank-page bug. Pre-empt by redirecting
+    // ourselves; preserve the original path in `?redirect=` so
+    // Payload's login handler bounces the user back after a
+    // successful login.
     const loginUrl = new URL('/admin/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname + request.nextUrl.search)
+    loginUrl.searchParams.set(
+      'redirect',
+      pathname + request.nextUrl.search,
+    )
     const response = NextResponse.redirect(loginUrl, 307)
     if (state !== 'missing') {
       response.cookies.delete('payload-token')
