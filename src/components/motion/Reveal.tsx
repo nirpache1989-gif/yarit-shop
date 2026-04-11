@@ -28,7 +28,7 @@
 import type { CSSProperties, ElementType, ReactNode } from 'react'
 import { useInView } from '@/lib/motion/useInView'
 
-type Direction = 'up' | 'start'
+type Direction = 'up' | 'start' | 'scale'
 
 type Props = {
   children: ReactNode

@@ -380,6 +380,13 @@ html {
   from { opacity: 0; transform: translateX(var(--reveal-dx, -24px)); }
   to   { opacity: 1; transform: translateX(0); }
 }
+/* T2.9 #2 — scale direction for the TrustBar icon bloom. Additive
+   sibling to the up/start directions; the 0.8 → 1 scale pairs with
+   the opacity fade for a "blooming" entrance without any translate. */
+@keyframes reveal-scale {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
 html[dir="rtl"] [data-reveal="start"] { --reveal-dx: 24px; }
 
 [data-reveal]:not([data-revealed="true"]) {
@@ -392,6 +399,10 @@ html[dir="rtl"] [data-reveal="start"] { --reveal-dx: 24px; }
 }
 [data-reveal="start"][data-revealed="true"] {
   animation: reveal-start 720ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal="scale"][data-revealed="true"] {
+  animation: reveal-scale 720ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   animation-delay: var(--reveal-delay, 0ms);
 }
 

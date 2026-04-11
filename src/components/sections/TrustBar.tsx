@@ -33,11 +33,20 @@ export function TrustBar() {
       <Container>
         {/* Each item is a <li> and StaggeredReveal clones each child
             with data-reveal + an incremented --reveal-delay. One
-            IntersectionObserver on the <ul> drives the whole set. */}
+            IntersectionObserver on the <ul> drives the whole set.
+            T2.9 #2 — switched to the new `scale` direction so each
+            icon blooms 0.8 → 1 while fading up rather than sliding
+            from below. 120ms stagger tightens the rhythm a notch
+            (was 110ms). IntersectionObserver is kept deliberately:
+            the T2.9 brief calls out that this section must use the
+            safe Reveal primitive path, not GSAP, because the
+            2026-04-11 hydration race would bite any gsap.from +
+            scrollTrigger entrance on TrustBar. */}
         <StaggeredReveal
           as="ul"
           className="grid grid-cols-2 md:grid-cols-4 gap-8"
-          stagger={110}
+          stagger={120}
+          direction="scale"
         >
           {items.map((item) => (
             <li
