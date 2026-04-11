@@ -197,16 +197,20 @@ export function HeroMotion({
       ref={scopeRef}
       className="hero-section relative overflow-hidden py-16 md:py-24 min-h-[560px] md:min-h-[720px]"
     >
-      {/* Layer 1 — watercolor botanical frame. Full opacity — the
-          image itself is already soft/washed so we don't need to
-          dim it. The outer wrapper (data-hero-bg) is what GSAP
-          parallaxes; the inner KenBurns is the 22s CSS keyframe
-          drift. Both compose cleanly because they target different
-          DOM nodes. */}
-      <div data-hero-bg className="absolute inset-0 -z-0" aria-hidden>
+      {/* Layer 1 — watercolor botanical frame. 2026-04-11 Yarit
+          swapped `hero-bg-2.png` for `herobg3.jpg` — a warmer
+          botanical wash with lavender + wildflowers along the
+          bottom and sparser herbs along the top, better suited
+          as a backdrop for the Copaia tree logo. Rendered with
+          a slightly reduced opacity (`opacity-85`) so the logo
+          has stronger visual priority than the backdrop. The
+          outer wrapper (data-hero-bg) is what GSAP parallaxes;
+          the inner KenBurns is the 22s CSS keyframe drift. Both
+          compose cleanly because they target different DOM nodes. */}
+      <div data-hero-bg className="absolute inset-0 -z-0 opacity-85" aria-hidden>
         <KenBurns variant="tl">
           <Image
-            src="/brand/ai/hero-bg-2.png"
+            src="/brand/ai/herobg3.jpg"
             alt=""
             fill
             priority
