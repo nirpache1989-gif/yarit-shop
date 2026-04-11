@@ -97,17 +97,34 @@ Two targeted fixes, plus CI guard:
 - `docs/YARIT-ADMIN-GUIDE.md` — corrected sidebar group names + Tags/Media visibility note
 - `src/lib/legal.ts` — two `/*turbopackIgnore: true*/` hints
 
+### Follow-up: YARIT-ADMIN-GUIDE.md full rewrite
+
+The cleanup pass fixed the mechanical drift in the guide (group names, Tags/Media visibility), but the user flagged that a richer task-oriented walkthrough would help Yarit more. Did a complete rewrite in the same day:
+
+- **Structure**: 7 numbered sections — First-time setup, Daily workflow, Products, Site content, Customers + old orders, Account settings, Troubleshooting + FAQ. Plus three appendices (sidebar diagram, URL reference, Nir contact).
+- **Task-oriented**: every section answers "how do I …" rather than describing the panel taxonomically. E.g. §3.1 walks through adding a Forever product field-by-field using the real Hebrew labels from `src/collections/Products.ts` (`סוג מוצר`, `שם המוצר`, `תיאור קצר`, `תיאור מלא`, `מחיר (₪)`, `מחיר לפני מבצע (₪)`, `קוד מוצר Forever`, `מחיר העלות מפוראבר (₪)`, etc.). §3.2 covers independent products with the conditional fields (`מספר קטלוגי`, `כמות במלאי`, `משקל (גרם)`). §4.1–4.5 walk through every SiteSettings field Yarit can touch (announcement bar, hero images, contact details, shipping rates, social links), each keyed to the actual field label in `src/globals/SiteSettings.ts`.
+- **Workflow**: §2 documents the full Forever fulfillment workflow state machine Yarit will touch daily — "לטיפול דחוף" → "נרכש מפוראבר" → "מוכן למשלוח" → "בדרך ללקוח" → "נמסר ללקוח". Mirrors the buckets the `/admin/fulfillment` view groups orders into, sourced from `src/components/admin/payload/FulfillmentView.tsx`.
+- **Gotchas specific to Yarit**: §7 explains why "תגיות" and "מדיה" aren't in the sidebar (intentionally hidden since Round 5); why different fields appear when switching `סוג מוצר` (the `admin.condition` branches in `Products.ts`); how password reset works; what to do when she's unsure (escalate to Nir, never improvise).
+- **Visual layout**: §"נספח א׳" is an ASCII diagram of the sidebar (four groups + greeting + bottom actions) so Yarit can verify her own panel matches the doc.
+- **Contact**: §"נספח ג׳" spells out when to contact Nir + the exact email + typical response time, consistent with the current `HelpButton.tsx` `HELP_EMAIL` constant.
+- **Length**: ~330 lines, organized for both cover-to-cover read and section-jump reference.
+
+**Intentionally not done** (waiting on user decision):
+
+- **Linking the guide from `HelpButton`**: currently the `?צריכה עזרה` button does a `mailto:` to Nir. Linking it to a rendered version of the guide (either a new `/admin/help` custom view, a storefront `/help` route, or an external GitHub pages raw render) is a separate architectural decision and touches `src/components/admin/payload/HelpButton.tsx` — admin territory. Deferred; needs explicit user approval.
+- **Screenshots**: the guide is text-only. Adding real screenshots would help but requires running the admin locally and capturing each surface — out of scope for a docs pass.
+
 ### Handoff status
 
-Track C cleanup is complete. The tree + docs are internally consistent and buildable from a cold clone without surprise. Possible next steps (no one has chosen):
+Track C cleanup is complete; Yarit admin guide rewritten and keyed to the real panel. Committed in two separate commits: `0897df5` (cleanup sweep, 13 files) and the follow-up guide commit. The tree + docs are internally consistent, buildable from a cold clone, and the user-facing guide matches the current admin UX field-by-field. Possible next steps (in priority order):
 
-- Drop `@swc-node/register` + `@swc/core` as its own isolated commit.
-- Rewrite `docs/YARIT-ADMIN-GUIDE.md` from scratch — user flagged this for the next session: Yarit clicks "?צריכה עזרה" in the admin and currently gets an email-to-Nir; a richer Hebrew walkthrough that mirrors the actual admin panel would be more useful.
-- Track A (Resend / Meshulam / legal markdown) when anything lands from Yarit.
-- Track B (Tier-2 GSAP: About page / cart drawer / checkout confetti / contact focus / footer reveal).
-- Track D (final handoff package).
+1. **Link the guide from `HelpButton`** — needs user approval since it touches admin. Options documented above.
+2. **Drop `@swc-node/register` + `@swc/core`** as its own isolated commit (verified safe, deferred).
+3. **Track B Tier-2 GSAP** — ideas documented in this session's chat turn; pending user pick.
+4. **Track A** (Resend / Meshulam / legal markdown) when anything lands from Yarit.
+5. **Track D** (final handoff package + Hebrew "your shop is live" note).
 
-The session has not pushed to remote yet — all 12 edits are staged-ready but uncommitted until user says "push".
+The session has committed the cleanup + guide rewrite locally but has NOT pushed to remote. Awaiting explicit user "push".
 
 ---
 
