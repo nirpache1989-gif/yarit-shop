@@ -17,6 +17,7 @@ import { Link } from '@/lib/i18n/navigation'
 import { Container } from '@/components/ui/Container'
 import { Eyebrow } from '@/components/ui/Eyebrow'
 import { NewsletterSignup } from '@/components/layout/NewsletterSignup'
+import { Reveal } from '@/components/motion/Reveal'
 import { brand } from '@/brand.config'
 
 export function Footer() {
@@ -34,7 +35,12 @@ export function Footer() {
       <div className="footer-garland" aria-hidden />
 
       <Container className="relative py-16 md:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 mb-12">
+        {/* Tier-2 T2.2: wrap the 4-column footer grid in a Reveal so it
+            fades up as the user reaches the bottom of the page. Uses
+            the IntersectionObserver-backed Reveal primitive (not GSAP)
+            so it's immune to the ScrollTrigger initialization bug that
+            affected the 2026-04-11 hotfix (see 027ebda). */}
+        <Reveal className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 mb-12">
           {/* Brand column */}
           <div className="col-span-2 md:col-span-1 space-y-3">
             <div
@@ -97,10 +103,14 @@ export function Footer() {
             </p>
             <NewsletterSignup />
           </div>
-        </div>
+        </Reveal>
 
-        {/* Bottom strip — social + copyright */}
-        <div className="pt-8 border-t border-[var(--color-border-brand)] flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Bottom strip — social + copyright — revealed 180ms after the
+            grid above so the two rows arrive in a small cascade. */}
+        <Reveal
+          delay={180}
+          className="pt-8 border-t border-[var(--color-border-brand)] flex flex-col md:flex-row items-center justify-between gap-4"
+        >
           <ul className="flex items-center gap-5 text-sm text-[var(--color-muted)]">
             {brand.social.instagram && (
               <li>
@@ -154,7 +164,7 @@ export function Footer() {
           <div className="text-xs text-[var(--color-muted)]">
             © {year} {brand.name.en} — {t('allRightsReserved')}
           </div>
-        </div>
+        </Reveal>
       </Container>
     </footer>
   )
