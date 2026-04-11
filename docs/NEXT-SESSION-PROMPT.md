@@ -65,15 +65,69 @@ The Tier-1 waves landed on the high-impact surfaces (hero, featured products, sh
 - Customer-only; NEVER touch the admin (`(payload)` and `src/components/admin/payload/*`).
 - Additive — don't remove any existing CSS keyframe, don't replace any existing `<Reveal>` / `<StaggeredReveal>` usage, don't touch the motion primitives exports.
 
-### Track C — QA + polish
+### Track C — Code + docs cleanup sweep ⭐ IMPORTANT — do this even if no other track runs
 
-Minor housekeeping noticed during the close-out session:
-1. **Vercel auto-deploy webhook is stalled.** Every push in this session had to fall back to `npx vercel --prod --yes` manually. Worth investigating the webhook settings in the Vercel dashboard → Git Integration, or re-linking the repo. Not urgent but inconvenient.
+This is the "leave no trace" pass. Even if Yarit hasn't sent any Track A items and there's no appetite for Tier-2, this track is always worth running, and the user explicitly flagged it as important. The goal is to hand the next maintainer (human or AI) a codebase + doc set that's internally consistent, free of stale cruft, and buildable from scratch without surprise.
+
+Work in roughly this order:
+
+**C.1 — Code cleanup**
+
+1. **Read every file modified in the last 4–5 commits** (`git log --name-only -5`) and look for leftover debug code, commented-out blocks, stale `TODO` / `FIXME` / `TEMP BISECT` / `// REVERT BEFORE COMMIT` comments that were addressed but never removed, and `console.log` calls that shouldn't be in prod.
+2. **Grep for debug markers across the whole tree**: search for `console.log`, `console.warn` (that aren't inside error handlers), `// TEMP`, `// DEBUG`, `// XXX`, `// HACK`, `// REMOVEME`. Triage each hit — either delete or convert to a proper comment explaining why the line exists.
+3. **Hunt for unused imports / exports / files**. A clean approach: `npx knip` (install if needed — zero-config, reports unused files/exports/deps). Alternatively a manual sweep: `grep -r 'from .*SomeComponent' src/` for each suspect file. Be conservative — don't delete anything that's imported dynamically or used by Payload's admin bundle indirectly.
+4. **Stricter type check**: run `npx tsc --noEmit --noUnusedLocals --noUnusedParameters` once. It will complain about things the default config skips. Fix what's real, ignore what's intentional.
+5. **`npm run lint -- --fix`** and review the diff before committing. Most likely it's whitespace / import ordering.
+6. **Check for OS cruft in git**: `.DS_Store`, `Thumbs.db`, `*.swp`, `.idea/`, `.vscode/*.json` that shouldn't be tracked. `git ls-files | grep -E '(\.DS_Store|Thumbs\.db|\.swp$)'`. If any exist, gitignore + remove from tracking.
+7. **Dependency audit**: `npx depcheck` to find declared-but-unused deps in `package.json`. Be careful — some peer deps show as unused but are actually required by `next` or `payload`.
+8. **Secrets sweep**: `git grep -E '(sk_|pk_|key[_-]?[a-z0-9]{16,})'` — confirm no hardcoded API keys slipped in. Should be clean given the Track A adapters are all paste-in stubs, but verify.
+
+**C.2 — Docs audit**
+
+Read **every single file** in `docs/` and make sure it reflects reality as of the session you're in. The full inventory (as of 2026-04-11 late):
+- `docs/STATE.md` — the changelog. Confirm the newest entry at the top is yours, earlier entries aren't contradicted.
+- `docs/CLAUDE.md` at the project root (not the agent-global one at `C:\Users\Ar1ma\.claude\`) — entry point, "where to find things" table, critical rules.
+- `docs/ARCHITECTURE.md` — high-level architecture. Any new modules or removed ones need reflecting.
+- `docs/BRAND.md` — colors, fonts, logo rules. Check against `src/brand.config.ts` and `globals.css @theme` block for drift.
+- `docs/CONVENTIONS.md` — code style + naming + file layout. **Add a rule forbidding partial `generateStaticParams` returning only `{locale}` after the 2026-04-11 SSG incident if it's not already there.**
+- `docs/DECISIONS.md` — ADRs. Check sequential numbering (no gaps), confirm no ADR is outdated or superseded without a "SUPERSEDED BY ADR-XX" note.
+- `docs/ENVIRONMENT.md` — local setup guide. Run through it from a cold clone perspective — does it still work end-to-end?
+- `docs/FULFILLMENT.md` — Forever fulfillment workflow. Check against the current `Orders` collection + OrderRow state machine.
+- `docs/INDEX.md` — table of contents. Must list every file in `docs/`. Update if you add or remove any.
+- `docs/ONBOARDING.md` — fresh-clone setup. Same as ENVIRONMENT.md but from an engineer's perspective. Check commands.
+- `docs/TASKS.md` — open tasks. Prune anything already done. Add anything discovered during the session.
+- `docs/YARIT-ADMIN-GUIDE.md` — the Hebrew guide for Yarit herself. This is the one Yarit actually reads. Most important doc for the "final handoff" use case. Read every sentence, fix typos, confirm every screenshot / instruction still matches the current admin UI.
+- `docs/ADMIN-SURFACES.md` — map of every admin surface. Confirm it matches `src/payload.config.ts` + the shipped admin views.
+- `docs/NEXT-SESSION.md` — the 5-min orientation. Update the TL;DR to reflect current state. Don't rewrite wholesale.
+- `docs/NEXT-SESSION-PROMPT.md` (this file) — if another session is coming after this one, archive this file (`git mv` to `NEXT-SESSION-PROMPT-<date>.md`) and write a fresh one. If this IS the final session, mark it completed at the top the same way the 2026-04-11 close-out prompt was marked (banner + historical content preserved).
+- `docs/NEXT-SESSION-PROMPT-2026-04-11-close-out.md` — historical, don't touch.
+- `docs/NEXT-SESSION-GSAP-PROMPT.md` — old GSAP Tier-1 roadmap. All waves marked shipped. Don't delete — historical reference for the vocabulary.
+- `docs/round-4-*` directories — intermediate working notes. If they're no longer useful, consider archiving or deleting, but only after checking with the user.
+
+For each file, ask:
+1. Is any content stale or contradicted by the current codebase?
+2. Are there any broken internal links (`[text](docs/...)` pointing at renamed or removed files)?
+3. Are there references to specific commits, dates, or deploys that should be updated? (e.g. mentions of "2026-04-10 build" when we're now on `4ea4d90`.)
+4. Are there typos or unclear sentences?
+5. Does the file still serve a useful purpose, or should it be archived?
+
+**C.3 — Runtime warnings sweep** (partly covered by the original "QA + polish" list — none are blockers, but now's a good time to clean them up)
+
+1. **Vercel auto-deploy webhook is stalled.** Every push in the close-out session fell back to `npx vercel --prod --yes` manually. Worth investigating the webhook settings in the Vercel dashboard → Git Integration, or re-linking the repo. Not urgent but annoying.
 2. **`middleware` → `proxy` deprecation warning** at build time. Tracked in `docs/DECISIONS.md` ADR-005. A clean rename would silence the warning but requires touching the middleware entry point. Low risk if Next docs are followed exactly.
-3. **Turbopack NFT warning on `src/lib/legal.ts`** — the legal loader reads from the filesystem, which causes Turbopack to trace the whole project. Non-blocking. A targeted `turbopackIgnore` comment on the filesystem call site or a `path.join(process.cwd(), 'content', 'legal', ...)` cleanup would silence it.
-4. **Payload media storage adapter warning** on Vercel builds — the `media` collection has uploads enabled but no Vercel Blob adapter is wired. Currently the catalog ships static files in `public/brand/ai/` via `STATIC_IMAGE_OVERRIDES` in `src/lib/product-image.ts`, so uploads to `/admin/collections/media` would fail on prod. If Yarit ever needs to upload new images via the admin, wire up `@payloadcms/storage-vercel-blob` (see ADR-017 and the current workaround).
-5. **pg-connection-string SSL mode deprecation** (Neon). Minor; tracked by Neon + Payload. A one-line env fix (`uselibpqcompat=true&sslmode=require` or `sslmode=verify-full`) silences the warning. Do in passing, not a whole session.
-6. **CI guard against incomplete `generateStaticParams`** (optional). A simple ESLint custom rule or a grep check in `.github/workflows/ci.yml` could catch the pattern `return routing.locales.map((locale) => ({ locale }))` and fail the build. Prevents regression of the 2026-04-11 SSG incident.
+3. **Turbopack NFT warning on `src/lib/legal.ts`** — the legal loader reads from the filesystem, which causes Turbopack to trace the whole project. Non-blocking. A targeted `/*turbopackIgnore: true*/` comment on the filesystem call site silences it.
+4. **Payload media storage adapter warning** on Vercel builds — the `media` collection has uploads enabled but no Vercel Blob adapter is wired. Currently the catalog ships static files in `public/brand/ai/` via `STATIC_IMAGE_OVERRIDES` in `src/lib/product-image.ts`, so uploads to `/admin/collections/media` would fail on prod. If Yarit ever needs to upload new images via the admin, wire up `@payloadcms/storage-vercel-blob` (see ADR-017 for the decision record + the current workaround).
+5. **pg-connection-string SSL mode deprecation** (Neon). Minor. A one-line env fix (`uselibpqcompat=true&sslmode=require` or `sslmode=verify-full`) silences the warning. Do in passing, not a whole session.
+6. **Optional CI guard**: a simple grep rule in `.github/workflows/ci.yml` that fails the build if any `generateStaticParams` returns only `{locale}` without a second param. Prevents regression of the 2026-04-11 SSG incident. 5-line shell one-liner.
+
+**C.4 — Final verification**
+
+1. `npx tsc --noEmit` → 0 errors.
+2. `npm run lint` → 0 errors, warning count matches expectation (3 stub-file warnings until Track A.1/A.2 are wired).
+3. `npm run build` → 40 routes, all `ƒ` Dynamic or `○` Static, zero `●` SSG, build completes clean.
+4. Local prod smoke test: `npx next start -p 3009` (or any free port) → curl all 16 routes from the 2026-04-11 late smoke test, all 200 (307 on `/account/orders/abc` is the auth redirect, expected).
+5. `git status` clean before committing.
+6. Commit the cleanup sweep as `chore: code + docs cleanup pass` or similar. One commit if tight; two commits (`chore(code): ...` + `chore(docs): ...`) if the changes are substantial. Ask the user before pushing.
 
 ### Track D — End the work (final handoff)
 
