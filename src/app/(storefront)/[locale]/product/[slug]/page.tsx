@@ -17,7 +17,6 @@ import { Container } from '@/components/ui/Container'
 import { Badge } from '@/components/ui/Badge'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import type { ProductCardData } from '@/components/product/ProductCard'
-import { STATIC_IMAGE_OVERRIDES } from '@/lib/product-image'
 import { Reveal } from '@/components/motion/Reveal'
 import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
 import { ProductGalleryMotion } from '@/components/product/ProductGalleryMotion'
@@ -69,17 +68,18 @@ export async function generateMetadata({
   const description =
     product.shortDescription ??
     (locale === 'he'
-      ? 'מוצר מתוך החנות של שורש'
-      : 'A product from the Shoresh shop')
+      ? 'מוצר מתוך החנות של קופאה'
+      : 'A product from the Copaia shop')
 
-  const staticOverride = STATIC_IMAGE_OVERRIDES[product.slug]
+  // 2026-04-11 Copaia catalog: STATIC_IMAGE_OVERRIDES is gone. Use
+  // the first Media URL directly for OG metadata.
   const mediaImages =
     product.images?.map((i) => {
       const img = i.image
       if (img && typeof img === 'object' && img.url) return img.url
       return null
     }).filter((x): x is string => x !== null) ?? []
-  const imageUrl = staticOverride ?? mediaImages[0]
+  const imageUrl = mediaImages[0]
   const absoluteImage = imageUrl
     ? imageUrl.startsWith('http')
       ? imageUrl
@@ -127,22 +127,18 @@ export default async function ProductPage({ params }: Props) {
   const product = await loadProduct(typedLocale, slug)
   if (!product) notFound()
 
-  // If this product has a static slug override, use it as the
-  // primary gallery image — otherwise fall through to the Media
-  // collection URLs. Keeps the product detail page in sync with the
-  // shop grid (both render via /brand/ai/…).
-  const staticOverride = STATIC_IMAGE_OVERRIDES[product.slug]
-  const mediaImages =
-    product.images?.map((i) => {
+  // 2026-04-11 Copaia catalog: STATIC_IMAGE_OVERRIDES is gone.
+  // Every product now has 2-3 real Media images. The gallery gets
+  // the full list; the JSON-LD `image` field also gets the full
+  // list per Google Rich Results' recommendation for Product schema.
+  const images: { url: string; alt: string }[] =
+    product.images?.flatMap((i) => {
       const img = i.image
       if (img && typeof img === 'object' && img.url) {
-        return { url: img.url, alt: img.alt ?? product.title }
+        return [{ url: img.url, alt: img.alt ?? product.title }]
       }
-      return null
-    }).filter((x): x is { url: string; alt: string } => x !== null) ?? []
-  const images = staticOverride
-    ? [{ url: staticOverride, alt: product.title }]
-    : mediaImages
+      return []
+    }) ?? []
 
   const priceText = formatILS(product.price)
   const compareText = product.compareAtPrice
@@ -153,12 +149,15 @@ export default async function ProductPage({ params }: Props) {
   // (price, availability, image) in search results. Keeping it small
   // and on-page avoids Next's `script` component and keeps the
   // hydration footprint zero.
-  const primaryImage = images[0]?.url
-  const absoluteImage = primaryImage
-    ? primaryImage.startsWith('http')
-      ? primaryImage
-      : `${SITE_URL}${primaryImage.startsWith('/') ? '' : '/'}${primaryImage}`
-    : undefined
+  //
+  // 2026-04-11 A.6 upgrade: emit the FULL image array (previously
+  // only the first image was emitted) — Google Rich Results docs
+  // recommend an array so the knowledge panel can rotate photos.
+  const toAbsolute = (u: string): string =>
+    u.startsWith('http')
+      ? u
+      : `${SITE_URL}${u.startsWith('/') ? '' : '/'}${u}`
+  const absoluteImages = images.map((i) => toAbsolute(i.url))
   const inStock =
     product.type === 'sourced'
       ? true // Sourced items are ordered from the supplier per-order
@@ -168,7 +167,7 @@ export default async function ProductPage({ params }: Props) {
     '@type': 'Product',
     name: product.title,
     description: product.shortDescription ?? undefined,
-    image: absoluteImage ? [absoluteImage] : undefined,
+    image: absoluteImages.length > 0 ? absoluteImages : undefined,
     sku: product.slug,
     offers: {
       '@type': 'Offer',

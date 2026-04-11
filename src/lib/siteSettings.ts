@@ -16,7 +16,7 @@
  *
  *          Pre-2026-04-11 QA discovered that `/contact` and the Footer
  *          were reading directly from `brand.config.ts` which still
- *          held placeholder values (`hello@shoresh.example`, empty
+ *          held placeholder values (`hello@copaia.example`, empty
  *          phone, etc.). This helper is the fix. See:
  *          docs/STATE.md 2026-04-11 late-evening QA pass.
  */
@@ -60,11 +60,14 @@ const EMPTY_RESOLVED: ResolvedSiteSettings = {
 
 /**
  * Empty strings and the known brand.config placeholders do not count
- * as "set". `brand.contact.email` is `hello@shoresh.example` — shipping
+ * as "set". `brand.contact.email` is `hello@copaia.example` — shipping
  * that to a real customer's inbox would be embarrassing.
  */
 const PLACEHOLDER_STRINGS = new Set<string>([
   '',
+  'hello@copaia.example',
+  // Pre-rename placeholder preserved so prod DBs still holding the old
+  // string get treated as "unset" after the 2026-04-11 brand rename.
   'hello@shoresh.example',
 ])
 

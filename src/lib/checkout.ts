@@ -26,7 +26,6 @@ import { getPaymentProvider } from '@/lib/payments'
 import { getEmailProvider } from '@/lib/email'
 import { renderOrderConfirmationEmail } from '@/lib/email/templates'
 import { countryToRegion, getShippingRatesForRegion } from '@/lib/shipping'
-import { STATIC_IMAGE_OVERRIDES } from '@/lib/product-image'
 import { signOrderToken } from '@/lib/orderToken'
 
 /**
@@ -256,13 +255,14 @@ export async function createOrderFromCheckout(
         return { ok: false, error: `OUT_OF_STOCK:${product.slug}` }
       }
     }
+    // 2026-04-11 Copaia catalog: `STATIC_IMAGE_OVERRIDES` is gone —
+    // with the new Media-backed catalog every product has real image
+    // rows, so we snapshot the first Media URL directly. Still falls
+    // through to `undefined` for products without any images (which
+    // the checkout API then reports as a zero-image state).
     const firstImage = product.images?.[0]?.image
-    const mediaUrl =
+    const imageUrl =
       firstImage && typeof firstImage === 'object' ? firstImage.url : undefined
-    // Prefer the shipped-with-the-build static override so orders
-    // snapshot a URL that will still resolve after the Media records
-    // are swapped out or Vercel Blob is reconfigured.
-    const imageUrl = STATIC_IMAGE_OVERRIDES[product.slug] ?? mediaUrl
 
     snapshots.push({
       productId: product.id,

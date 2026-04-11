@@ -118,7 +118,7 @@ Default to **server components**. Add `'use client'` only when you need:
 
 - Commit messages: lowercase, imperative mood, scope prefix optional (`feat: add product card`, `fix(cart): rejects forever items`).
 - Squash-merge PRs to keep main history clean.
-- **Do not commit:** `.env.local`, `shoresh-dev.db`, anything in `node_modules` or `.next`. `.gitignore` handles these.
+- **Do not commit:** `.env.local`, `copaia-dev.db` (or the pre-rename `shoresh-dev.db`), anything in `node_modules` or `.next`. `.gitignore` handles these.
 
 ## When in doubt
 

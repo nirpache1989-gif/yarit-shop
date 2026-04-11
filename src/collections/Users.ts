@@ -1,5 +1,5 @@
 /**
- * @file Users collection (Shoresh) — single auth collection
+ * @file Users collection (Copaia) — single auth collection
  * @summary One users collection serves BOTH the shop admin (Yarit) and
  *          customers. A `role` field distinguishes the two; admin panel
  *          access is gated on `role === 'admin'` via the `access.admin`
@@ -31,7 +31,7 @@ export const Users: CollectionConfig = {
   },
   auth: {
     forgotPassword: {
-      generateEmailSubject: () => 'איפוס סיסמה — שורש',
+      generateEmailSubject: () => 'איפוס סיסמה — קופאה',
       generateEmailHTML: (args) => {
         const token =
           args && typeof args === 'object' && 'token' in args
@@ -43,14 +43,14 @@ export const Users: CollectionConfig = {
 <html lang="he" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <title>איפוס סיסמה — שורש</title>
+    <title>איפוס סיסמה — קופאה</title>
   </head>
   <body style="font-family: -apple-system, system-ui, 'Segoe UI', sans-serif; background: #f6efdc; padding: 40px 16px; color: #2d2418;">
     <div style="max-width: 520px; margin: 0 auto; background: #fdf8e8; border: 1px solid #d8c79a; border-radius: 16px; padding: 32px;">
       <h1 style="margin: 0 0 12px; font-size: 24px; color: #2d4f3e;">איפוס סיסמה</h1>
       <p style="margin: 0 0 16px; line-height: 1.6;">היי,</p>
       <p style="margin: 0 0 16px; line-height: 1.6;">
-        קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך באתר שורש. לחצי על הכפתור למטה כדי להגדיר סיסמה חדשה.
+        קיבלנו בקשה לאיפוס הסיסמה לחשבון שלך באתר קופאה. לחצי על הכפתור למטה כדי להגדיר סיסמה חדשה.
       </p>
       <p style="margin: 24px 0; text-align: center;">
         <a href="${resetUrl}" style="display: inline-block; background: #2d4f3e; color: #ffffff; text-decoration: none; padding: 14px 32px; border-radius: 999px; font-weight: 700;">
@@ -67,7 +67,7 @@ export const Users: CollectionConfig = {
         אם לא ביקשת איפוס סיסמה, אפשר להתעלם מהמייל הזה — הסיסמה לא תשתנה.
       </p>
       <p style="margin: 16px 0 0; font-size: 13px; color: #6b5e44;">
-        — שורש 🌿
+        — קופאה 🌿
       </p>
     </div>
   </body>

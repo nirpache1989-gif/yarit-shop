@@ -1,5 +1,5 @@
 /**
- * @file Shoresh seed logic — one-time demo data loader
+ * @file Copaia seed logic — one-time demo data loader
  * @summary Populates an empty Payload DB with: 5 categories, 7 real
  *          products (with their real photos from `../assets/`), and
  *          default SiteSettings values.
@@ -12,7 +12,7 @@
  * IDEMPOTENCY
  *   The seed is NOT idempotent. It always tries to insert. If you run
  *   it twice on the same DB, you'll get unique-constraint errors.
- *   To reset: stop dev, delete `shoresh-dev.db*`, delete `public/media`,
+ *   To reset: stop dev, delete `copaia-dev.db*`, delete `public/media`,
  *   restart dev, hit the endpoint again.
  *
  * WHY A LIB + ROUTE INSTEAD OF A CLI SCRIPT
@@ -91,28 +91,95 @@ type SeedProduct = {
   supplierCode: string
 }
 
+// ─── 8-product catalog (2026-04-11 Copaia rename + catalog replacement) ──
+// Each product's `files` array lists the new Copaia-era image set from
+// `C:/AI/YaritShop/assets/`. First file is always the MAIN photo (shown on
+// product cards + as the main image in the detail-page gallery). 6/8 products
+// have 2 images; 2/8 (aloe-drink, aloe-toothgel) have 3.
+//
+// Supplier codes (`supplierCode`) for the 4 new products land as 'TBD' —
+// Yarit will fill them in from the admin panel once she maps Forever Living's
+// real SKUs to each slug. Same pattern as the earlier `aloe-body-duo-gift-set`
+// which was 'TBD' before retirement.
+//
+// Descriptions for the 4 new products are drafts based on Forever Living's
+// public product line and can be adjusted by Yarit in the admin after seed.
 const SOURCED_PRODUCTS: SeedProduct[] = [
   {
-    files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM.jpeg'],
-    slug: 'aloe-lip-balm',
+    files: ['AloeDrinkMAIN.jpg', 'AloeDrink1.jpg', 'AloeDrink2.jpg'],
+    slug: 'aloe-drink',
     title: {
-      he: "שפתון לחות אלוורה וג'וג'ובה",
-      en: 'Aloe & Jojoba Lip Balm',
+      he: 'משקה אלוורה ורה בטעם אפרסק',
+      en: 'Aloe Peaches Drink',
     },
     shortDescription: {
-      he: "שפתון לחות עשיר עם אלוורה, ג'וג'ובה ושעוות דבורים — תמיד בתיק",
-      en: 'A rich moisturizing balm with aloe, jojoba & beeswax — always in the bag',
+      he: 'משקה אלוורה ורה עדין בטעם אפרסק — 84.3% ג׳ל אלוורה טהור, ללא חומרים משמרים',
+      en: 'A gentle peach-flavored aloe vera drink — 84.3% pure aloe gel, preservative-free',
     },
     description: {
-      he: "שפתון לחות בעבודת יד הכולל ג'ל אלוורה ורה, שמן ג'וג'ובה ושעוות דבורים טהורה. הג'וג'ובה חודר לעור בעדינות ודומה בהרכבו לשמנים הטבעיים של השפתיים, האלוורה מרגיעה, והשעווה אוטמת את הלחות לאורך זמן. השילוב יוצר שכבה עדינה שמגנה על שפתיים יבשות מרוח, שמש ומזגן. קל לשימוש, לא דביק, ובגודל מושלם לכיס או לארנק.\n\nהשימוש: למרוח בכל עת שהשפתיים מרגישות יבשות, לפני היציאה לשמש או לרוח, או כשכבה לפני שנת לילה.",
-      en: "A handcrafted lip balm combining aloe vera gel, jojoba oil, and pure beeswax. Jojoba absorbs gently and mirrors the natural oils of your lips; aloe soothes; beeswax seals in moisture for long-lasting hydration. Together they form a delicate protective layer against wind, sun, and air conditioning. Non-sticky, easy to apply, and pocket-sized.\n\nHow to use: apply whenever lips feel dry, before going out in the sun or wind, or as an overnight treatment.",
+      he: 'משקה אלוורה ורה בטעם אפרסק עדין — 84.3% ג׳ל אלוורה טהור שמופק ישירות מהעלה, ללא חומרים משמרים וללא צבעי מאכל מלאכותיים. הטעם המתקתק של האפרסק הופך את המשקה לקל ונעים לשתייה יומיומית, במיוחד למי שאיננו מתחבר לטעם הטבעי של אלוורה טהור. מתאים לתמיכה בעיכול תקין, בתחושת חיוניות ובמערכת החיסון — כחלק משגרה יומית מאוזנת.\n\nהשימוש: כ-60 מ״ל פעמיים ביום, רצוי לפני הארוחות. ניתן לערבב עם מיץ טבעי או לשתות ישירות. לשמור בקירור אחרי הפתיחה ולצרוך תוך 90 ימים.',
+      en: "A peach-flavored aloe vera drink — 84.3% pure aloe gel extracted directly from the leaf, preservative-free and without artificial colors. The gentle sweetness of peach makes it easy and pleasant to drink daily, especially for anyone who doesn't love the taste of plain aloe. Suitable for supporting healthy digestion, vitality, and the immune system as part of a balanced daily routine.\n\nHow to use: about 60ml twice a day, preferably before meals. Can be mixed with natural juice or sipped straight. Refrigerate after opening and consume within 90 days.",
     },
-    categorySlug: 'skincare',
-    price: 42,
-    supplierCode: '022',
+    categorySlug: 'nutrition',
+    price: 155,
+    supplierCode: 'TBD',
   },
   {
-    files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM (2).jpeg'],
+    files: ['AloeHeatMain.jpg', 'ALoeHeat1.jpg'],
+    slug: 'aloe-heat-lotion',
+    title: {
+      he: 'קרם אלוורה מחמם — Aloe Heat',
+      en: 'Aloe Heat Lotion',
+    },
+    shortDescription: {
+      he: 'קרם עיסוי מחמם עם אלוורה, מנטול ואיקליפטוס — להרגעת שרירים וכאבי גב',
+      en: 'Warming massage lotion with aloe, menthol & eucalyptus — for tired muscles & back relief',
+    },
+    description: {
+      he: 'קרם עיסוי מחמם המשלב ג׳ל אלוורה ורה עם תמציות מנטול, איקליפטוס, רוזמרין ושמני צמחים נוספים. נספג במהירות ומייצר תחושה נעימה של חום שמלווה את השריר ומסייעת להקלה על מתח, נוקשות וכאבי גב קלים. מושלם אחרי אימון, אחרי יום ארוך על הרגליים, או כחלק משגרת עיסוי.\n\nהשימוש: למרוח בעדינות על האזור הרצוי, לעסות במעגלים עד לספיגה. להימנע ממגע בעיניים ובאזורים רגישים. לא מיועד לפצעים פתוחים.',
+      en: 'A warming massage cream combining aloe vera gel with menthol, eucalyptus, rosemary, and additional botanical oils. Absorbs quickly and creates a pleasant warming sensation that works with the muscle to help relieve tension, stiffness, and mild back discomfort. Perfect after a workout, after a long day on your feet, or as part of a massage routine.\n\nHow to use: apply gently to the target area and massage in circular motions until absorbed. Avoid contact with eyes and sensitive areas. Not intended for open wounds.',
+    },
+    categorySlug: 'skincare',
+    price: 115,
+    supplierCode: 'TBD',
+  },
+  {
+    files: ['ForeverAloeDeoMAIN.jpg', 'ForeverAloeDeo1.jpg'],
+    slug: 'aloe-deodorant',
+    title: {
+      he: 'דאודורנט אלוורה טבעי',
+      en: 'Natural Aloe Deodorant',
+    },
+    shortDescription: {
+      he: 'דאודורנט רול-און טבעי עם ג׳ל אלוורה — ללא אלומיניום וללא בישום חזק',
+      en: 'Natural roll-on deodorant with aloe vera gel — aluminum-free, unfragranced',
+    },
+    description: {
+      he: 'דאודורנט רול-און עדין המבוסס על ג׳ל אלוורה ורה טהור, ללא מלחי אלומיניום וללא ניחוח חזק. פורמולה קלילה שמתאימה לעור רגיש ולשימוש יומיומי, מעניק הגנה יעילה מבלי לסתום את בלוטות הזיעה. מתאים גם לשימוש אחרי גילוח בשל תכונות ההרגעה של האלוורה.\n\nהשימוש: למרוח על עור נקי ויבש בבוקר או אחרי מקלחת. להמתין שייספג לפני לבישת הבגדים.',
+      en: "A gentle roll-on deodorant built on pure aloe vera gel, free of aluminum salts and strong fragrance. A lightweight formula suitable for sensitive skin and everyday use, delivering effective protection without clogging sweat glands. Also works well after shaving thanks to aloe's soothing properties.\n\nHow to use: apply to clean, dry skin in the morning or after a shower. Let it absorb before dressing.",
+    },
+    categorySlug: 'skincare',
+    price: 55,
+    supplierCode: 'TBD',
+  },
+  {
+    files: ['foreveraloefirstMAIN.jpg', 'ForeverAloefirst1.jpg'],
+    slug: 'aloe-first-spray',
+    title: { he: 'תרסיס אלוורה מרגיע', en: 'Aloe First Spray' },
+    shortDescription: {
+      he: 'תרסיס אלוורה רב-שימושי לעור אחרי שמש, גילוח או גירוי',
+      en: 'All-purpose aloe spray for skin after sun, shaving or irritation',
+    },
+    description: {
+      he: 'תרסיס לעור וגם לשיער, המבוסס על אלוורה ורה טהורה בשילוב תערובת של תמציות צמחים (קמומיל, אכילאה, פרופוליס ועוד). מרגיע ומלחלח את העור במהירות אחרי שהייה ממושכת בשמש, אחרי גילוח, או כשהעור מרגיש מגורה. התרסיס מאפשר יישום נקי ומהיר בכל מקום בגוף, ומתאים גם כבסיס לחות לשיער יבש או קרקפת מגורה.\n\nהשימוש: לרסס על אזור נקי ולתת לעור לספוג. חזור לפי הצורך.',
+      en: "A spray for skin and hair built on pure aloe vera with a blend of botanical extracts (chamomile, yarrow, propolis, and more). Quickly soothes and hydrates skin after extended sun exposure, shaving, or when skin feels irritated. The spray makes application clean and effortless anywhere on the body, and also works as a light moisture base for dry hair or an irritated scalp.\n\nHow to use: spray onto a clean area and let absorb. Reapply as needed.",
+    },
+    categorySlug: 'aloe',
+    price: 120,
+    supplierCode: '040',
+  },
+  {
+    files: ['ForeverToothGelMAIN.jpg', 'ForeverToothgel1.jpg', 'ForeverToothgel2.jpg'],
     slug: 'aloe-toothgel',
     title: { he: 'משחת שיניים אלוורה ופרופוליס', en: 'Aloe & Propolis Toothgel' },
     shortDescription: {
@@ -128,42 +195,26 @@ const SOURCED_PRODUCTS: SeedProduct[] = [
     supplierCode: '028',
   },
   {
-    files: [
-      'WhatsApp Image 2026-04-09 at 8.09.49 PM (3).jpeg',
-      'WhatsApp Image 2026-04-09 at 8.09.50 PM.jpeg',
-    ],
-    slug: 'aloe-soothing-spray',
-    title: { he: 'תרסיס אלוורה מרגיע', en: 'Aloe Soothing Spray' },
+    files: ['ForeverBeePollenMAIN.jpg', 'ForeverBeePollen1.jpg'],
+    slug: 'bee-pollen',
+    title: {
+      he: 'אבקת דבורים — Bee Pollen',
+      en: 'Bee Pollen Tablets',
+    },
     shortDescription: {
-      he: 'תרסיס אלוורה רב-שימושי לעור אחרי שמש, גילוח או גירוי',
-      en: 'All-purpose aloe spray for skin after sun, shaving or irritation',
+      he: 'אבקת דבורים טבעית בטבליות — עשירה בחלבון, ויטמיני B וחומצות אמינו',
+      en: 'Natural bee pollen tablets — rich in protein, B vitamins & amino acids',
     },
     description: {
-      he: 'תרסיס לעור וגם לשיער, המבוסס על אלוורה ורה טהורה בשילוב תערובת של תמציות צמחים (קמומיל, אכילאה, פרופוליס ועוד). מרגיע ומלחלח את העור במהירות אחרי שהייה ממושכת בשמש, אחרי גילוח, או כשהעור מרגיש מגורה. התרסיס מאפשר יישום נקי ומהיר בכל מקום בגוף, ומתאים גם כבסיס לחות לשיער יבש או קרקפת מגורה.\n\nהשימוש: לרסס על אזור נקי ולתת לעור לספוג. חזור לפי הצורך.',
-      en: "A spray for skin and hair built on pure aloe vera with a blend of botanical extracts (chamomile, yarrow, propolis, and more). Quickly soothes and hydrates skin after extended sun exposure, shaving, or when skin feels irritated. The spray makes application clean and effortless anywhere on the body, and also works as a light moisture base for dry hair or an irritated scalp.\n\nHow to use: spray onto a clean area and let absorb. Reapply as needed.",
+      he: 'טבליות לעיסה המבוססות על אבקת דבורים טבעית — תוסף תזונה עשיר בחלבון צמחי, ויטמיני B, חומצות אמינו חיוניות ומינרלים. אבקת הדבורים נאספת ישירות מהדבורים בעת איסוף הצוף, והיא נחשבת לאחד ממקורות התזונה המרוכזים והשלמים שהטבע מציע. משמשת באופן מסורתי לתמיכה באנרגיה, בסיבולת ובתמיכה עונתית כללית.\n\nהשימוש: לצרוך לפי ההוראות על האריזה. להיוועץ ברופא אם יש רגישות לדבש או למוצרי כוורת.',
+      en: 'Chewable tablets built on natural bee pollen — a dietary supplement rich in plant protein, B vitamins, essential amino acids, and minerals. Bee pollen is collected directly from bees as they gather nectar and is considered one of the most concentrated, complete natural foods. Traditionally used to support energy, stamina, and general seasonal wellness.\n\nHow to use: follow the dosage on the package. Consult a doctor if you have any sensitivity to honey or bee products.',
     },
-    categorySlug: 'aloe',
-    price: 120,
-    supplierCode: '040',
+    categorySlug: 'nutrition',
+    price: 155,
+    supplierCode: 'TBD',
   },
   {
-    files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM.jpeg'],
-    slug: 'aloe-vera-gel',
-    title: { he: "ג'ל אלוורה ורה", en: 'Aloe Vera Gel' },
-    shortDescription: {
-      he: 'ג׳ל אלוורה ורה שקוף — המוצר האולטימטיבי לכל קופסת העזרה הראשונה',
-      en: 'Clear aloe vera gel — the ultimate first-aid kit essential',
-    },
-    description: {
-      he: 'ג׳ל אלוורה ורה שקוף, קליל ונטול שומניות, שנספג כמעט מיד ומעניק תחושה של רעננות והקלה. שימושי במיוחד אחרי שהייה בשמש, על עקיצות, אחרי גילוח, על עור יבש או גירויים קלים — בקיצור, המוצר שירית שומרת תמיד במגירת האמבטיה.\n\nהשימוש: למרוח בעדינות על עור נקי. בטוח לשימוש יומיומי ולכל בני המשפחה.',
-      en: 'A clear, light, non-greasy aloe vera gel that absorbs almost instantly and leaves an immediate sense of freshness and relief. Especially useful after sun exposure, on bug bites, after shaving, on dry patches, or for mild irritation — the product Yarit keeps in her bathroom drawer at all times.\n\nHow to use: apply gently to clean skin. Safe for daily use by the whole family.',
-    },
-    categorySlug: 'aloe',
-    price: 95,
-    supplierCode: '061',
-  },
-  {
-    files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (1).jpeg'],
+    files: ['ForeverBeepropolisMAIN.jpg', 'ForeverBeePropolis1.jpg'],
     slug: 'bee-propolis',
     title: { he: 'פרופוליס דבורים — טבליות', en: 'Bee Propolis Tablets' },
     shortDescription: {
@@ -179,7 +230,7 @@ const SOURCED_PRODUCTS: SeedProduct[] = [
     supplierCode: '027',
   },
   {
-    files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (2).jpeg'],
+    files: ['ForeverDailyMAIN.jpg', 'ForeverDaily1.jpg'],
     slug: 'daily-multivitamin',
     title: { he: 'מולטי ויטמין יומי מתקדם', en: 'Advanced Daily Multivitamin' },
     shortDescription: {
@@ -193,25 +244,6 @@ const SOURCED_PRODUCTS: SeedProduct[] = [
     categorySlug: 'nutrition',
     price: 140,
     supplierCode: '439',
-  },
-  {
-    files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (3).jpeg'],
-    slug: 'aloe-body-duo-gift-set',
-    title: {
-      he: 'מארז מתנה אלוורה לגוף',
-      en: 'Aloe Body Duo Gift Set',
-    },
-    shortDescription: {
-      he: 'ג׳ל רחצה וקרם גוף — הזוג המושלם למקלחת ואחריה',
-      en: 'Body wash + body lotion — the perfect shower-and-after duo',
-    },
-    description: {
-      he: 'מארז מתנה מלוטש הכולל שני מוצרים שעובדים יחד: ג׳ל רחצה עדין על בסיס אלוורה ורה שמנקה את העור בלי לייבש, וקרם גוף קליל שנספג מהר ומעניק שכבת לחות לכל היום. שניהם ללא צבע מלאכותי, עם ניחוח עדין וטבעי. מתנה מושלמת ליום הולדת, אירוח, או פשוט לפנק את עצמך.\n\nהשימוש: ג׳ל הרחצה במקלחת כמו ג׳ל רגיל. קרם הגוף על עור לח אחרי מקלחת, לספיגה מיטבית.',
-      en: 'A polished gift set of two products designed to work together: a gentle aloe vera body wash that cleanses without drying, and a lightweight body lotion that absorbs quickly and leaves the skin softly hydrated all day. Both free of artificial colors, with a delicate natural scent. A lovely gift for birthdays, hosting, or just treating yourself.\n\nHow to use: the body wash in the shower as usual; the lotion on damp skin right after for best absorption.',
-    },
-    categorySlug: 'gifts',
-    price: 195,
-    supplierCode: 'TBD',
   },
 ]
 
@@ -249,7 +281,7 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
     log.push(msg)
   }
 
-  say('Shoresh seed — starting')
+  say('Copaia seed — starting')
   say(`  assets: ${assetsDir}`)
   if (opts.wipe) say('  WIPE MODE: deleting existing data first')
 
@@ -354,10 +386,16 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
         images: mediaIds.map((id) => ({ image: id })),
         category: categoryIds[p.categorySlug],
         status: 'published',
+        // 2026-04-11 Copaia catalog: pick the 3 most visually striking
+        // products for the homepage featured carousel. `aloe-drink` is
+        // the peach bottle on marble (biggest visual pop), `aloe-toothgel`
+        // has 3 gallery images that show off the T1.7 Flip animation,
+        // `daily-multivitamin` is the one with a real supplier code
+        // that Yarit knows well.
         isFeatured: [
-          'aloe-lip-balm',
+          'aloe-drink',
+          'aloe-toothgel',
           'daily-multivitamin',
-          'aloe-body-duo-gift-set',
         ].includes(p.slug),
         isNew: true,
         sku: p.supplierCode,
@@ -419,7 +457,7 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
     slug: 'site-settings',
     data: {
       contact: {
-        email: 'hello@shoresh.example',
+        email: 'hello@copaia.example',
         phone: '+972-50-000-0000',
         whatsapp: '972500000000',
         address: 'ישראל',

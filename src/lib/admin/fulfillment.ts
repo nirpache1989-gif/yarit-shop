@@ -10,7 +10,7 @@
  *            - Bumped the hard cap from 200 to 500 and added a
  *              `totalDocs` passthrough so the view can warn Yarit if
  *              she ever gets close to the limit. Real pagination is
- *              a follow-up; at Shoresh's scale 500 is more than a
+ *              a follow-up; at Copaia's scale 500 is more than a
  *              year's worth of orders.
  *            - Dropped the per-row `findByID` fallback for customer
  *              lookup (old N+1 hot-spot). `depth: 1` already asks
@@ -42,7 +42,7 @@ export type FulfillmentBuckets = {
   cap: number
 }
 
-// 500 covers ~16 months of orders at Shoresh's expected scale
+// 500 covers ~16 months of orders at Copaia's expected scale
 // (~1 order/day). Real cursor pagination is a post-launch follow-up.
 const FULFILLMENT_CAP = 500
 

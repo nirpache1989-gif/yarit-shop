@@ -1,4 +1,4 @@
-# Shoresh docs — table of contents
+# Copaia docs — table of contents
 
 Every file in `docs/` in one place. Read `NEXT-SESSION.md` first if
 you're coming back to this repo cold; read `ONBOARDING.md` if you

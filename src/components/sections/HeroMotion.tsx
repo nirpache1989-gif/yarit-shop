@@ -251,15 +251,19 @@ export function HeroMotion({
       </div>
 
       <Container className="relative flex flex-col items-center text-center gap-8 md:gap-10">
-        <div data-hero-logo className="logo-halo relative">
+        {/* 2026-04-11 Copaia rename — Yarit asked for a slightly larger
+            logo, nudged ~1cm (≈40px) down from the top of the hero so
+            the botanical header frame has breathing room above it.
+            Sizes bumped from h-64/md:h-96 → h-72/md:h-[28rem]. */}
+        <div data-hero-logo className="logo-halo relative mt-6 md:mt-10">
           <span className="leaf-breathe inline-block">
             <Image
-              src="/brand/logo.png"
+              src="/brand/copaia.png"
               alt={logoAlt}
               width={500}
               height={750}
               priority
-              className="h-64 md:h-96 w-auto object-contain relative z-10 drop-shadow-[0_6px_18px_rgba(24,51,41,0.18)]"
+              className="h-72 md:h-[28rem] w-auto object-contain relative z-10 drop-shadow-[0_6px_18px_rgba(24,51,41,0.18)]"
             />
           </span>
         </div>

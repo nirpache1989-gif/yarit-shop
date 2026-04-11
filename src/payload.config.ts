@@ -1,5 +1,5 @@
 /**
- * @file Payload CMS configuration for Shoresh
+ * @file Payload CMS configuration for Copaia
  * @summary Root Payload config. Registers all collections + the
  *          SiteSettings global, wires the DB adapter (Postgres for
  *          production, SQLite for local dev), configures Lexical rich
@@ -12,7 +12,7 @@
  *              `postgresql://` → Postgres via @payloadcms/db-postgres
  *              (used on Vercel with Neon)
  *            - Otherwise → SQLite via @payloadcms/db-sqlite (local dev,
- *              zero config, file at ./shoresh-dev.db)
+ *              zero config, file at ./copaia-dev.db)
  *
  *          Media storage:
  *            - If BLOB_READ_WRITE_TOKEN is set → @payloadcms/storage-vercel-blob
@@ -45,13 +45,13 @@ import { Categories } from './collections/Categories'
 import { Products } from './collections/Products'
 import { Orders } from './collections/Orders'
 import { SiteSettings } from './globals/SiteSettings'
-import { shoreshEmailAdapter } from './lib/payload/emailAdapter'
+import { copaiaEmailAdapter } from './lib/payload/emailAdapter'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 // ─── Database adapter — pick based on DATABASE_URI shape ────────────
-const dbUri = process.env.DATABASE_URI || 'file:./shoresh-dev.db'
+const dbUri = process.env.DATABASE_URI || 'file:./copaia-dev.db'
 const isPostgres =
   dbUri.startsWith('postgres://') || dbUri.startsWith('postgresql://')
 
@@ -100,8 +100,8 @@ export default buildConfig({
     // hydration check.
     suppressHydrationWarning: true,
     meta: {
-      titleSuffix: '— ניהול שורש',
-      icons: [{ rel: 'icon', url: '/brand/logo.png' }],
+      titleSuffix: '— ניהול קופאה',
+      icons: [{ rel: 'icon', url: '/brand/copaia.png' }],
     },
     components: {
       // Brand graphics — replace Payload defaults on login + nav
@@ -246,7 +246,7 @@ export default buildConfig({
   // can swap to Resend via EMAIL_PROVIDER. Without this, the
   // forgot-password endpoint would silently log to payload.logger
   // and customers would never see their reset URL.
-  email: shoreshEmailAdapter,
+  email: copaiaEmailAdapter,
 
   // Sharp enables Payload's image processing (resizing, format conversion).
   sharp,

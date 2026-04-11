@@ -1,6 +1,6 @@
 /**
  * @file Header — sticky site navigation
- * @summary Top bar with the Shoresh logo, primary nav, cart icon,
+ * @summary Top bar with the Copaia logo, primary nav, cart icon,
  *          language switcher, and the customer account link.
  *
  *          Async server component because `HeaderAccountLink` calls
@@ -45,7 +45,7 @@ export async function Header() {
                 whole wordmark. See .leaf-breathe in globals.css. */}
             <span className="leaf-breathe">
               <Image
-                src="/brand/logo.png"
+                src="/brand/copaia.png"
                 alt={brand.name.en}
                 width={64}
                 height={96}

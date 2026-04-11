@@ -1,5 +1,5 @@
 /**
- * @file Next.js configuration for Shoresh
+ * @file Next.js configuration for Copaia
  * @summary Composes two plugin wrappers around the base Next config:
  *          - `withPayload`   — Payload CMS bundling + admin hot-reload
  *          - `withNextIntl`  — next-intl message loader + routing plugin

@@ -7,42 +7,24 @@
  *          product grid still shows the static override.
  *
  *          Resolution order:
- *            1. Static slug override (ships with the build, always works)
- *            2. Media collection URL (only valid if Vercel Blob is wired)
- *            3. Placeholder (ships with the build)
+ *            1. Media collection URL (first image on product.images)
+ *            2. Placeholder (ships with the build)
  *
- *          See: docs/DECISIONS.md ADR-015 (rebrand + Blob sidestep).
+ *          2026-04-11 Copaia catalog replacement (ADR-020): the old
+ *          `STATIC_IMAGE_OVERRIDES` map pointed each canonical slug at
+ *          a hand-picked AI-watercolor file in `/brand/ai/`. With the
+ *          catalog replaced by 8 Copaia products (3 kept, 4 new, 1
+ *          renamed, 3 dropped) and each product now owning 2 or 3 real
+ *          Payload Media photos, the static overrides were both stale
+ *          and a blocker to the 3-image gallery pipeline (they forced
+ *          the detail page to render a single hardcoded image instead
+ *          of the full images[] array). Deleting the map entirely lets
+ *          the resolver fall through to the Media URL in every surface.
+ *
+ *          See: docs/DECISIONS.md ADR-015 (original override rationale),
+ *          ADR-019 (Forever removal), and the 2026-04-11 Copaia rename
+ *          ship entry in docs/STATE.md.
  */
-// Keys match the `slug` field on the corresponding Products row in
-// the database. Filenames in the destination are the case-munged
-// versions already on disk in `public/brand/ai/` (Aloelips.jpg,
-// AloeFirst.jpg, etc.).
-//
-// Defensive aliasing: the seed script in `src/lib/seed.ts` uses the
-// canonical slug convention (`aloe-lip-balm`, `aloe-toothgel`, …).
-// A couple of Hebrew-aligned drift aliases are registered below for
-// any hand-edited database rows that may have drifted from the seed
-// convention.
-//
-// Photos NOT covered here fall through to the Media collection URL,
-// then to the placeholder — that's the right behavior for honey,
-// lavender oil, and any product without a dedicated flat-lay photo.
-export const STATIC_IMAGE_OVERRIDES: Record<string, string> = {
-  // ─── Canonical seed-script slugs (src/lib/seed.ts) ───
-  'aloe-lip-balm': '/brand/ai/Aloelips.jpg',
-  'aloe-toothgel': '/brand/ai/AloeToothGel.jpg',
-  'aloe-soothing-spray': '/brand/ai/AloeFirst.jpg',
-  'aloe-vera-gel': '/brand/ai/AloeGelly.jpg',
-  'bee-propolis': '/brand/ai/BeePropolis.jpg',
-  'daily-multivitamin': '/brand/ai/DailyMultivitamin.jpg',
-  'aloe-body-duo-gift-set': '/brand/ai/BodylotionNwsh.jpg',
-
-  // ─── Drift aliases for hand-edited databases ───
-  'aloe-lips': '/brand/ai/Aloelips.jpg',
-  'aloe-first': '/brand/ai/AloeFirst.jpg',
-  'aloe-vera-gelly': '/brand/ai/AloeGelly.jpg',
-  'aloe-body-perfect-match': '/brand/ai/BodylotionNwsh.jpg',
-}
 
 export const PRODUCT_PLACEHOLDER = '/brand/ai/product-placeholder.jpg'
 
@@ -57,9 +39,6 @@ type ProductImageInput = {
  * it straight to next/image without null checks.
  */
 export function resolveProductImage(product: ProductImageInput): string {
-  const staticOverride = STATIC_IMAGE_OVERRIDES[product.slug]
-  if (staticOverride) return staticOverride
-
   const firstImage = product.images?.[0]?.image
   const mediaUrl =
     firstImage && typeof firstImage === 'object' ? firstImage.url : undefined

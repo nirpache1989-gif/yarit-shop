@@ -1,6 +1,6 @@
 {
   "common": {
-    "shopName": "Shoresh",
+    "shopName": "Copaia",
     "tagline": "Rooted in wellness",
     "skipToContent": "Skip to main content",
     "loading": "Loading...",
@@ -81,7 +81,7 @@
   "meetYarit": {
     "eyebrow": "The person behind the shop",
     "heading": "Hi, I'm Yarit",
-    "body": "Shoresh is my little shop — a place for products I genuinely trust and use every day myself. I'm here to help, answer questions, and find the right thing for you together.",
+    "body": "Copaia is my little shop — a place for products I genuinely trust and use every day myself. I'm here to help, answer questions, and find the right thing for you together.",
     "readMore": "Read my story",
     "imageAlt": "Hands holding an aloe seedling"
   },
@@ -143,8 +143,8 @@
   },
   "about": {
     "title": "About",
-    "heading": "Shoresh — natural wellness from the heart",
-    "body": "Shoresh is the online home of Yarit. Here you'll find a curated range of high-quality natural products Yarit uses and loves — all in one place, with personal guidance and warm service.",
+    "heading": "Copaia — natural wellness from the heart",
+    "body": "Copaia is the online home of Yarit. Here you'll find a curated range of high-quality natural products Yarit uses and loves — all in one place, with personal guidance and warm service.",
     "moreComingSoon": "More details coming soon"
   },
   "contact": {

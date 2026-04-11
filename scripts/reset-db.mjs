@@ -37,6 +37,13 @@ const __dirname = path.dirname(__filename)
 const repoRoot = path.resolve(__dirname, '..')
 
 const filesToRemove = [
+  // Current (post-2026-04-11 rename)
+  'copaia-dev.db',
+  'copaia-dev.db-journal',
+  'copaia-dev.db-shm',
+  'copaia-dev.db-wal',
+  // Pre-rename — cleaned up defensively for anyone pulling this branch
+  // with a stale local dev DB from before the brand rename.
   'shoresh-dev.db',
   'shoresh-dev.db-journal',
   'shoresh-dev.db-shm',
@@ -75,5 +82,5 @@ console.log(
 )
 console.log('        -H "content-type: application/json" \\')
 console.log(
-  '        -d \'{"email":"admin@shoresh.example","password":"admin1234"}\'',
+  '        -d \'{"email":"admin@copaia.example","password":"admin1234"}\'',
 )

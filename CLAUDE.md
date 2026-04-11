@@ -1,16 +1,16 @@
-# Shoresh — AI Agent Entry Point
+# Copaia — AI Agent Entry Point
 
 > **This file is auto-loaded by Claude Code when any session opens this project.**
-> It is the entry point for any AI assistant continuing work on Shoresh.
+> It is the entry point for any AI assistant continuing work on Copaia.
 > **Read `docs/NEXT-SESSION.md` FIRST** — it has the current status, known issues, and a 5-minute orientation. Then come back here, then `docs/STATE.md`, then `docs/TASKS.md`.
 >
-> 🚀 **Production is live at https://yarit-shop.vercel.app** (2026-04-10).
+> 🚀 **Production is live at https://yarit-shop.vercel.app** (2026-04-10). The project was renamed from "Shoresh" to "Copaia" on 2026-04-11 — historical doc entries still reference the old name and must not be rewritten.
 
 ---
 
-## What Shoresh is
+## What Copaia is
 
-**Shoresh** (שורש — "Root") is a bilingual Hebrew/English e-commerce site for **Yarit**, a natural-wellness shop owner in Israel. The shop sells a curated catalog of natural wellness products that Yarit hand-picks and either stocks at home or orders from a supplier per-order.
+**Copaia** (קופאה, pronounced ko-PA-eh) is a bilingual Hebrew/English e-commerce site for **Yarit**, a natural-wellness shop owner in Israel. The shop sells a curated catalog of natural wellness products that Yarit hand-picks and either stocks at home or orders from a supplier per-order. The logo is a tree with visible roots — the tagline "שורשים של בריאות" / "Rooted in wellness" still matches the imagery after the rename.
 
 - **Owner:** Yarit (non-technical)
 - **Primary language:** Hebrew (RTL), with English as a secondary locale

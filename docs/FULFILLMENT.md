@@ -4,7 +4,7 @@
 
 ## Summary
 
-Yarit sells two categories of products on Shoresh:
+Yarit sells two categories of products on Copaia:
 
 1. **Independent products** — she stocks them at home. Normal e-commerce fulfillment: order arrives, she picks from her own stock, packages, ships.
 2. **Forever Living products** — she does NOT stock them. When an order arrives, she goes to Forever, buys the items at her distributor price, receives them at her home, then repackages and ships to the customer.

@@ -12,7 +12,7 @@
  *          `getResolvedSiteSettings` helper and uses those values for
  *          social links + WhatsApp. Falls back to `brand.config.ts`
  *          only for fields Yarit hasn't filled in yet. This fixes the
- *          public footer showing `hello@shoresh.example` (the brand
+ *          public footer showing `hello@copaia.example` (the brand
  *          config placeholder) after Yarit had already set her real
  *          email in `/admin/globals/site-settings`.
  *

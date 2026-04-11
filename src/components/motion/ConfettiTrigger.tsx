@@ -1,7 +1,7 @@
 /**
  * @file ConfettiTrigger — brand-palette confetti helper
  * @summary Thin wrapper around `canvas-confetti` (already installed,
- *          used by the admin fulfillment dashboard) with Shoresh
+ *          used by the admin fulfillment dashboard) with Copaia
  *          brand defaults baked in. Storefront sites should reach
  *          for THIS module, not import `canvas-confetti` directly,
  *          so the visual language stays consistent across every

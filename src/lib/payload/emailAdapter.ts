@@ -1,5 +1,5 @@
 /**
- * @file Payload email adapter (Shoresh bridge)
+ * @file Payload email adapter (Copaia bridge)
  * @summary Implements Payload's `EmailAdapter` interface and delegates
  *          to the existing storefront `getEmailProvider()` factory in
  *          `src/lib/email/index.ts`. This avoids adding a new npm
@@ -22,8 +22,8 @@ import type { EmailAdapter, SendEmailOptions } from 'payload'
 import { getEmailProvider } from '@/lib/email'
 
 const DEFAULT_FROM_ADDRESS =
-  process.env.EMAIL_FROM ?? 'noreply@shoresh.local'
-const DEFAULT_FROM_NAME = process.env.EMAIL_FROM_NAME ?? 'שורש'
+  process.env.EMAIL_FROM ?? 'noreply@copaia.local'
+const DEFAULT_FROM_NAME = process.env.EMAIL_FROM_NAME ?? 'קופאה'
 
 /**
  * Flattens Nodemailer's `to` (string | Address | array of either) into
@@ -60,12 +60,12 @@ function flattenFrom(from: SendEmailOptions['from']): string | undefined {
   return undefined
 }
 
-export const shoreshEmailAdapter: EmailAdapter<{
+export const copaiaEmailAdapter: EmailAdapter<{
   ok: boolean
   providerRef?: string
   error?: string
 }> = () => ({
-  name: 'shoresh-bridge',
+  name: 'copaia-bridge',
   defaultFromAddress: DEFAULT_FROM_ADDRESS,
   defaultFromName: DEFAULT_FROM_NAME,
   sendEmail: async (message) => {

@@ -7,7 +7,7 @@
  *          USAGE
  *              curl -X POST http://localhost:3000/api/dev/create-admin \
  *                -H "content-type: application/json" \
- *                -d '{"email":"admin@shoresh.example","password":"admin1234","name":"Yarit"}'
+ *                -d '{"email":"admin@copaia.example","password":"admin1234","name":"Yarit"}'
  *
  *          This endpoint is part of the (payload) route group and
  *          lives alongside `/api/dev/seed`.
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       password?: string
       name?: string
     }
-    const email = body.email ?? 'admin@shoresh.example'
+    const email = body.email ?? 'admin@copaia.example'
     const password = body.password ?? 'admin1234'
     const name = body.name ?? 'Yarit'
 

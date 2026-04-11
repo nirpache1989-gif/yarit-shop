@@ -19,7 +19,7 @@ export type FormatLocale = 'he' | 'en'
 
 /**
  * Format a number of Israeli shekels for display. Always prefixed
- * with ₪, no decimal places (Shoresh's price list is integer-only),
+ * with ₪, no decimal places (Copaia's price list is integer-only),
  * locale-appropriate digit grouping.
  */
 // The `locale` parameter is currently unused because the ₪ prefix

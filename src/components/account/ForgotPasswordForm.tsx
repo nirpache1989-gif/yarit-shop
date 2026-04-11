@@ -5,7 +5,7 @@
  *          success message after submit, regardless of whether the
  *          email exists, to prevent user enumeration. The actual
  *          reset email is sent (or printed to the dev console) by
- *          our shoreshEmailAdapter.
+ *          our copaiaEmailAdapter.
  */
 'use client'
 

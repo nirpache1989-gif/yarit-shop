@@ -1,31 +1,31 @@
-# Brand — Shoresh (שורש)
+# Brand — Copaia (קופאה)
 
 The brand is defined in `src/brand.config.ts` (TypeScript constants) and `src/app/globals.css` (`@theme` block with matching CSS variables). These two files must stay in sync manually.
 
+**2026-04-11 rename:** The project was renamed from "Shoresh" (שורש) to "Copaia" (קופאה) on this date. The tagline and watercolor brand vocabulary were intentionally kept — the new Copaia tree-and-roots wordmark continues the botanical/natural visual direction. Historical references to "Shoresh" in `docs/STATE.md`, `docs/DECISIONS.md`, and archived `NEXT-SESSION-PROMPT*.md` files are left in place as historical facts.
+
 ## Name
 
-- **Hebrew:** שורש
-- **Latin:** Shoresh
-- **Meaning:** "Root" — evokes natural origin, groundedness, health from the source.
+- **Hebrew:** קופאה (pronounced ko-PA-eh)
+- **Latin:** Copaia
+- **Previous name:** Shoresh / שורש (retired 2026-04-11)
 
-The name is locked in (the supplied logo shows it). The previous placeholder `Yarit` is retired.
-
-## Tagline (draft)
+## Tagline
 
 - **Hebrew:** שורשים של בריאות
 - **English:** Rooted in wellness
 
-Not finalized — Yarit can redline.
+The Hebrew tagline literally says "roots of wellness" — it was originally a wordplay on the old brand name "Shoresh" (root). After the rename, the imagery still matches the new Copaia tree-and-roots logo, so it stays.
 
 ## Logo
 
-Source: `assets/Logomain1.jpg` (above the project root). Watercolor illustration of a tree with:
+Source: `public/brand/logo.jpg` (moved from the new Copaia source `LogoCopaiaSMALL.jpg` during the 2026-04-11 rename). Stylized tree illustration with:
 - Green leafy canopy
-- Brown trunk that forms parts of the letterforms
-- Visible roots system
-- "Shoresh" text integrated into the art
+- Brown trunk with visible root system under the wordmark
+- "COPAIA" wordmark integrated into the base of the trunk
+- Warm parchment background (part of the JPG, not a solid colour you can cleanly delete)
 
-The logo's background is a warm parchment tone (part of the painting, not a solid colour you can cleanly delete).
+The logo is referenced by `Header`, `HeroMotion`, the Payload admin `BrandLogo` + `BrandIcon`, and the admin `meta.icons` entry in `payload.config.ts`. All use the same `/brand/logo.jpg` path.
 
 ## AI-generated assets (`public/brand/ai/`)
 

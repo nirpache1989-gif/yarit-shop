@@ -2,7 +2,7 @@
  * @file Meshulam payment provider
  * @summary Real implementation framework for Meshulam
  *          (https://meshulam.co.il), the recommended Israeli payment
- *          gateway for Shoresh. Structured so Nir can paste in the
+ *          gateway for Copaia. Structured so Nir can paste in the
  *          four credentials, swap `EMAIL_PROVIDER=mock` → `resend`
  *          and `PAYMENT_PROVIDER=mock` → `meshulam`, and have the
  *          whole flow come alive without touching code.

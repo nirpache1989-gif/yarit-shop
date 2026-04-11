@@ -46,9 +46,13 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# ====== Shoresh / Payload ======
+# ====== Copaia / Payload ======
 
 # Local SQLite database (used only in dev — production runs on Neon Postgres)
+copaia-dev.db
+copaia-dev.db-*
+# Pre-rename SQLite filenames — preserved so stale dev databases from
+# before the 2026-04-11 brand rename stay ignored.
 shoresh-dev.db
 shoresh-dev.db-*
 

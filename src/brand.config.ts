@@ -1,5 +1,5 @@
 /**
- * @file Shoresh brand configuration — SINGLE SOURCE OF TRUTH
+ * @file Copaia brand configuration — SINGLE SOURCE OF TRUTH
  * @summary Every piece of brand data (name, palette, fonts, contact info,
  *          social links) lives here. Changing the shop's identity is a
  *          one-file change: edit this file and everything downstream
@@ -20,8 +20,8 @@
 export const brand = {
   /** Brand name in each script. */
   name: {
-    he: 'שורש',
-    en: 'Shoresh',
+    he: 'קופאה',
+    en: 'Copaia',
   },
 
   /** Short tagline. Placeholder until Yarit picks a final one. */
@@ -90,7 +90,7 @@ export const brand = {
   contact: {
     phone: '', // TODO(yarit): add phone number
     whatsapp: '', // E.164 without leading + (e.g. 972501234567)
-    email: 'hello@shoresh.example', // TODO(yarit): replace with real email
+    email: 'hello@copaia.example', // TODO(yarit): replace with real email
     address: '', // TODO(yarit): add business address
     businessTaxId: '', // TODO(yarit): ח.פ. / ע.מ.
   },
@@ -100,7 +100,7 @@ export const brand = {
    * the footer automatically.
    */
   social: {
-    instagram: '', // e.g. 'https://instagram.com/shoresh'
+    instagram: '', // e.g. 'https://instagram.com/copaia'
     facebook: '',
     tiktok: '',
   },

@@ -46,7 +46,7 @@ First visit to `/admin` prompts you to create the initial admin user — pick an
 | `EMAIL_PROVIDER` | D | `mock` (default, console-logs) or `resend`. Selects the active provider in `src/lib/email/index.ts`. |
 | `RESEND_API_KEY` | D | Resend API key for sending emails. |
 | `EMAIL_FROM` | D | Verified sender address in Resend. Use `onboarding@resend.dev` for smoke tests before domain verification. |
-| `EMAIL_FROM_NAME` | D | Display name for outgoing mail (e.g. `שורש`). |
+| `EMAIL_FROM_NAME` | D | Display name for outgoing mail (e.g. `קופאה`). |
 | `ADMIN_NOTIFICATION_EMAIL` | D | Yarit's inbox for new-order notifications. Optional — falls back to `SiteSettings.contact.email`. |
 | `BLOB_READ_WRITE_TOKEN` | F | Vercel Blob storage token. **Auto-injected** when a Blob store is linked in the Vercel dashboard — do not paste manually. When set, `src/payload.config.ts` activates the `vercelBlobStorage` plugin. |
 
@@ -55,7 +55,7 @@ Never check `.env.local` into git. `.env.example` is the committed template.
 ## Database
 
 ### Local (SQLite)
-Default. `DATABASE_URI=file:./shoresh-dev.db`. Zero config. The database file lives at the project root. To reset, stop the dev server and delete `shoresh-dev.db` — it'll be recreated on the next boot.
+Default. `DATABASE_URI=file:./copaia-dev.db`. Zero config. The database file lives at the project root. To reset, stop the dev server and delete `copaia-dev.db` — it'll be recreated on the next boot. (Pre-2026-04-11 the filename was `shoresh-dev.db` — both are in `.gitignore`.)
 
 ### Production (Neon Postgres)
 
@@ -95,7 +95,7 @@ Local dev stores uploaded media in `./media/` at the project root (gitignored). 
 2. Connect it to the project. Vercel auto-injects `BLOB_READ_WRITE_TOKEN` as an environment variable — you don't need to copy-paste it manually
 3. Redeploy. On boot, `payload.config.ts` detects the token and activates the `vercelBlobStorage` plugin — all Media collection uploads go to Blob automatically, the `url` field on each Media doc resolves to a Vercel Blob URL, and `next/image` serves them via its CDN
 
-**Free tier:** 1 GB storage + 1 TB bandwidth/month. Easily enough for the first year at Shoresh's expected volume.
+**Free tier:** 1 GB storage + 1 TB bandwidth/month. Easily enough for the first year at Copaia's expected volume.
 
 ## Deploying to Vercel (real flow)
 
@@ -129,7 +129,7 @@ When Yarit has a Meshulam account:
 
 ## Logo processing (optional)
 
-If you want a transparent PNG version of the Shoresh logo:
+If you want a transparent PNG version of the Copaia logo:
 
 ```bash
 cd yarit-shop

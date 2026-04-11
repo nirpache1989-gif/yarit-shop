@@ -16,7 +16,7 @@
  *              EMAIL_FROM=shop@yourdomain.co.il
  *
  *          Optional:
- *              EMAIL_FROM_NAME=שורש
+ *              EMAIL_FROM_NAME=קופאה
  *
  *          Once all three are set and the dev server is restarted,
  *          every `getEmailProvider().send(...)` call goes to Resend

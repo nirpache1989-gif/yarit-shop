@@ -1,7 +1,7 @@
 # Onboarding — from a fresh clone to a running storefront in 5 minutes
 
 This is the runnable version. Copy-paste each block, and by the
-end you should have: Shoresh running on `localhost:3000`, an admin
+end you should have: Copaia running on `localhost:3000`, an admin
 login that works, 9 seeded products, and a clean local SQLite
 database that never touches production.
 

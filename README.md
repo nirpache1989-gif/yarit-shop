@@ -1,6 +1,6 @@
-# Shoresh — שורש
+# Copaia — קופאה
 
-A bilingual Hebrew/English natural wellness e-commerce site, built for Yarit (a Forever Living authorized distributor) and her selection of other natural products.
+A bilingual Hebrew/English natural wellness e-commerce site, built for Yarit (a Forever Living authorized distributor) and her selection of other natural products. Project renamed from "Shoresh" to "Copaia" on 2026-04-11 — historical docs in `docs/STATE.md` still reference the old name.
 
 ## Stack
 

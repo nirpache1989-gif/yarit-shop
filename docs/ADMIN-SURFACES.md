@@ -257,10 +257,12 @@ admin below it disappears — see the comment block at the top of
 
 ## Graphics
 
-- **`BrandLogo`** — Shoresh tree + wordmark, shown on the login
-  page and anywhere Payload renders `<Logo>`.
-- **`BrandIcon`** — Compact tree silhouette, shown in the sidebar
-  icon slot.
+- **`BrandLogo`** — Copaia tree + wordmark, shown on the login
+  page and anywhere Payload renders `<Logo>`. Reads `brand.name.he`
+  from `brand.config.ts` for alt text and display text (no more
+  hardcoded Hebrew — refactored during the 2026-04-11 rename).
+- **`BrandIcon`** — Compact tree mark, shown in the sidebar
+  icon slot. Also reads `brand.name.he` from `brand.config.ts`.
 
 Both live in `src/components/admin/payload/`.
 

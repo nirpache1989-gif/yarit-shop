@@ -1,5 +1,5 @@
 /*
- * Shoresh — global styles
+ * Copaia — global styles
  * -------------------------------------------------------------
  * Loaded by src/app/(storefront)/[locale]/layout.tsx. NOT loaded
  * by the Payload admin (which uses its own CSS in admin-brand.css).
@@ -200,7 +200,7 @@ html {
 
 /* Header logo gets a subtle warm glow in dark mode — the header
    version is small and doesn't need a full bright patch. */
-[data-theme="dark"] header img[alt="Shoresh"] {
+[data-theme="dark"] header img[alt="Copaia"] {
   filter: drop-shadow(0 0 10px rgba(230, 185, 118, 0.50));
 }
 

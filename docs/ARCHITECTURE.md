@@ -1,6 +1,6 @@
 # Architecture
 
-High-level system design for Shoresh. For the full product vision, see the plan file at `C:\Users\Ar1ma\.claude\plans\glimmering-scribbling-pudding.md`.
+High-level system design for Copaia (renamed from Shoresh on 2026-04-11). For the full product vision, see the plan file at `C:\Users\Ar1ma\.claude\plans\glimmering-scribbling-pudding.md`.
 
 ## System shape
 
@@ -121,7 +121,7 @@ Routes in the storefront (`/api/checkout`, `/api/webhooks/meshulam`) go through 
 
 `src/brand.config.ts` is the single source of truth for brand data (name, colors, fonts, contact). The palette is mirrored into CSS variables and Tailwind v4 tokens inside `src/app/globals.css` `@theme` block. These two files **must** stay in sync manually — if you change a color in `brand.config.ts`, change the matching `--color-*` line in `globals.css`.
 
-The logo is the watercolor tree + "Shoresh" wordmark from `assets/Logomain1.jpg`. It's served from `public/brand/logo-parchment.jpg` (original, used against the site's matching parchment background) and, optionally, `public/brand/logo.png` (transparent, after running `scripts/process-logo.py`).
+The logo is the tree-with-roots + "COPAIA" wordmark, served from `public/brand/logo.jpg` (moved here from `yarit-shop/media/Do not touch - temporary/LogoCopaiaSMALL.jpg` during the 2026-04-11 brand rename). All 4 logo references (Header, HeroMotion, admin BrandLogo, admin BrandIcon) + the Payload admin meta icon point at this single file.
 
 ## AI handoff (self-documentation)
 
