@@ -38,7 +38,9 @@ import { Link } from '@/lib/i18n/navigation'
 import { Container } from '@/components/ui/Container'
 import { Eyebrow } from '@/components/ui/Eyebrow'
 import { KenBurns } from '@/components/motion/KenBurns'
+import { SplitWords } from '@/components/motion/SplitWords'
 import { useGsapScope } from '@/components/motion/GsapScope'
+import { useInView } from '@/lib/motion/useInView'
 
 type Props = {
   eyebrow: string
@@ -56,6 +58,19 @@ export function MeetYaritMotion({
   imageAlt,
 }: Props) {
   const scopeRef = useRef<HTMLElement>(null)
+
+  // T2.9 #3 — body-paragraph word cascade. SplitWords is a mount-only
+  // CSS-keyframe primitive (animationDelay is relative to mount time),
+  // so if we rendered it unconditionally from the start of the page
+  // load the words would finish cascading long before the user
+  // scrolled down to MeetYarit. Instead, gate the mount on useInView
+  // so the cascade fires the moment the body paragraph enters the
+  // viewport. Before in-view, a plain `<p>` occupies the same slot
+  // so layout is identical and the parent T1.1 GSAP x-translate still
+  // has something to animate.
+  const { ref: bodyInViewRef, inView: bodyInView } = useInView<HTMLDivElement>({
+    rootMargin: '0px 0px -10% 0px',
+  })
 
   useGsapScope(scopeRef, ({ gsap, reduced }) => {
     if (reduced) {
@@ -163,13 +178,34 @@ export function MeetYaritMotion({
             >
               {heading}
             </h2>
-            <p
-              data-meet-text-block
-              className="text-lg md:text-xl text-[var(--color-foreground)]/80 leading-relaxed italic"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              {body}
-            </p>
+            {/* T2.9 #3 — body-paragraph word cascade gated on in-view.
+                The wrapper <div> keeps `data-meet-text-block` so the
+                T1.1 column-converge GSAP still staggers this child
+                alongside the eyebrow/heading/link. Inside, we render a
+                plain <p> until the section enters the viewport, then
+                swap to <SplitWords> whose CSS keyframe cascade plays
+                from mount time (60ms per word). Swapping on in-view
+                keeps the cascade tied to the scroll position rather
+                than page-load time. */}
+            <div data-meet-text-block ref={bodyInViewRef}>
+              {bodyInView ? (
+                <SplitWords
+                  as="p"
+                  stagger={60}
+                  className="text-lg md:text-xl text-[var(--color-foreground)]/80 leading-relaxed italic"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {body}
+                </SplitWords>
+              ) : (
+                <p
+                  className="text-lg md:text-xl text-[var(--color-foreground)]/80 leading-relaxed italic"
+                  style={{ fontFamily: 'var(--font-display)' }}
+                >
+                  {body}
+                </p>
+              )}
+            </div>
             <div data-meet-text-block>
               <Link
                 href="/about"
