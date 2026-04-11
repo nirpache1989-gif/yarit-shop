@@ -21,6 +21,8 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { ProductThumbnailCell as ProductThumbnailCell_20344d9f879ac81c313bcb503fe6ed29 } from '@/components/admin/payload/ProductThumbnailCell'
+import { StockQuickAdjust as StockQuickAdjust_d19e6581f9e02ac7cbc4535f5c59ba23 } from '@/components/admin/payload/StockQuickAdjust'
 import { BrandIcon as BrandIcon_202e9744fead022414559124ef9fc8c6 } from '@/components/admin/payload/BrandIcon'
 import { BrandLogo as BrandLogo_973eb6bf15c826b2df632361ed684413 } from '@/components/admin/payload/BrandLogo'
 import { AdminLangSwitcher as AdminLangSwitcher_bdb1d146fe59b4b27e3b34b5ed6d714d } from '@/components/admin/payload/AdminLangSwitcher'
@@ -60,6 +62,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/components/admin/payload/ProductThumbnailCell#ProductThumbnailCell": ProductThumbnailCell_20344d9f879ac81c313bcb503fe6ed29,
+  "@/components/admin/payload/StockQuickAdjust#StockQuickAdjust": StockQuickAdjust_d19e6581f9e02ac7cbc4535f5c59ba23,
   "@/components/admin/payload/BrandIcon#BrandIcon": BrandIcon_202e9744fead022414559124ef9fc8c6,
   "@/components/admin/payload/BrandLogo#BrandLogo": BrandLogo_973eb6bf15c826b2df632361ed684413,
   "@/components/admin/payload/AdminLangSwitcher#AdminLangSwitcher": AdminLangSwitcher_bdb1d146fe59b4b27e3b34b5ed6d714d,

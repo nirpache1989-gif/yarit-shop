@@ -34,13 +34,47 @@ export const Products: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'type', 'price', 'category', 'status'],
+    // 2026-04-11 Track B.1 — `images` column renders a tiny
+    // thumbnail via `ProductThumbnailCell` so Yarit can visually
+    // scan the catalog from the list view without clicking into
+    // each product.
+    defaultColumns: ['images', 'title', 'type', 'price', 'category', 'status'],
     group: { en: '📦 Catalog', he: '📦 קטלוג' },
     description: {
       en: 'All products in the shop.',
       he: 'כאן נמצאים כל המוצרים בחנות. לחצי על מוצר כדי לערוך אותו, או על "צרי חדש" כדי להוסיף מוצר חדש לחנות.',
     },
     listSearchableFields: ['title', 'sku'],
+    // 2026-04-11 Track B.4 — Payload's built-in Live Preview button
+    // on the Products edit form. Opens an iframe with the current
+    // storefront URL for the product, letting Yarit eyeball the real
+    // product page while she edits without juggling tabs. The URL
+    // callback reads the slug from the current form data and returns
+    // a locale-prefixed URL (Hebrew is the default locale so /product
+    // is unprefixed; English gets /en/product).
+    livePreview: {
+      url: ({ data, locale }) => {
+        const slug =
+          (data as { slug?: string })?.slug ??
+          ((data as { id?: number | string })?.id
+            ? String((data as { id?: number | string }).id)
+            : '')
+        if (!slug) return '/'
+        const base =
+          process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/+$/, '') ??
+          'http://localhost:3000'
+        const localePrefix =
+          locale && locale.code && locale.code !== 'he'
+            ? `/${locale.code}`
+            : ''
+        return `${base}${localePrefix}/product/${slug}`
+      },
+      breakpoints: [
+        { label: 'Mobile', name: 'mobile', width: 375, height: 812 },
+        { label: 'Tablet', name: 'tablet', width: 768, height: 1024 },
+        { label: 'Desktop', name: 'desktop', width: 1440, height: 900 },
+      ],
+    },
   },
   access: {
     read: () => true, // Public — storefront needs to list/show products.
@@ -200,6 +234,15 @@ export const Products: CollectionConfig = {
           en: 'First image is the main one shown on product cards. Add more for the gallery on the product page.',
           he: 'התמונה הראשונה תופיע ככרטיס המוצר באתר. אפשר להוסיף עוד תמונות עם "Add Image" — כולן יוצגו בגלריה בדף המוצר.',
         },
+        // 2026-04-11 Track B.1 — custom list-view cell rendering a
+        // 48px thumbnail of the first image. See
+        // src/components/admin/payload/ProductThumbnailCell.tsx for
+        // the fallback behavior when a product has no images yet.
+        components: {
+          Cell: {
+            path: '@/components/admin/payload/ProductThumbnailCell#ProductThumbnailCell',
+          },
+        },
       },
     },
 
@@ -287,7 +330,14 @@ export const Products: CollectionConfig = {
         condition: (data) => data.type === 'stocked',
         description: {
           en: 'Number of units currently in your inventory.',
-          he: 'כמות היחידות שיש לך בבית עכשיו. • מתעדכן אוטומטית כשהזמנה נסגרת. • כשהכמות יורדת מתחת ל-5, המוצר מופיע ב"מלאי נמוך" בעמוד הבית של פאנל הניהול. • חשוב לעדכן ידנית אם קיבלת משלוח חדש.',
+          he: 'כמות היחידות שיש לך בבית עכשיו. • מתעדכן אוטומטית כשהזמנה נסגרת. • כשהכמות יורדת מתחת ל-5, המוצר מופיע ב"מלאי נמוך" בעמוד הבית של פאנל הניהול. • חשוב לעדכן ידנית אם קיבלת משלוח חדש. • אפשר להשתמש בכפתורי ‎+1 / ‎−1 לצד השדה לעדכונים מהירים.',
+        },
+        // 2026-04-11 Track B.2 — replaces the default NumberField
+        // with a wrapper that adds +1 / −1 quick-adjust buttons.
+        components: {
+          Field: {
+            path: '@/components/admin/payload/StockQuickAdjust#StockQuickAdjust',
+          },
         },
       },
     },

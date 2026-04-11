@@ -615,6 +615,211 @@
   color: #7C4E2F;
 }
 
+/* ============================================================
+ * Track B.2 — Stock quick-adjust +/- buttons
+ * ----
+ * Wraps Payload's default NumberField on the `stock` field with two
+ * tiny sage pill buttons for Yarit's "I just received 6 more" /
+ * "I just sold one" workflows. Buttons sit under the input so
+ * they don't crowd the description text.
+ * ============================================================ */
+.yarit-stock-adjust {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.yarit-stock-adjust__buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.yarit-stock-adjust__btn {
+  min-width: 2.6rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(91, 115, 66, 0.35);
+  background: rgba(91, 115, 66, 0.08);
+  color: rgba(61, 82, 64, 1);
+  font-weight: 700;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 120ms ease;
+}
+.yarit-stock-adjust__btn:hover:not(:disabled) {
+  background: rgba(91, 115, 66, 0.16);
+  border-color: rgba(91, 115, 66, 0.55);
+}
+.yarit-stock-adjust__btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+.yarit-stock-adjust__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.yarit-stock-adjust__btn--minus {
+  /* Subtle ochre tint for the destructive direction. */
+  color: rgba(124, 78, 47, 1);
+  border-color: rgba(124, 78, 47, 0.3);
+  background: rgba(124, 78, 47, 0.06);
+}
+.yarit-stock-adjust__btn--minus:hover:not(:disabled) {
+  background: rgba(124, 78, 47, 0.14);
+  border-color: rgba(124, 78, 47, 0.5);
+}
+
+/* ============================================================
+ * Track B.1 — Product list thumbnail cell
+ * ----
+ * Tiny 48px rounded thumbnail rendered inside the products list
+ * view (first column before the title). Empty state (`—`) shows a
+ * muted placeholder so rows stay aligned.
+ * ============================================================ */
+.yarit-thumb-cell {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--style-radius-m);
+  object-fit: contain;
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-border-color);
+  padding: 3px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.yarit-thumb-cell--empty {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-elevation-400);
+  font-style: italic;
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* ============================================================
+ * Track B.3 — Dashboard "Recent orders" section
+ * ----
+ * Sits between the stats row and the tile grid. Renders up to 3
+ * most-recent paid orders with a quick link to each order's edit
+ * page. Empty state shows a friendly placeholder so a first-session
+ * admin view still looks complete.
+ * ============================================================ */
+.yarit-recent {
+  margin-top: 1.2rem;
+  margin-bottom: 1.6rem;
+  background: var(--theme-elevation-50);
+  border: 1px solid var(--theme-border-color);
+  border-radius: var(--style-radius-l);
+  padding: 1.2rem 1.3rem 1.4rem;
+}
+.yarit-recent__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid rgba(91, 115, 66, 0.18);
+}
+.yarit-recent__header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--theme-text);
+  font-family: var(--font-frank-ruhl, serif);
+}
+.yarit-recent__all {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(91, 115, 66, 0.85);
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+.yarit-recent__all:hover {
+  color: rgba(61, 82, 64, 1);
+}
+.yarit-recent__empty {
+  color: var(--theme-elevation-500);
+  font-style: italic;
+  padding: 0.8rem 0.2rem 0.4rem;
+}
+.yarit-recent__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.yarit-recent__link {
+  display: block;
+  padding: 0.75rem 0.85rem;
+  border-radius: var(--style-radius-m);
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    transform 180ms ease;
+}
+.yarit-recent__link:hover {
+  background: rgba(91, 115, 66, 0.06);
+  border-color: rgba(91, 115, 66, 0.2);
+  transform: translateX(-2px);
+}
+.yarit-recent__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+.yarit-recent__number {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--theme-text);
+  font-family: var(--font-frank-ruhl, serif);
+}
+.yarit-recent__status {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(91, 115, 66, 0.85);
+  background: rgba(91, 115, 66, 0.1);
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.yarit-recent__mid {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  font-size: 0.88rem;
+  margin-bottom: 0.2rem;
+}
+.yarit-recent__customer {
+  color: var(--theme-text);
+}
+.yarit-recent__total {
+  color: var(--theme-elevation-600);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.yarit-recent__bottom {
+  font-size: 0.82rem;
+  color: var(--theme-elevation-500);
+  font-style: italic;
+  font-family: var(--font-frank-ruhl, serif);
+}
+
 .yarit-tiles {
   display: grid;
   gap: 1rem;

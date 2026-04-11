@@ -38,6 +38,20 @@ type Stats = {
   customers: number
 }
 
+/** 2026-04-11 Track B.3 — recent orders section.
+ *  Shape of a single row in the "Recent orders" list below the stats
+ *  grid. Deliberately minimal — we only need enough to render a
+ *  1-line preview + a link to the full order edit page. */
+type RecentOrder = {
+  id: number | string
+  orderNumber: string
+  createdAt: string
+  total: number
+  customerLabel: string
+  itemSummary: string
+  fulfillmentStatus: string
+}
+
 /**
  * Time-synced Hebrew greeting for Yarit. Uses Asia/Jerusalem so it
  * matches her local day-of-time regardless of where the server runs.
@@ -118,6 +132,72 @@ async function getStats(payload: Payload): Promise<Stats> {
     lowStock: lowStock.totalDocs,
     customers: customers.totalDocs,
   }
+}
+
+/** 2026-04-11 Track B.3 — fetch the 3 most recent paid orders for
+ *  the dashboard's "recent orders" section. Uses `depth: 1` so the
+ *  `customer` relationship populates in a single query (same pattern
+ *  as loadFulfillment()). Returns an empty array on any failure so
+ *  the dashboard still renders.
+ *
+ *  Short-lived on the server, never reaches the client — the
+ *  component that consumes this is itself a server component. */
+async function getRecentOrders(payload: Payload): Promise<RecentOrder[]> {
+  try {
+    const res = await payload.find({
+      collection: 'orders',
+      where: { paymentStatus: { equals: 'paid' } },
+      sort: '-createdAt',
+      limit: 3,
+      depth: 1,
+    })
+    return res.docs.map((doc: Record<string, unknown>) => {
+      const customer = doc.customer as
+        | { name?: string; email?: string }
+        | string
+        | number
+        | null
+      const shippingAddress = doc.shippingAddress as
+        | { recipientName?: string }
+        | undefined
+      const customerName =
+        (customer && typeof customer === 'object' && customer.name) ||
+        shippingAddress?.recipientName ||
+        ''
+      const customerEmail =
+        (customer && typeof customer === 'object' && customer.email) || ''
+      const customerLabel = customerName || customerEmail || 'לקוחה'
+      const items = (doc.items as Array<{ title?: string; quantity?: number }>) ?? []
+      const firstItem = items[0]
+      const itemSummary = firstItem
+        ? items.length === 1
+          ? `${firstItem.title ?? ''}${firstItem.quantity && firstItem.quantity > 1 ? ` × ${firstItem.quantity}` : ''}`
+          : `${firstItem.title ?? ''} +${items.length - 1}`
+        : 'אין פריטים'
+      return {
+        id: doc.id as number | string,
+        orderNumber: (doc.orderNumber as string) ?? `#${doc.id}`,
+        createdAt: (doc.createdAt as string) ?? '',
+        total: (doc.total as number) ?? 0,
+        customerLabel,
+        itemSummary,
+        fulfillmentStatus: (doc.fulfillmentStatus as string) ?? 'pending',
+      }
+    })
+  } catch (err) {
+    console.warn(
+      'YaritDashboard.getRecentOrders: payload.find failed — rendering empty section',
+      err instanceof Error ? err.message : err,
+    )
+    return []
+  }
+}
+
+const FULFILLMENT_LABEL_HE: Record<string, string> = {
+  pending: 'בהמתנה',
+  packed: 'מוכנה למשלוח',
+  shipped: 'בדרך ללקוחה',
+  delivered: 'נמסרה',
 }
 
 type Tile = {
@@ -205,7 +285,10 @@ function buildTiles(stats: Stats): Tile[] {
 }
 
 export async function YaritDashboard(props: AdminViewServerProps) {
-  const stats = await getStats(props.payload)
+  const [stats, recentOrders] = await Promise.all([
+    getStats(props.payload),
+    getRecentOrders(props.payload),
+  ])
   const tiles = buildTiles(stats)
   const { hello, emoji, subtitle } = greet()
 
@@ -232,6 +315,59 @@ export async function YaritDashboard(props: AdminViewServerProps) {
           urgent={stats.lowStock > 0}
         />
         <Stat label="לקוחות רשומים" value={stats.customers} />
+      </section>
+
+      {/* 2026-04-11 Track B.3 — recent orders section. Renders the 3
+          most recent paid orders with order number, customer, item
+          summary, total, and a quick link to the order edit page.
+          Empty-state renders a friendly placeholder so the dashboard
+          still looks complete when there are no orders yet (common
+          during initial launch). */}
+      <section className="yarit-recent" aria-label="הזמנות אחרונות">
+        <header className="yarit-recent__header">
+          <h2>הזמנות אחרונות</h2>
+          <Link
+            href="/admin/fulfillment"
+            className="yarit-recent__all"
+          >
+            לכל ההזמנות ←
+          </Link>
+        </header>
+        {recentOrders.length === 0 ? (
+          <div className="yarit-recent__empty">
+            כשהזמנות יתחילו להיכנס, שלושת האחרונות יופיעו כאן.
+          </div>
+        ) : (
+          <ol className="yarit-recent__list">
+            {recentOrders.map((o) => (
+              <li key={o.id} className="yarit-recent__item">
+                <Link
+                  href={`/admin/collections/orders/${o.id}`}
+                  className="yarit-recent__link"
+                >
+                  <div className="yarit-recent__top">
+                    <span className="yarit-recent__number">
+                      {o.orderNumber}
+                    </span>
+                    <span className="yarit-recent__status">
+                      {FULFILLMENT_LABEL_HE[o.fulfillmentStatus] ??
+                        o.fulfillmentStatus}
+                    </span>
+                  </div>
+                  <div className="yarit-recent__mid">
+                    <span className="yarit-recent__customer">
+                      {o.customerLabel}
+                    </span>
+                    <span className="yarit-recent__total">
+                      ₪{o.total.toLocaleString('he-IL')}
+                    </span>
+                  </div>
+                  <div className="yarit-recent__bottom">{o.itemSummary}</div>
+                </Link>
+              </li>
+            ))}
+          </ol>
+        )}
       </section>
 
       <section className="yarit-tiles" aria-label="פעולות מהירות">
