@@ -32,7 +32,6 @@ import { CountUp } from '@/components/motion/CountUp'
 
 type Stats = {
   openOrders: number
-  awaitingForever: number
   publishedProducts: number
   draftProducts: number
   lowStock: number
@@ -78,7 +77,7 @@ function greet(): { hello: string; emoji: string; subtitle: string } {
 }
 
 async function getStats(payload: Payload): Promise<Stats> {
-  const [openOrders, awaitingForever, published, draft, lowStock, customers] =
+  const [openOrders, published, draft, lowStock, customers] =
     await Promise.all([
       payload.count({
         collection: 'orders',
@@ -86,20 +85,6 @@ async function getStats(payload: Payload): Promise<Stats> {
           and: [
             { paymentStatus: { equals: 'paid' } },
             { fulfillmentStatus: { not_equals: 'delivered' } },
-          ],
-        },
-      }),
-      // Wave B6: must also filter by paymentStatus=paid to match the
-      // fulfillment dashboard's "actionable" semantics. Previously
-      // counted unpaid forever orders too, which inflated the
-      // "urgent" tile on the dashboard vs. what Yarit actually sees
-      // in the fulfillment view.
-      payload.count({
-        collection: 'orders',
-        where: {
-          and: [
-            { paymentStatus: { equals: 'paid' } },
-            { fulfillmentStatus: { equals: 'awaiting_forever_purchase' } },
           ],
         },
       }),
@@ -115,7 +100,7 @@ async function getStats(payload: Payload): Promise<Stats> {
         collection: 'products',
         where: {
           and: [
-            { type: { equals: 'independent' } },
+            { type: { equals: 'stocked' } },
             { stock: { less_than: 5 } },
           ],
         },
@@ -128,7 +113,6 @@ async function getStats(payload: Payload): Promise<Stats> {
 
   return {
     openOrders: openOrders.totalDocs,
-    awaitingForever: awaitingForever.totalDocs,
     publishedProducts: published.totalDocs,
     draftProducts: draft.totalDocs,
     lowStock: lowStock.totalDocs,
@@ -239,11 +223,6 @@ export async function YaritDashboard(props: AdminViewServerProps) {
           label="הזמנות פתוחות"
           value={stats.openOrders}
           urgent={stats.openOrders > 0}
-        />
-        <Stat
-          label="לטיפול דחוף"
-          value={stats.awaitingForever}
-          urgent={stats.awaitingForever > 0}
         />
         <Stat label="מוצרים פורסמו" value={stats.publishedProducts} />
         <Stat label="טיוטות" value={stats.draftProducts} />

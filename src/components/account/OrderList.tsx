@@ -69,10 +69,6 @@ const PAYMENT_TONE: Record<string, string> = {
 
 const FULFILLMENT_TONE: Record<string, string> = {
   pending: 'bg-[var(--color-border-brand)] text-[var(--color-primary-dark)]',
-  awaiting_forever_purchase:
-    'bg-[var(--color-accent)]/15 text-[var(--color-accent-deep)]',
-  forever_purchased:
-    'bg-[var(--color-accent)]/10 text-[var(--color-accent-deep)]',
   packed: 'bg-[var(--color-primary)]/15 text-[var(--color-primary-dark)]',
   shipped: 'bg-[var(--color-primary)]/30 text-[var(--color-primary-dark)]',
   delivered: 'bg-[var(--color-primary)] text-white',

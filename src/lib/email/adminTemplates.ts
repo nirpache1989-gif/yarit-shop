@@ -17,10 +17,9 @@ type NewOrderAlertData = {
   items: Array<{
     title: string
     quantity: number
-    type: 'forever' | 'independent'
+    type: 'sourced' | 'stocked'
   }>
   total: number
-  hasForever: boolean
   siteUrl: string
   shippingCity: string
   shippingCountry: string
@@ -32,17 +31,10 @@ export function renderNewOrderAlertEmail(data: NewOrderAlertData): {
   text: string
 } {
   const primaryDark = brand.colors.primaryDark
-  const accent = brand.colors.accentDeep
   const muted = brand.colors.muted
   const border = brand.colors.border
   const bg = brand.colors.background
   const surface = brand.colors.surface
-
-  const foreverFlag = data.hasForever
-    ? `<div style="margin-top:16px;padding:12px 16px;background:${accent}15;border:1px solid ${accent}40;border-radius:12px;color:${accent};font-size:14px;font-weight:600;">
-         ⚠️ זה כולל פריטים של Forever — תצטרכי להזמין מפוראבר לפני האריזה.
-       </div>`
-    : ''
 
   const itemsRows = data.items
     .map(
@@ -50,7 +42,6 @@ export function renderNewOrderAlertEmail(data: NewOrderAlertData): {
       <tr>
         <td style="padding:8px 0;color:${primaryDark};font-size:14px;">
           ${escapeHtml(item.title)}
-          ${item.type === 'forever' ? `<span style="color:${accent};font-size:12px;font-weight:600;"> [Forever]</span>` : ''}
         </td>
         <td style="padding:8px 0;color:${muted};text-align:left;font-size:14px;">× ${item.quantity}</td>
       </tr>`,
@@ -75,7 +66,6 @@ export function renderNewOrderAlertEmail(data: NewOrderAlertData): {
           <p style="margin:16px 0 0 0;font-size:15px;color:${primaryDark};">
             מספר הזמנה: <strong>${escapeHtml(data.orderNumber)}</strong>
           </p>
-          ${foreverFlag}
         </td></tr>
         <tr><td style="padding:16px 32px;">
           <h2 style="margin:16px 0 8px 0;font-size:13px;text-transform:uppercase;letter-spacing:0.5px;color:${muted};">פרטי לקוח</h2>
@@ -113,15 +103,8 @@ export function renderNewOrderAlertEmail(data: NewOrderAlertData): {
     `טלפון: ${data.customerPhone}`,
     ``,
     `פריטים:`,
-    ...data.items.map(
-      (i) =>
-        `  - ${i.title}${i.type === 'forever' ? ' [Forever]' : ''} × ${i.quantity}`,
-    ),
+    ...data.items.map((i) => `  - ${i.title} × ${i.quantity}`),
     `סה״כ: ₪${data.total}`,
-    ``,
-    data.hasForever
-      ? '⚠️ כולל פריטי Forever — להזמין מפוראבר לפני האריזה'
-      : '',
     ``,
     `לוח הניהול: ${dashboardUrl}`,
   ]

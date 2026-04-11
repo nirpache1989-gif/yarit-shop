@@ -247,29 +247,5 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
 
-    // ─── Forever distributor metadata ─────────────────────────────
-    {
-      name: 'forever',
-      type: 'group',
-      label: { en: 'Forever Living', he: 'Forever Living' },
-      fields: [
-        {
-          name: 'distributorName',
-          type: 'text',
-          label: { en: 'Distributor name', he: 'שם הזכיין' },
-        },
-        {
-          name: 'distributorId',
-          type: 'text',
-          label: { en: 'Distributor ID', he: 'מספר זכיין' },
-          admin: {
-            description: {
-              en: 'Yarit\u2019s Forever Living distributor number.',
-              he: 'מספר הזכיינית של ירית ב-Forever Living.',
-            },
-          },
-        },
-      ],
-    },
   ],
 }

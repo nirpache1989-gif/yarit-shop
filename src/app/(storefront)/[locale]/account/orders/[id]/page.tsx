@@ -51,7 +51,7 @@ type OrderItem = {
   quantity: number
   price: number
   imageUrl?: string
-  productType: 'forever' | 'independent'
+  productType: 'sourced' | 'stocked'
 }
 
 type ShippingAddress = {

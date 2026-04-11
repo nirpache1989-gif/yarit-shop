@@ -27,14 +27,18 @@ import { CountUp } from '@/components/motion/CountUp'
 // Wave F motion:
 //   - Stat values count up from 0 on mount via CountUp.
 //   - Each bucket section fades up with a small per-bucket stagger
-//     (0ms / 120ms / 240ms / 360ms) so the page reads as "bucket
-//     sorting with quiet pride" rather than a dump of divs.
-//   - The urgent "awaiting forever" bucket wraps its header in a
+//     (0ms / 120ms / 240ms) so the page reads as "bucket sorting
+//     with quiet pride" rather than a dump of divs.
+//   - The urgent "ready to pack" bucket wraps its header in a
 //     .yarit-fulfillment__bucket--urgent ring that slowly pulses.
 //   - The near-cap warning banner slides down from the top via
 //     .yarit-near-cap-banner.
 //
 //   Keyframes + reduced-motion guards live in admin-brand.css.
+//
+// 2026-04-11 ADR-019 (remove Forever terminology): the 2 Forever
+// buckets are gone. The dashboard now shows 3 buckets max — "ready
+// to pack" (urgent), "shipped", and "delivered" (optional).
 
 export async function FulfillmentView(props: AdminViewServerProps) {
   const all = props.searchParams?.all
@@ -42,8 +46,6 @@ export async function FulfillmentView(props: AdminViewServerProps) {
   const buckets = await loadFulfillment(props.payload, { includeDelivered })
 
   const total =
-    buckets.awaitingForever.length +
-    buckets.foreverPurchased.length +
     buckets.readyToPack.length +
     buckets.shipped.length +
     (includeDelivered ? buckets.delivered.length : 0)
@@ -79,39 +81,25 @@ export async function FulfillmentView(props: AdminViewServerProps) {
       <div className="yarit-stats">
         <Stat
           label="לטיפול מיידי"
-          value={buckets.awaitingForever.length}
+          value={buckets.readyToPack.length}
           urgent
         />
-        <Stat label="נרכש, להכנה" value={buckets.foreverPurchased.length} />
-        <Stat label="מוכן למשלוח" value={buckets.readyToPack.length} />
-        <Stat label="נשלח" value={buckets.shipped.length} />
+        <Stat label="בדרך ללקוח" value={buckets.shipped.length} />
         <Stat label="נמסר ללקוח" value={buckets.delivered.length} />
       </div>
 
       <Section
-        title="לטיפול דחוף — להזמין מפוראבר"
-        emptyText="אין הזמנות שממתינות להזמנה מפוראבר 🌿"
-        orders={buckets.awaitingForever}
+        title="לטיפול — להכין ולשלוח"
+        emptyText="אין הזמנות ממתינות לטיפול 🌿"
+        orders={buckets.readyToPack}
         delay={0}
         urgent
-      />
-      <Section
-        title="נרכש מפוראבר, ממתין לאריזה"
-        emptyText=""
-        orders={buckets.foreverPurchased}
-        delay={120}
-      />
-      <Section
-        title="מוכן למשלוח"
-        emptyText="אין הזמנות ממתינות לאריזה"
-        orders={buckets.readyToPack}
-        delay={240}
       />
       <Section
         title="בדרך ללקוח"
         emptyText=""
         orders={buckets.shipped}
-        delay={360}
+        delay={120}
       />
 
       {includeDelivered && buckets.delivered.length > 0 && (
@@ -119,7 +107,7 @@ export async function FulfillmentView(props: AdminViewServerProps) {
           title="נמסר ללקוח"
           emptyText=""
           orders={buckets.delivered}
-          delay={480}
+          delay={240}
         />
       )}
 

@@ -1,24 +1,28 @@
 /**
  * @file Products collection — the heart of the catalog
- * @summary Single collection holds BOTH Forever Living products and
- *          Yarit's independent natural products. The `type` field is a
- *          discriminator that controls:
+ * @summary Single collection holds every product in the shop. The
+ *          `type` field is a discriminator between items Yarit stocks
+ *          at home (`stocked`) and items she orders from a supplier
+ *          per-customer-order (`sourced`). It controls:
  *
- *          - Which conditional fields appear in the admin
- *          - Whether stock is tracked (only `independent` has stock)
- *          - How orders are routed in the Fulfillment Dashboard (Phase E):
- *              * forever      → "awaiting_forever_purchase" queue
- *              * independent  → straight to "packed" if stock allows
+ *          - Whether stock is tracked (only `stocked` has stock)
+ *          - Which help text shows in the admin for stock-related fields
+ *          - How the storefront renders the out-of-stock state
  *
- *          NEVER add a product without setting `type`. The storefront,
- *          cart, checkout, and admin all branch on it.
+ *          Orders do NOT branch on this field anymore. Every paid order
+ *          flows through the same 3-step fulfillment pipeline
+ *          (`packed → shipped → delivered`). The supplier-vs-stock
+ *          distinction is a product-level concern, not an order-level
+ *          workflow — when Yarit sees an order, she looks at the line
+ *          item titles and knows which ones need sourcing without the
+ *          system telling her.
+ *
+ *          See: docs/DECISIONS.md ADR-019 (2026-04-11, Remove Forever
+ *          terminology + collapse fulfillment workflow).
  *
  *          Localized fields (title, descriptions, SEO) store he + en
  *          content separately. The Hebrew version is authoritative —
  *          English is a secondary mirror for international customers.
- *
- *          See: docs/ARCHITECTURE.md §Data Model, docs/FULFILLMENT.md,
- *               plan §6.
  */
 import type { CollectionConfig } from 'payload'
 
@@ -33,37 +37,37 @@ export const Products: CollectionConfig = {
     defaultColumns: ['title', 'type', 'price', 'category', 'status'],
     group: { en: '📦 Catalog', he: '📦 קטלוג' },
     description: {
-      en: 'All products in the shop — both Forever Living and independent.',
+      en: 'All products in the shop.',
       he: 'כאן נמצאים כל המוצרים בחנות. לחצי על מוצר כדי לערוך אותו, או על "צרי חדש" כדי להוסיף מוצר חדש לחנות.',
     },
-    listSearchableFields: ['title', 'sku', 'foreverProductCode'],
+    listSearchableFields: ['title', 'sku'],
   },
   access: {
     read: () => true, // Public — storefront needs to list/show products.
   },
   fields: [
-    // ─── Discriminator: drives ALL downstream behavior ────────────
+    // ─── Discriminator: drives stock-tracking behavior ────────────
     {
       name: 'type',
       type: 'select',
       required: true,
-      defaultValue: 'forever',
+      defaultValue: 'stocked',
       label: { en: 'Product type', he: 'סוג מוצר' },
       options: [
         {
-          label: { en: 'Forever Living (drop-shipped)', he: 'Forever Living (הזמנה מפוראבר)' },
-          value: 'forever',
+          label: { en: 'In stock at home', he: 'קיים במלאי' },
+          value: 'stocked',
         },
         {
-          label: { en: 'Independent (in stock)', he: 'עצמאי (במלאי)' },
-          value: 'independent',
+          label: { en: 'Ordered from supplier on demand', he: 'לפי הזמנה מהספק' },
+          value: 'sourced',
         },
       ],
       admin: {
         position: 'sidebar',
         description: {
-          en: 'Forever items are ordered from Forever per-order; independent items are stocked at home.',
-          he: 'Forever — כל הזמנה נרכשת מפוראבר ונשלחת ישירות, אין צורך במלאי. • עצמאי — המוצר שוכב אצלך בבית, חשוב לעדכן את שדה "מלאי". • בספק? תמיד אפשר להתחיל עם Forever ולשנות אחר כך.',
+          en: '"In stock" — the product is on your shelf; keep the stock field up to date. "Ordered on demand" — you order it from your supplier only when a customer buys, so stock tracking is skipped. You can change this at any time.',
+          he: 'קיים במלאי — המוצר שוכב אצלך בבית, חשוב לעדכן את שדה "מלאי". • לפי הזמנה מהספק — את מזמינה את המוצר מהספק רק כשיש הזמנה מלקוח, אין צורך לעדכן מלאי. • אפשר לשנות בכל עת בין שני המצבים.',
         },
       },
     },
@@ -259,42 +263,14 @@ export const Products: CollectionConfig = {
       },
     },
 
-    // ─── Conditional: FOREVER products only ──────────────────────
-    {
-      name: 'foreverProductCode',
-      type: 'text',
-      label: { en: 'Forever product code', he: 'קוד מוצר Forever' },
-      admin: {
-        condition: (data) => data.type === 'forever',
-        description: {
-          en: 'The SKU/item code as it appears in Forever\u2019s catalog.',
-          he: 'הקוד של המוצר כפי שמופיע בקטלוג של Forever.',
-        },
-      },
-    },
-    {
-      name: 'foreverDistributorPrice',
-      type: 'number',
-      min: 0,
-      label: { en: 'Your Forever cost (₪)', he: 'מחיר העלות מפוראבר (₪)' },
-      admin: {
-        condition: (data) => data.type === 'forever',
-        description: {
-          en: 'Your distributor price — for margin tracking only, not shown to customers.',
-          he: 'מחיר הזכיין שלך — לצורך מעקב רווח בלבד, לא מוצג ללקוחות.',
-        },
-      },
-    },
-
-    // ─── Conditional: INDEPENDENT products only ──────────────────
+    // ─── Inventory fields (always shown, but stock only meaningful for stocked items) ──
     {
       name: 'sku',
       type: 'text',
       label: { en: 'SKU', he: 'מספר קטלוגי (מק״ט)' },
       admin: {
-        condition: (data) => data.type === 'independent',
         description: {
-          en: 'Optional internal product code, only for independent items.',
+          en: 'Optional internal product code.',
           he: 'קוד פנימי של המוצר אצלך, אם יש לך אחד. אופציונלי.',
         },
       },
@@ -306,7 +282,9 @@ export const Products: CollectionConfig = {
       defaultValue: 0,
       label: { en: 'Stock on hand', he: 'כמות במלאי' },
       admin: {
-        condition: (data) => data.type === 'independent',
+        // Only visible for items Yarit actually inventories. Items she
+        // orders from her supplier on demand don't have stock to track.
+        condition: (data) => data.type === 'stocked',
         description: {
           en: 'Number of units currently in your inventory.',
           he: 'כמות היחידות שיש לך בבית עכשיו. • מתעדכן אוטומטית כשהזמנה נסגרת. • כשהכמות יורדת מתחת ל-5, המוצר מופיע ב"מלאי נמוך" בעמוד הבית של פאנל הניהול. • חשוב לעדכן ידנית אם קיבלת משלוח חדש.',
@@ -319,7 +297,6 @@ export const Products: CollectionConfig = {
       min: 0,
       label: { en: 'Weight (grams)', he: 'משקל (גרם)' },
       admin: {
-        condition: (data) => data.type === 'independent',
         description: {
           en: 'Used for shipping cost calculation.',
           he: 'משמש לחישוב עלות משלוח.',

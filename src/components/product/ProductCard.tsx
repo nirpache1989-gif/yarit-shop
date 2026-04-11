@@ -40,7 +40,7 @@ type Media = { id: number | string; url?: string; alt?: string }
 
 export type ProductCardData = {
   id: number | string
-  type: 'forever' | 'independent'
+  type: 'sourced' | 'stocked'
   slug: string
   title: string
   shortDescription?: string

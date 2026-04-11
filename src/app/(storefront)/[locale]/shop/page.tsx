@@ -1,10 +1,9 @@
 /**
  * @file /shop — product listing page
- * @summary Full product grid with category + brand filter chips.
- *          Fetches products from Payload on the server with locale
- *          applied. Filter state is in the URL (?category=slug,
- *          ?brand=forever|independent) so it's bookmarkable and
- *          shareable.
+ * @summary Full product grid with category filter chips. Fetches
+ *          products from Payload on the server with locale applied.
+ *          Filter state is in the URL (?category=slug) so it's
+ *          bookmarkable and shareable.
  */
 import type { Metadata } from 'next'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -74,9 +73,9 @@ export default async function ShopPage({ params, searchParams }: Props) {
   const categories = categoriesRes.docs as unknown as CategoryData[]
 
   // Build the product query
-  // Note: the `type: forever | independent` discriminator exists on
+  // Note: the `type: sourced | stocked` discriminator exists on
   // Products but is NEVER exposed to customers as a filter. It's a
-  // purely internal signal for fulfillment routing and stock tracking.
+  // purely internal signal for stock tracking.
   const where: Where = {
     status: { equals: 'published' },
   }

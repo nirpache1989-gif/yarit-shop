@@ -6,10 +6,6 @@
  *          The auth gate is the caller's responsibility — inside
  *          /admin/* Payload's view runner already enforces it.
  *
- *          (The legacy `/fulfillment` route in `(admin-tools)` was
- *          deleted in Round 5 — everything lives inside `/admin`
- *          now so it picks up the branded chrome automatically.)
- *
  *          Wave B6 (pre-launch hardening):
  *            - Bumped the hard cap from 200 to 500 and added a
  *              `totalDocs` passthrough so the view can warn Yarit if
@@ -25,14 +21,15 @@
  *              `console.warn` if it ever fails (shouldn't, but we
  *              want to see it in the server logs if it does).
  *
- *          See: plan Phase 4.2.
+ *          2026-04-11 ADR-019 (remove Forever terminology): the old
+ *          `awaitingForever` and `foreverPurchased` buckets are gone.
+ *          Every paid order lives in one of three buckets now —
+ *          `readyToPack`, `shipped`, `delivered`.
  */
 import type { Payload, Where } from 'payload'
 import type { OrderRowData } from '@/components/admin/OrderRow'
 
 export type FulfillmentBuckets = {
-  awaitingForever: OrderRowData[]
-  foreverPurchased: OrderRowData[]
   readyToPack: OrderRowData[]
   shipped: OrderRowData[]
   delivered: OrderRowData[]
@@ -65,7 +62,7 @@ type RawOrder = {
   items: Array<{
     title: string
     quantity: number
-    productType: 'forever' | 'independent'
+    productType: 'sourced' | 'stocked'
   }>
   shippingAddress: {
     recipientName: string
@@ -134,13 +131,10 @@ export async function loadFulfillment(
   )
 
   return {
-    awaitingForever: orders.filter(
-      (o) => o.fulfillmentStatus === 'awaiting_forever_purchase',
+    readyToPack: orders.filter(
+      (o) =>
+        o.fulfillmentStatus === 'packed' || o.fulfillmentStatus === 'pending',
     ),
-    foreverPurchased: orders.filter(
-      (o) => o.fulfillmentStatus === 'forever_purchased',
-    ),
-    readyToPack: orders.filter((o) => o.fulfillmentStatus === 'packed'),
     shipped: orders.filter((o) => o.fulfillmentStatus === 'shipped'),
     delivered: orders.filter((o) => o.fulfillmentStatus === 'delivered'),
     totalDocs: res.totalDocs ?? orders.length,

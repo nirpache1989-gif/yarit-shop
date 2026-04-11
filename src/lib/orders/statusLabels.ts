@@ -24,8 +24,6 @@ export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
 export type FulfillmentStatus =
   | 'pending'
-  | 'awaiting_forever_purchase'
-  | 'forever_purchased'
   | 'packed'
   | 'shipped'
   | 'delivered'
@@ -56,16 +54,12 @@ const FULFILLMENT_STATUS_LABELS: Record<
 > = {
   he: {
     pending: 'ממתין',
-    awaiting_forever_purchase: 'להזמין מפוראבר',
-    forever_purchased: 'נרכש מפוראבר',
     packed: 'ארוז ומוכן',
     shipped: 'בדרך ללקוח',
     delivered: 'נמסר ללקוח',
   },
   en: {
     pending: 'Pending',
-    awaiting_forever_purchase: 'Awaiting Forever purchase',
-    forever_purchased: 'Forever purchased',
     packed: 'Packed',
     shipped: 'Shipped',
     delivered: 'Delivered',
@@ -89,74 +83,47 @@ export function getFulfillmentStatusLabel(
 }
 
 /**
- * Step sequences for the visual fulfillment timeline on the customer
- * order-detail page. Two variants because Forever orders go through
- * the extra "awaiting → purchased" pre-steps before they reach the
- * normal pack/ship/deliver flow.
+ * Step sequence for the visual fulfillment timeline on the customer
+ * order-detail page and the admin order rows. Every order goes through
+ * the same 4 steps regardless of whether line items are sourced from a
+ * supplier or stocked at home — that's a product-level detail, not an
+ * order-level workflow. See docs/DECISIONS.md ADR-019.
  *
  * The order matches the state-machine in Orders.ts and the buttons in
  * OrderRow.tsx — keep all three in sync if the workflow changes.
  */
-export const FULFILLMENT_STEPS_BASE: FulfillmentStatus[] = [
+export const FULFILLMENT_STEPS: FulfillmentStatus[] = [
   'pending',
-  'packed',
-  'shipped',
-  'delivered',
-]
-
-export const FULFILLMENT_STEPS_FOREVER: FulfillmentStatus[] = [
-  'pending',
-  'awaiting_forever_purchase',
-  'forever_purchased',
   'packed',
   'shipped',
   'delivered',
 ]
 
 /**
- * Returns the index of `status` inside the appropriate step sequence
- * (Forever or base). Steps with index ≤ result are "complete or
- * current". Returns 0 if the status doesn't appear in the sequence.
+ * Returns the index of `status` inside `FULFILLMENT_STEPS`. Steps with
+ * index ≤ result are "complete or current". Returns 0 if the status
+ * doesn't appear in the sequence.
  */
 export function getCurrentStepIndex(
   status: FulfillmentStatus | string,
-  hasForever: boolean,
 ): number {
-  const steps = hasForever ? FULFILLMENT_STEPS_FOREVER : FULFILLMENT_STEPS_BASE
-  const idx = steps.indexOf(status as FulfillmentStatus)
+  const idx = FULFILLMENT_STEPS.indexOf(status as FulfillmentStatus)
   return idx >= 0 ? idx : 0
-}
-
-export function getFulfillmentStepsFor(
-  hasForever: boolean,
-): FulfillmentStatus[] {
-  return hasForever ? FULFILLMENT_STEPS_FOREVER : FULFILLMENT_STEPS_BASE
 }
 
 // ─── Customer-facing labels ─────────────────────────────────────────
 //
-// Everything below this line is the customer side of the story.
-// Admins use the labels above, which match Yarit's operational
-// vocabulary ("להזמין מפוראבר", "נרכש מפוראבר"). Customers don't
-// care about the Forever sourcing pipeline — they just want to know
-// "where is my package?". So we collapse the 6 internal states into
-// 4 customer-friendly buckets:
+// Customers see a slightly softer version of the admin vocabulary.
+// We collapse the 4 operational states into 4 customer-friendly
+// buckets so the labels read as reassurance rather than inventory-speak:
 //
 //   DB status                     Customer step    Customer label (he)
 //   ─────────────────────────────  ───────────────  ────────────────────
 //   pending                        received         ההזמנה התקבלה
-//   awaiting_forever_purchase      preparing        בהכנה
-//   forever_purchased              preparing        בהכנה
 //   packed                         preparing        בהכנה
 //   shipped                        shipped          בדרך אלייך
 //   delivered                      delivered        נמסרה
 //
-// The customer timeline always has these 4 steps regardless of
-// whether the order has Forever items — that's an internal detail
-// the customer shouldn't need to understand. The admin fulfillment
-// dashboard (OrderRow.tsx, FulfillmentView.tsx) keeps its 6-step
-// operational view because Yarit DOES need to act on each state
-// individually.
 
 export type CustomerFulfillmentStep =
   | 'received'
@@ -195,8 +162,6 @@ export function getCustomerStepFor(
   switch (status) {
     case 'pending':
       return 'received'
-    case 'awaiting_forever_purchase':
-    case 'forever_purchased':
     case 'packed':
       return 'preparing'
     case 'shipped':

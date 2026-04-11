@@ -8,23 +8,22 @@
  *               pending → paid → (cancelled | refunded)
  *
  *          2. `fulfillmentStatus` tracks PHYSICAL GOODS:
- *               pending
- *                 → awaiting_forever_purchase   (has Forever items, Yarit needs to order from Forever)
- *                 → forever_purchased           (Yarit confirmed she bought)
- *                 → packed                      (items in hand, ready to ship)
- *                 → shipped                     (handed to courier)
- *                 → delivered                   (customer received)
+ *               pending                  (awaiting payment)
+ *                 → packed               (items ready to ship)
+ *                 → shipped              (handed to courier)
+ *                 → delivered            (customer received)
  *
- *          When an order contains BOTH Forever and independent items,
- *          the Forever workflow wins — fulfillmentStatus starts at
- *          `awaiting_forever_purchase` and Yarit can't mark it shipped
- *          until she confirms she sourced the Forever items.
+ *          Every paid order flows through the same 3 steps regardless
+ *          of whether any line items are stocked at home or sourced
+ *          from a supplier per-order. The sourcing step (if any) is a
+ *          product-level concern that Yarit handles mentally by
+ *          glancing at the order line items — not something the state
+ *          machine enforces anymore. See docs/DECISIONS.md ADR-019
+ *          (2026-04-11, Remove Forever terminology).
  *
  *          Line items are SNAPSHOTTED at order creation (title, price,
  *          image) so historical orders stay correct even if the
  *          product is later edited, renamed, or deleted.
- *
- *          See: docs/FULFILLMENT.md, plan §6.
  */
 import type { CollectionConfig } from 'payload'
 
@@ -120,8 +119,11 @@ export const Orders: CollectionConfig = {
           required: true,
           label: { en: 'Product type at time of order', he: 'סוג מוצר בזמן ההזמנה' },
           options: [
-            { label: 'Forever', value: 'forever' },
-            { label: 'Independent', value: 'independent' },
+            { label: { en: 'In stock', he: 'במלאי' }, value: 'stocked' },
+            {
+              label: { en: 'Ordered from supplier', he: 'לפי הזמנה' },
+              value: 'sourced',
+            },
           ],
         },
         {
@@ -309,14 +311,6 @@ export const Orders: CollectionConfig = {
       label: { en: 'Fulfillment status', he: 'סטטוס אספקה' },
       options: [
         { label: { en: 'Pending', he: 'ממתין' }, value: 'pending' },
-        {
-          label: { en: 'Awaiting Forever purchase', he: 'להזמין מפוראבר' },
-          value: 'awaiting_forever_purchase',
-        },
-        {
-          label: { en: 'Forever purchased', he: 'נרכש מפוראבר' },
-          value: 'forever_purchased',
-        },
         { label: { en: 'Packed', he: 'ארוז ומוכן' }, value: 'packed' },
         { label: { en: 'Shipped', he: 'בדרך ללקוח' }, value: 'shipped' },
         { label: { en: 'Delivered', he: 'נמסר ללקוח' }, value: 'delivered' },
@@ -335,8 +329,8 @@ export const Orders: CollectionConfig = {
       label: { en: 'Fulfillment notes', he: 'הערות אספקה' },
       admin: {
         description: {
-          en: 'Private notes — Forever order confirmation numbers, tracking, etc.',
-          he: 'הערות פרטיות — אישורי הזמנה מפוראבר, מספרי מעקב, וכו׳.',
+          en: 'Private notes — supplier confirmation numbers, tracking, etc.',
+          he: 'הערות פרטיות — אישורי הזמנה מהספק, מספרי מעקב, וכו׳.',
         },
       },
     },
@@ -407,13 +401,12 @@ export const Orders: CollectionConfig = {
           const items = (doc.items as Array<{
             title: string
             quantity: number
-            productType: 'forever' | 'independent'
+            productType: 'sourced' | 'stocked'
           }>).map((i) => ({
             title: i.title,
             quantity: i.quantity,
             type: i.productType,
           }))
-          const hasForever = items.some((i) => i.type === 'forever')
 
           const rendered = renderNewOrderAlertEmail({
             orderNumber: doc.orderNumber,
@@ -422,7 +415,6 @@ export const Orders: CollectionConfig = {
             customerPhone,
             items,
             total: doc.total,
-            hasForever,
             siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
             shippingCity: doc.shippingAddress?.city ?? '',
             shippingCountry: doc.shippingAddress?.country ?? '',

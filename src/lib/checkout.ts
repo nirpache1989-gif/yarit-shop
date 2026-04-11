@@ -6,12 +6,10 @@
  *             collection (price, availability, type) — NEVER trust
  *             client-side cart prices
  *          2. Finds or creates a customer User (with a random password)
- *          3. Creates the Order with `orderStatus=pending` and the
- *             correct initial `fulfillmentStatus`:
- *                - Any Forever items → awaiting_forever_purchase
- *                - All independent, stock OK → packed
- *                - Stock issues → pending
- *          4. Decrements stock for independent items
+ *          3. Creates the Order with `orderStatus=pending` and
+ *             `fulfillmentStatus=packed` (every paid order goes through
+ *             the same 3-step pack→ship→deliver pipeline; see ADR-019)
+ *          4. Decrements stock for stocked items
  *          5. Calls the active payment provider to initiate payment
  *          6. If the provider reports `immediate: true` (mock mode),
  *             flips the order to `paid` right away
@@ -210,12 +208,12 @@ export function validateCheckoutInput(
 
 type ProductSnapshot = {
   productId: number | string
-  type: 'forever' | 'independent'
+  type: 'sourced' | 'stocked'
   slug: string
   title: string
   price: number
   quantity: number
-  stock: number | null // null for Forever (virtual stock)
+  stock: number | null // null for `sourced` items (no inventory)
   imageUrl?: string
 }
 
@@ -240,7 +238,7 @@ export async function createOrderFromCheckout(
       locale: input.locale,
     })) as {
       id: number | string
-      type: 'forever' | 'independent'
+      type: 'sourced' | 'stocked'
       slug: string
       title: string
       price: number
@@ -252,7 +250,7 @@ export async function createOrderFromCheckout(
     if (!product || product.status !== 'published') {
       return { ok: false, error: `PRODUCT_NOT_FOUND:${item.productId}` }
     }
-    if (product.type === 'independent') {
+    if (product.type === 'stocked') {
       const stock = product.stock ?? 0
       if (stock < item.quantity) {
         return { ok: false, error: `OUT_OF_STOCK:${product.slug}` }
@@ -273,7 +271,7 @@ export async function createOrderFromCheckout(
       title: product.title,
       price: product.price,
       quantity: item.quantity,
-      stock: product.type === 'independent' ? (product.stock ?? 0) : null,
+      stock: product.type === 'stocked' ? (product.stock ?? 0) : null,
       imageUrl,
     })
   }
@@ -326,11 +324,11 @@ export async function createOrderFromCheckout(
     customer = created as { id: number | string }
   }
 
-  // 4. Determine initial fulfillment status
-  const hasForever = snapshots.some((s) => s.type === 'forever')
-  const initialFulfillmentStatus: string = hasForever
-    ? 'awaiting_forever_purchase'
-    : 'packed'
+  // 4. Initial fulfillment status — every paid order goes straight
+  //    to `packed` (ready for pack/ship/deliver). The supplier vs.
+  //    stocked distinction is a product-level concern Yarit handles
+  //    mentally by looking at the order's line items.
+  const initialFulfillmentStatus: string = 'packed'
 
   // 5. Create Order
   const order = (await payload.create({
@@ -362,9 +360,9 @@ export async function createOrderFromCheckout(
     },
   })) as { id: number | string; orderNumber: string }
 
-  // 6. Decrement stock for independent items
+  // 6. Decrement stock for stocked items
   for (const snap of snapshots) {
-    if (snap.type === 'independent' && snap.stock !== null) {
+    if (snap.type === 'stocked' && snap.stock !== null) {
       await payload.update({
         collection: 'products',
         id: snap.productId as number,

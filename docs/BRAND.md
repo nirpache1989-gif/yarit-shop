@@ -50,10 +50,9 @@ Used by `TrustBar`. rembg-processed transparent PNGs that sit cleanly on the par
 
 Original JPGs are also in `public/brand/ai/` in case we want to re-process.
 
-### Section backgrounds (3)
+### Section backgrounds (2)
 Absolutely positioned, low-opacity layers behind section content:
 - `hero-bg-wash.jpg` — sage botanical wash for the homepage hero
-- `forever-spotlight-bg.jpg` — similar wash for the Forever Living section
 - `newsletter-bg.jpg` — reserved for the Phase G newsletter CTA
 
 ### Utility assets (3)

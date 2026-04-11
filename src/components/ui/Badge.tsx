@@ -1,7 +1,7 @@
 /**
  * @file Badge — small pill label
- * @summary Used for "New", "Featured", "Forever", "Sale", etc. Three
- *          visual variants matching the palette.
+ * @summary Used for "New", "Featured", "Sale", etc. Three visual
+ *          variants matching the palette.
  */
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/cn'

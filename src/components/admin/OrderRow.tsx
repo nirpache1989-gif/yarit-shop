@@ -8,12 +8,16 @@
  *          `access.update` rule.
  *
  *          The state machine (as rendered here):
- *            awaiting_forever_purchase → forever_purchased → packed → shipped → delivered
- *            packed → shipped → delivered
+ *            pending → packed → shipped → delivered
  *
  *          Each button triggers one forward transition and refreshes
  *          the page so the row moves to the new group (or disappears
  *          if it's now delivered).
+ *
+ *          2026-04-11 ADR-019 (remove Forever terminology): the old
+ *          `awaiting_forever_purchase` and `forever_purchased` states
+ *          are gone. Every order flows through the same 3 action
+ *          clicks (packed → shipped → delivered).
  */
 'use client'
 
@@ -26,7 +30,7 @@ import { getFulfillmentStatusLabel } from '@/lib/orders/statusLabels'
 type Item = {
   title: string
   quantity: number
-  productType: 'forever' | 'independent'
+  productType: 'sourced' | 'stocked'
 }
 
 type Address = {
@@ -43,13 +47,7 @@ export type OrderRowData = {
   createdAt: string
   total: number
   paymentStatus: string
-  fulfillmentStatus:
-    | 'pending'
-    | 'awaiting_forever_purchase'
-    | 'forever_purchased'
-    | 'packed'
-    | 'shipped'
-    | 'delivered'
+  fulfillmentStatus: 'pending' | 'packed' | 'shipped' | 'delivered'
   items: Item[]
   shippingAddress: Address
   customerName?: string
@@ -62,10 +60,6 @@ export type OrderRowData = {
 
 const STATUS_TONE: Record<OrderRowData['fulfillmentStatus'], string> = {
   pending: 'bg-[var(--color-border-brand)] text-[var(--color-primary-dark)]',
-  awaiting_forever_purchase:
-    'bg-[var(--color-accent)]/20 text-[var(--color-accent-deep)] border border-[var(--color-accent)]/40',
-  forever_purchased:
-    'bg-[var(--color-accent)]/10 text-[var(--color-accent-deep)]',
   packed:
     'bg-[var(--color-primary)]/15 text-[var(--color-primary-dark)]',
   shipped:
@@ -78,9 +72,7 @@ function nextStatus(
   current: OrderRowData['fulfillmentStatus'],
 ): { to: OrderRowData['fulfillmentStatus']; label: string } | null {
   switch (current) {
-    case 'awaiting_forever_purchase':
-      return { to: 'forever_purchased', label: 'סימנתי שרכשתי מפוראבר' }
-    case 'forever_purchased':
+    case 'pending':
       return { to: 'packed', label: 'נארז, מוכן למשלוח' }
     case 'packed':
       return { to: 'shipped', label: 'נשלח ללקוח' }
@@ -162,8 +154,6 @@ export function OrderRow({ order }: Props) {
     }
   }
 
-  const hasForever = order.items.some((i) => i.productType === 'forever')
-
   return (
     <li className="rounded-2xl border border-[var(--color-border-brand)] bg-[var(--color-surface)] overflow-hidden">
       <div className="p-5 grid gap-4 items-start md:grid-cols-[1fr_auto]">
@@ -185,11 +175,6 @@ export function OrderRow({ order }: Props) {
             >
               {getFulfillmentStatusLabel(order.fulfillmentStatus, 'he')}
             </span>
-            {hasForever && (
-              <span className="inline-flex items-center rounded-full bg-[var(--color-accent)]/15 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-accent-deep)]">
-                🌿 פוראבר
-              </span>
-            )}
             <span className="ms-auto text-xs text-[var(--color-muted)]">
               {formatDate(order.createdAt)}
             </span>
@@ -227,14 +212,7 @@ export function OrderRow({ order }: Props) {
           <ul className="text-sm space-y-1">
             {order.items.map((item, i) => (
               <li key={i} className="text-[var(--color-foreground)] flex items-center gap-2">
-                <span
-                  className={cn(
-                    'w-1.5 h-1.5 rounded-full',
-                    item.productType === 'forever'
-                      ? 'bg-[var(--color-accent)]'
-                      : 'bg-[var(--color-primary)]',
-                  )}
-                />
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]" />
                 <span>
                   {item.title}
                   <span className="text-[var(--color-muted)]"> × {item.quantity}</span>

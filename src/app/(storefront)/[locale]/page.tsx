@@ -1,9 +1,6 @@
 /**
  * @file Storefront home page
- * @summary Homepage composition. ForeverSpotlight section was removed
- *          in the post-launch rebrand (Yarit's feedback: minimize any
- *          customer-facing mention of the Forever brand; keep the
- *          internal type discriminator and fulfillment workflow only).
+ * @summary Homepage composition.
  *
  *          Current order:
  *            Hero → TrustBar → Featured → MeetYarit → Testimonials → Categories

@@ -160,8 +160,8 @@ export default async function ProductPage({ params }: Props) {
       : `${SITE_URL}${primaryImage.startsWith('/') ? '' : '/'}${primaryImage}`
     : undefined
   const inStock =
-    product.type === 'forever'
-      ? true // Forever products are sourced on demand
+    product.type === 'sourced'
+      ? true // Sourced items are ordered from the supplier per-order
       : (product.stock ?? 0) > 0
   const jsonLd = {
     '@context': 'https://schema.org',

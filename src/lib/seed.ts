@@ -1,8 +1,7 @@
 /**
  * @file Shoresh seed logic — one-time demo data loader
- * @summary Populates an empty Payload DB with: 5 categories, 8 real
- *          Forever Living products (with their real photos from
- *          `../assets/`), 2 placeholder independent products, and
+ * @summary Populates an empty Payload DB with: 5 categories, 7 real
+ *          products (with their real photos from `../assets/`), and
  *          default SiteSettings values.
  *
  * HOW TO RUN
@@ -75,15 +74,12 @@ const CATEGORIES = [
   { slug: 'gifts', title: { he: 'מתנות', en: 'Gifts' } },
 ]
 
-// ─── Seed products sourced from Forever Living ──────────────────────
-// NOTE: These are products Yarit sources from Forever, but the
-// customer-facing titles NEVER mention "Forever" per Yarit's explicit
-// brand instructions (2026-04-10). The `foreverProductCode` field is
-// admin-only — Yarit uses it internally when placing orders with her
-// supplier. The `type: 'forever'` discriminator is also internal and
-// drives the fulfillment workflow (orders with these items go into
-// the "needs sourcing from Forever" queue). None of it leaks to
-// customers.
+// ─── Seed products ──────────────────────────────────────────────────
+// Yarit sources these from her supplier on demand. Seeded as
+// `type: 'sourced'` by default so the stock field is skipped in the
+// admin form — she can switch any individual product to `stocked`
+// later if she starts holding inventory at home. See
+// docs/DECISIONS.md ADR-019.
 type SeedProduct = {
   files: string[]
   slug: string
@@ -92,10 +88,10 @@ type SeedProduct = {
   description: { he: string; en: string }
   categorySlug: string
   price: number
-  foreverProductCode: string
+  supplierCode: string
 }
 
-const FOREVER_PRODUCTS: SeedProduct[] = [
+const SOURCED_PRODUCTS: SeedProduct[] = [
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM.jpeg'],
     slug: 'aloe-lip-balm',
@@ -113,7 +109,7 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     },
     categorySlug: 'skincare',
     price: 42,
-    foreverProductCode: '022',
+    supplierCode: '022',
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.49 PM (2).jpeg'],
@@ -129,7 +125,7 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     },
     categorySlug: 'aloe',
     price: 45,
-    foreverProductCode: '028',
+    supplierCode: '028',
   },
   {
     files: [
@@ -148,7 +144,7 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     },
     categorySlug: 'aloe',
     price: 120,
-    foreverProductCode: '040',
+    supplierCode: '040',
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM.jpeg'],
@@ -164,7 +160,7 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     },
     categorySlug: 'aloe',
     price: 95,
-    foreverProductCode: '061',
+    supplierCode: '061',
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (1).jpeg'],
@@ -180,7 +176,7 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     },
     categorySlug: 'nutrition',
     price: 165,
-    foreverProductCode: '027',
+    supplierCode: '027',
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (2).jpeg'],
@@ -196,7 +192,7 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     },
     categorySlug: 'nutrition',
     price: 140,
-    foreverProductCode: '439',
+    supplierCode: '439',
   },
   {
     files: ['WhatsApp Image 2026-04-09 at 8.09.50 PM (3).jpeg'],
@@ -215,16 +211,16 @@ const FOREVER_PRODUCTS: SeedProduct[] = [
     },
     categorySlug: 'gifts',
     price: 195,
-    foreverProductCode: 'TBD',
+    supplierCode: 'TBD',
   },
 ]
 
 // ─── Independent products ───────────────────────────────────────────
 // Currently empty — per Yarit's feedback on 2026-04-10, the initial
-// catalog is strictly the 7 Forever-sourced products she has photos
-// for. Independent products will be added later as she starts
-// sourcing her own selection.
-const INDEPENDENT_PRODUCTS: Array<{
+// catalog is strictly the 7 sourced products Yarit has photos for.
+// Stocked items (kept in her house) will be added later as she
+// expands the catalog.
+const STOCKED_PRODUCTS: Array<{
   slug: string
   title: { he: string; en: string }
   shortDescription: { he: string; en: string }
@@ -317,8 +313,8 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
     say(`  + ${cat.slug}  (id=${result.id})`)
   }
 
-  // 2. Media + Forever products
-  say('\n[2/4] uploading media + creating Forever products...')
+  // 2. Media + sourced products
+  say('\n[2/4] uploading media + creating sourced products...')
   const mediaCache: Record<string, number | string> = {}
 
   async function uploadMediaOnce(filename: string, altHe: string, altEn: string) {
@@ -340,7 +336,7 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
     return result.id
   }
 
-  for (const p of FOREVER_PRODUCTS) {
+  for (const p of SOURCED_PRODUCTS) {
     const mediaIds: (number | string)[] = []
     for (const f of p.files) {
       const id = await uploadMediaOnce(f, p.title.he, p.title.en)
@@ -349,7 +345,7 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
     const created = await payload.create({
       collection: 'products',
       data: {
-        type: 'forever',
+        type: 'sourced',
         title: p.title.he,
         slug: p.slug,
         shortDescription: p.shortDescription.he,
@@ -364,7 +360,7 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
           'aloe-body-duo-gift-set',
         ].includes(p.slug),
         isNew: true,
-        foreverProductCode: p.foreverProductCode,
+        sku: p.supplierCode,
       },
       locale: 'he',
     })
@@ -381,19 +377,19 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
     say(`  + ${p.slug}  (id=${created.id}, ₪${p.price})`)
   }
 
-  // 3. Independent products
-  say('\n[3/4] creating independent products...')
-  for (const p of INDEPENDENT_PRODUCTS) {
+  // 3. Stocked products
+  say('\n[3/4] creating stocked products...')
+  for (const p of STOCKED_PRODUCTS) {
     const created = await payload.create({
       collection: 'products',
       data: {
-        type: 'independent',
+        type: 'stocked',
         title: p.title.he,
         slug: p.slug,
         shortDescription: p.shortDescription.he,
         description: lex(p.description.he),
         price: p.price,
-        images: [], // no seed image for independent products
+        images: [], // no seed image for stocked products
         category: categoryIds[p.categorySlug],
         status: 'published',
         isFeatured: false,
@@ -458,10 +454,6 @@ export async function runSeed(payload: Payload, opts: { wipe?: boolean } = {}) {
             price: 149,
           },
         ],
-      },
-      forever: {
-        distributorName: 'Yarit',
-        distributorId: '',
       },
     },
     locale: 'he',

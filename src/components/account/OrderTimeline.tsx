@@ -4,11 +4,11 @@
  *          the customer where their order is in the pipeline.
  *
  *          Always 4 steps — "Order received" → "Preparing" → "On the
- *          way" → "Delivered". The 6-state admin workflow
- *          (pending / awaiting_forever_purchase / forever_purchased
- *          / packed / shipped / delivered) is collapsed into these 4
- *          buckets by `getCustomerStepFor` so the customer never
- *          sees internal sourcing terminology ("להזמין מפוראבר" etc).
+ *          way" → "Delivered". The 4 DB fulfillment states
+ *          (pending / packed / shipped / delivered) map 1:1 to these
+ *          via `getCustomerStepFor` in statusLabels.ts, but the
+ *          customer sees the softer labels rather than the admin
+ *          operational vocabulary.
  *
  *          If Yarit's operational view needs to change, update
  *          `src/lib/orders/statusLabels.ts` — both admin and customer
