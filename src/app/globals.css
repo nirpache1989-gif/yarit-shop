@@ -181,14 +181,13 @@ html {
   color: var(--color-foreground);
 }
 
-/* In dark mode, the Hero shows the hero-bg-wash at full light-mode
-   intensity — no multiply blend, no reduced opacity. This shadows
-   the dark-mode wash rule below (around line ~240) specifically
-   inside the Hero's light pocket. */
-[data-theme="dark"] .hero-section > div[aria-hidden] img[src*="hero-bg-wash"] {
-  opacity: 1;
-  mix-blend-mode: normal;
-}
+/* 2026-04-11 Track G cleanup: the `hero-bg-wash.jpg` asset was
+   deleted after the `herobg3.jpg` swap — it wasn't referenced
+   from any JSX anymore, and the CSS rules that targeted it were
+   dead weight. Removed both the "force full opacity inside the
+   Hero's light pocket" and the "dark-mode multiply blend" rules.
+   If a future redesign brings back a `hero-bg-wash`-like asset,
+   resurrect these rules with the new filename. */
 
 /* The logo halo oval is unnecessary inside the Hero light pocket —
    the logo already sits on cream parchment, so a second bright
@@ -274,17 +273,9 @@ html {
   );
 }
 
-/* The Hero uses `/brand/ai/hero-bg-wash.jpg` — a parchment watercolor
-   painting. With the Warm Night palette (warm molasses background
-   instead of cool forest-black), the wash integrates naturally and
-   actually benefits from higher visibility — the warm sage leaves
-   read as a garden seen by candlelight. We use `multiply` to keep
-   the wash darker than the background so it doesn't blow out.
-   Targeted via the Hero's absolute-positioned wash container. */
-[data-theme="dark"] section > div[aria-hidden] img[src*="hero-bg-wash"] {
-  opacity: 0.28;
-  mix-blend-mode: multiply;
-}
+/* 2026-04-11 Track G cleanup: second `hero-bg-wash.jpg` CSS rule
+   also removed along with the asset. See the note ~100 lines above
+   for the full context. */
 
 /* ===== Keyframes for micro-interactions ===== */
 @keyframes pulse-added {

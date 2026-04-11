@@ -37,8 +37,6 @@
   },
   "devDependencies": {
     "@playwright/browser-chromium": "^1.59.1",
-    "@swc-node/register": "^1.11.1",
-    "@swc/core": "^1.15.24",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
