@@ -1,157 +1,134 @@
-# Next session — final closing prompt (copy-paste this to start)
+# Next session — starting prompt
 
-> **Purpose:** You are the closing session of the Shoresh project. This file is the exact prompt the user will paste when they open a new session. Your job is to take the project from "all code shipped locally" to "deployed, verified, and handed over to Yarit". Read this file top to bottom, then `CLAUDE.md`, then `docs/STATE.md` (top section — "Latest (2026-04-11)"), and only then start working.
+> **Purpose:** You are (probably) the last session of the Shoresh project. The previous close-out session (2026-04-11 late) shipped everything from `e3a8a53` + `4ea4d90` to production, verified end-to-end, and left the project in a paste-and-go state waiting on Yarit. Your job is to pick up whatever is ready and walk the project the rest of the way.
 >
-> **When this file was written:** 2026-04-11, at the end of the GSAP Tier-1 finish + mobile audit session. Everything in code is DONE. The previous sessions left all of G1/G2/G3/T1.1/T1.2/T1.3/T1.4/T1.5/T1.6/T1.7 + admin language pill + mobile fixes ready to commit.
+> **Read this file top to bottom, then `CLAUDE.md`, then the "Latest (2026-04-11 late)" section of `docs/STATE.md`. Only then start working.** The previous close-out prompt is archived at `docs/NEXT-SESSION-PROMPT-2026-04-11-close-out.md` — it's historical now, you don't need it.
 
 ---
 
-## TL;DR — your mission this session
+## Status as of 2026-04-11 late (what you inherit)
 
-1. Verify everything still builds clean (`tsc`, `lint`, `build`).
-2. Commit the accumulated local work as ONE clean commit (or a tight series — your call based on what's cleanest).
-3. Push to `main`. Confirm Vercel auto-deploys. If the Vercel webhook is stalled (has been a known issue), run `npx vercel --prod` manually.
-4. Smoke-test the live production URL at `https://yarit-shop.vercel.app` across desktop Chrome + real mobile Safari/Chrome (the user will test on their Redmi Note Poco X7). Verify:
-   - Hebrew default loads on `/`
-   - English at `/en`
-   - Language switcher visible in the header at every breakpoint (the big mobile regression from the 2026-04-11 audit)
-   - Site loads in LIGHT mode by default even when the phone's OS is set to dark (the second 2026-04-11 audit fix)
-   - Featured products heading pins to viewport top on desktop while cards scroll past (T1.4)
-   - Sticky header shrinks after 80px scroll — bg more opaque, shadow appears, logo ~20% smaller (T1.5)
-   - Shop page: clicking a filter chip morphs the product grid (T1.6)
-   - Product detail: hover zoom on the main image, thumb clicks flip into the main slot (T1.7 — thumb path requires a multi-image product)
-   - Nothing in the admin panel regressed
-5. Handle whichever external credentials Yarit has handed over (these are Track A — any combination of them unblocks going fully live):
-   - `RESEND_API_KEY` + `EMAIL_FROM` + `EMAIL_FROM_NAME` + `EMAIL_PROVIDER=resend` — paste into Vercel env and redeploy
-   - `MESHULAM_*` credentials — finish the two `TODO(meshulam)` hotspots in `src/lib/payments/meshulam.ts` against Yarit's Meshulam PDF, sandbox E2E test, then paste env and flip `PAYMENT_PROVIDER=meshulam`
-   - Legal markdown — drop the files in `content/legal/<slug>/<locale>.md`, then re-add the footer legal links in `src/components/layout/Footer.tsx`
-   - Custom domain — wire up DNS + add to Vercel project settings
-   - Final product catalog copy — Yarit edits live via `/admin/collections/products`
-6. Update `docs/STATE.md` with a new changelog entry describing what this session actually shipped. Don't delete this file (`NEXT-SESSION-PROMPT.md`) — just mark it completed at the top.
+- **Production is LIVE** at `https://yarit-shop.vercel.app`. Latest deploy is `dpl_Asz72xL4FqWDPHacoe6khgSf5gXV` based on `4ea4d90` (main). Auto-deploy via GitHub webhook has been stalling intermittently since 2026-04-10 — if a new push doesn't pick up within 2–3 minutes, run `npx vercel --prod --yes` from `C:/AI/YaritShop/yarit-shop` to trigger a manual deploy. Project is already linked via `.vercel/project.json`.
+- **All 16 smoke-test routes return 200 in prod**: `/`, `/en`, `/shop`, `/en/shop`, `/product/<any>`, `/en/product/<any>`, `/reset-password/<any>`, `/en/reset-password/<any>`, `/about`, `/en/about`, `/contact`, `/admin/login`, `/robots.txt`, `/sitemap.xml`. Product detail pages render the real Hebrew titles, `data-gallery-image` is live (T1.7 `ProductGalleryMotion`), `id="site-header"` is live (T1.5 header shrink observer).
+- **The SSG/DYNAMIC_SERVER_USAGE incident is fixed** (see `docs/STATE.md` 2026-04-11 late). Three routes lost their incomplete `generateStaticParams` functions. **Do NOT re-add `generateStaticParams` returning only `{locale}` to any storefront page** — either return full params including the second segment, or omit the function entirely.
+- **Quality gates on main**: `npx tsc --noEmit` → 0. `npm run lint` → 0 errors, 0 warnings. `npm run build` → 40 routes, all classified `ƒ` Dynamic or `○` Static, zero `●` SSG routes.
+- **Motion state**: GSAP Tier-1 waves G1/G2/G3/T1.1/T1.2/T1.3/T1.4/T1.5/T1.6/T1.7 all shipped and verified in prod. Foundation files: `src/lib/motion/gsap.ts`, `src/lib/motion/useGsapReducedMotion.ts`, `src/components/motion/GsapScope.tsx`. Motion primitives (`Reveal`, `StaggeredReveal`, `KenBurns`, `SplitWords`, `CountUp`, `ConfettiTrigger`, `BranchDivider`) all exported and in active use.
+- **Admin**: Yarit-friendly re-skin is shipped. Admin language pill is shipped. Do NOT touch `src/app/(payload)/*`, `src/components/admin/payload/*`, `src/collections/*`, `src/payload.config.ts` unless Yarit specifically asks for an admin change.
 
 ---
 
-## Important rules (non-negotiable)
+## What's still blocked on Yarit (external inputs)
 
-1. **Never commit or push without explicit user authorization.** The user holds git permission. They may say "go ahead and commit" in this session, or they may want to review first. Read their first message carefully.
-2. **Never modify the admin panel aesthetics unless asked.** `src/app/(payload)/*`, `src/components/admin/payload/*`, `src/collections/*`, `src/payload.config.ts` are under the admin domain. The admin language pill is shipped; don't add more GSAP there.
-3. **Additive only for motion.** Do not remove any CSS keyframe in `globals.css` or any primitive in `src/components/motion/`. The `Reveal`, `StaggeredReveal`, `KenBurns`, `SplitWords`, `CountUp`, `ConfettiTrigger` primitives stay exported.
-4. **Respect the drift vocabulary.** Durations 600–1400ms for single moves, 2–4s for orchestrated. Eases `power2.out` / `power3.out` / `expo.out` / `power1.inOut` only. No elastic / bounce / back. Tilt ceiling ±3–8°.
-5. **Every new motion uses `useGsapScope`** from `src/components/motion/GsapScope.tsx` with a reduced-motion check and `clearProps: 'all'` on reduced.
-6. **Server→client props are strings/numbers/booleans/JSX only.** No function props cross the boundary.
-7. **Single GSAP entry point.** Import from `@/lib/motion/gsap`, never raw `gsap/ScrollTrigger` or `gsap/Flip`. The single entry registers plugins exactly once.
-8. **No Tailwind arbitrary-value classes inside JSX comments or Markdown files** — the Tailwind v4 scanner picks them up and can 500 every page at build time. Describe class patterns in prose.
+These are the "paste-and-go" items. If Yarit has handed any of them over before this session starts, pick them up; otherwise skip.
+
+### Track A.1 — Resend email credentials
+- **Status**: adapter is paste-in-ready at `src/lib/email/resend.ts`. `.env.example` documents every variable.
+- **When Yarit sends the API key**: she pastes four variables into Vercel → Project → Settings → Environment Variables (prod scope): `EMAIL_PROVIDER=resend`, `RESEND_API_KEY=...`, `EMAIL_FROM=shop@<verified-domain>`, `EMAIL_FROM_NAME=שורש`. Optional: `ADMIN_NOTIFICATION_EMAIL=yarit@...`. Trigger a redeploy from the Vercel dashboard (or `npx vercel --prod --yes --force`). Smoke test by placing a test order via the mock payment provider and confirming the order-confirmation email lands.
+- **Caveat**: If Yarit hasn't verified a domain in Resend yet, first smoke test must use `onboarding@resend.dev` as the FROM. Domain verification adds DKIM/SPF records and is a one-time setup.
+
+### Track A.2 — Meshulam payment credentials
+- **Status**: provider scaffolding is paste-in-ready at `src/lib/payments/meshulam.ts`. Two `TODO(meshulam)` hotspots at lines 123 (createPayment body field names) and 193 (webhook signature handling) need to be reconciled against Yarit's actual Meshulam PDF before use.
+- **When Yarit sends the PDF + sandbox credentials**: (1) reconcile the two TODOs with the exact field names / signature algorithm from the PDF, (2) paste sandbox env vars into `.env.local`: `PAYMENT_PROVIDER=meshulam`, `MESHULAM_API_KEY=...`, `MESHULAM_USER_ID=...`, `MESHULAM_PAGE_CODE=...`, `MESHULAM_WEBHOOK_SECRET=...`, `MESHULAM_BASE_URL=https://sandbox.meshulam.co.il/api/light/server/1.0`, (3) run a sandbox end-to-end test: create test order → walk the hosted payment page → confirm webhook lands → confirm order `paymentStatus` flips to `paid` → confirm the fulfillment dashboard surfaces it. If any step fails, STOP and report — do NOT flip to live mode. (4) Only after sandbox E2E is green, Yarit pastes the live `MESHULAM_BASE_URL=https://meshulam.co.il/api/light/server/1.0` + live credentials into Vercel env and redeploys. **Per `CLAUDE.md` rule 9**, the webhook signature check must be enforced even locally.
+
+### Track A.3 — Legal markdown (terms / privacy / shipping / returns)
+- **Status**: loader at `src/app/(storefront)/[locale]/legal/[slug]/page.tsx` reads from `content/legal/<slug>/<locale>.md`. Folders are scaffolded empty. `content/legal/README.md` documents the drop-in format. Footer links for legal pages are currently hidden (see the two comment blocks in `src/components/layout/Footer.tsx` at lines ~51–55 and ~74–77).
+- **When Yarit's lawyer sends the files**: (1) drop `he.md` + `en.md` into each of `content/legal/{terms,privacy,shipping,returns}/`, (2) verify each renders at `/legal/<slug>` and `/en/legal/<slug>`, (3) re-add the four footer links in `Footer.tsx`. **IMPORTANT**: the live URL is `/legal/<slug>`, NOT `/policies/<slug>` — the Footer comments still say `/policies/*` which is stale. Use `/legal/*` when re-adding. Translation keys for the anchor text may or may not still be in `src/messages/{he,en}.json` — check before adding.
+
+### Track A.4 — Custom domain
+- **User action only**: (1) Yarit adds the domain in Vercel → Project → Settings → Domains, (2) updates DNS records at her registrar per Vercel's instructions, (3) waits for cert to issue, (4) updates `NEXT_PUBLIC_SITE_URL` in Vercel env to the new https origin + redeploys. Your side: once the new origin serves traffic, smoke test it the same way the 2026-04-11 late session smoke-tested `yarit-shop.vercel.app`. Confirm Payload admin login still works from the new origin.
+
+### Track A.5 — Final product catalog copy
+- **Yarit-only** via `/admin/collections/products`. No code action.
 
 ---
 
-## Working directory & quality gates
+## What else the next session could do (pick based on what Yarit sends)
+
+If Yarit doesn't have Track A items ready yet, or if they're all done quickly, here are the optional tracks in rough priority order. Ask the user which (if any) to tackle.
+
+### Track B — GSAP Tier-2 expansion (additive only)
+
+The Tier-1 waves landed on the high-impact surfaces (hero, featured products, shop filter, product gallery, header). Tier-2 candidates that would fit the editorial-botanical vocabulary without breaking the restraint rule:
+
+1. **About page narrative scroll** (`src/app/(storefront)/[locale]/about/page.tsx`). Likely has zero GSAP right now. A subtle text-reveal timeline paired with `KenBurns` on any imagery would echo the Hero rhythm without feeling heavy. ~1 new component in `src/components/sections/AboutMotion.tsx`, wrapped by the existing server page.
+2. **Cart drawer open/close timeline** (the customer-facing cart, not admin). Currently probably uses CSS transitions. A GSAP timeline would let the drawer slide + items stagger in with `power2.out` at ~600ms. Gate on `useGsapReducedMotion`. Verify `CartDrawer`'s existing focus trap + scroll lock are not disturbed.
+3. **Checkout success confetti** — the `ConfettiTrigger` primitive already exists. Firing it once when the user lands on `/checkout/success` would close the loop on a successful purchase. Very light touch, reduced-motion-safe.
+4. **Contact form focus micro-interactions** — subtle scale or underline pulse on focus. Again, additive only.
+5. **Footer reveal on scroll** — if there isn't already one. Short fade + slight y translation, same rhythm as the existing `<Reveal>` primitive.
+
+**Non-negotiable rules** (from `CLAUDE.md` + prior feedback):
+- Durations 600–1400ms for single moves, 2–4s for orchestrated.
+- Eases `power2.out` / `power3.out` / `expo.out` / `power1.inOut` only. No elastic / bounce / back.
+- Tilt ceiling ±3–8°.
+- Every motion uses `useGsapScope` with a `useGsapReducedMotion` check and `clearProps: 'all'` on reduced.
+- Import gsap only from `@/lib/motion/gsap`, never raw.
+- Customer-only; NEVER touch the admin (`(payload)` and `src/components/admin/payload/*`).
+- Additive — don't remove any existing CSS keyframe, don't replace any existing `<Reveal>` / `<StaggeredReveal>` usage, don't touch the motion primitives exports.
+
+### Track C — QA + polish
+
+Minor housekeeping noticed during the close-out session:
+1. **Vercel auto-deploy webhook is stalled.** Every push in this session had to fall back to `npx vercel --prod --yes` manually. Worth investigating the webhook settings in the Vercel dashboard → Git Integration, or re-linking the repo. Not urgent but inconvenient.
+2. **`middleware` → `proxy` deprecation warning** at build time. Tracked in `docs/DECISIONS.md` ADR-005. A clean rename would silence the warning but requires touching the middleware entry point. Low risk if Next docs are followed exactly.
+3. **Turbopack NFT warning on `src/lib/legal.ts`** — the legal loader reads from the filesystem, which causes Turbopack to trace the whole project. Non-blocking. A targeted `turbopackIgnore` comment on the filesystem call site or a `path.join(process.cwd(), 'content', 'legal', ...)` cleanup would silence it.
+4. **Payload media storage adapter warning** on Vercel builds — the `media` collection has uploads enabled but no Vercel Blob adapter is wired. Currently the catalog ships static files in `public/brand/ai/` via `STATIC_IMAGE_OVERRIDES` in `src/lib/product-image.ts`, so uploads to `/admin/collections/media` would fail on prod. If Yarit ever needs to upload new images via the admin, wire up `@payloadcms/storage-vercel-blob` (see ADR-017 and the current workaround).
+5. **pg-connection-string SSL mode deprecation** (Neon). Minor; tracked by Neon + Payload. A one-line env fix (`uselibpqcompat=true&sslmode=require` or `sslmode=verify-full`) silences the warning. Do in passing, not a whole session.
+6. **CI guard against incomplete `generateStaticParams`** (optional). A simple ESLint custom rule or a grep check in `.github/workflows/ci.yml` could catch the pattern `return routing.locales.map((locale) => ({ locale }))` and fail the build. Prevents regression of the 2026-04-11 SSG incident.
+
+### Track D — End the work (final handoff)
+
+If Yarit doesn't send any Track A items and there's no appetite for Tier-2 / polish, the cleanest way to close the project is:
+
+1. **Verify `docs/YARIT-ADMIN-GUIDE.md`** is complete and readable by a non-technical user. Read through it, fix any typos or stale references, make sure every collection and common task is covered.
+2. **Walk through `docs/STATE.md`** one more time and ensure the timeline reads cleanly end-to-end.
+3. **Write Yarit a short "your shop is live" note** (in Hebrew, since that's her primary language) — what URL to bookmark, how to log into the admin, what she can edit (product catalog, site settings), what she can't (legal pages, until her lawyer sends the markdown), and what to do when her Meshulam account is ready.
+4. **Tell the user (Nir) what to say to Yarit, when to say it, and what the "done" state looks like.**
+
+Track D can be as short as a 30-minute session. It ends the project cleanly.
+
+---
+
+## Non-negotiable rules (same as every session)
+
+1. **Never push without explicit user word.** Both `git push` calls in this session will be gated on the user saying "push" or equivalent.
+2. **No admin panel aesthetic changes.** `src/app/(payload)/*`, `src/components/admin/payload/*`, `src/collections/*`, `src/payload.config.ts` are read-only unless Yarit specifically asks for a change.
+3. **Motion is additive only.** Don't remove existing keyframes, don't touch the motion primitives, don't break the editorial-botanical vocabulary. Durations + eases per the list above.
+4. **`setRequestLocale` + `getTranslations` in every server page/layout that uses translations.** Next 16 + next-intl 4.9 is strict about this.
+5. **`cookies()`, `headers()`, `draftMode()` are async.** `await` always.
+6. **Never import `next/link` in storefront code.** Use `Link` from `@/lib/i18n/navigation` — the locale-aware version.
+7. **Single GSAP entry point** — `@/lib/motion/gsap`, never raw `gsap/ScrollTrigger` or `gsap/Flip`.
+8. **Server→client props are strings/numbers/booleans/JSX only.** No function props across the boundary.
+9. **No Tailwind arbitrary-value classes in JSX comments or markdown files** — the v4 scanner picks them up and can 500 every page at build time. Describe class patterns in prose.
+10. **Hebrew + English bilingual strings always go through `src/messages/{he,en}.json`.**
+11. **Do NOT re-add `generateStaticParams` returning only `{locale}` to any storefront page.** This is the 2026-04-11 late incident in permanent form. Either return full params (locale × slug/token/id) or omit the function.
+
+---
+
+## Working directory + quality gates
 
 ```
 cd C:/AI/YaritShop/yarit-shop
 npx tsc --noEmit        # must exit 0
-npm run lint            # must exit 0
-npm run build           # must exit 0
+npm run lint            # must exit 0 (0 errors; 3 warnings are intentional stub files until Track A.1/A.2 are wired)
+npm run build           # must exit 0, all 40 routes
 ```
 
-Dev server: `npm run dev` → http://localhost:3000
-Preview MCP: the user may ask you to verify via the Claude Preview MCP. Remember that Preview MCP's Chrome does NOT emit native scroll events on programmatic `window.scrollTo(y)` — ScrollTrigger won't auto-update during preview-driven tests. Dispatch `window.dispatchEvent(new Event('scroll'))` manually if you need to verify scroll-triggered behavior in the preview.
+Dev server: `npm run dev` → http://localhost:3000. **Warning**: `npm run dev` does NOT exercise SSG behavior — if you need to reproduce a production-only issue, use `npm run build && npx next start -p <free-port>` instead. The 2026-04-11 SSG incident was latent for weeks because nobody ran a prod build locally.
 
----
-
-## What's in the working tree right now (2026-04-11 handoff)
-
-Everything below was brought in by the 2026-04-10 + 2026-04-11 sessions. Either this is committed already when you read this (user committed at end of 2026-04-11) OR you are the one committing it. Check with `git status` and `git log` at the very start of your session to know which.
-
-### Storefront GSAP tree
-
-- `src/lib/motion/gsap.ts` — single entry, registers ScrollTrigger + Flip. `Flip` imported via `gsap/dist/Flip` to dodge a GSAP 3.14.2 types subpath casing bug on Windows.
-- `src/lib/motion/useGsapReducedMotion.ts` — `useSyncExternalStore` hook that returns live `prefers-reduced-motion` state.
-- `src/components/motion/GsapScope.tsx` — the `useGsapScope(ref, setupFn, deps)` helper every motion component uses.
-- `src/components/sections/HeroMotion.tsx` (G2)
-- `src/components/sections/MeetYaritMotion.tsx` (T1.1)
-- `src/components/sections/CategoryGridMotion.tsx` (T1.2)
-- `src/components/ui/BranchDivider.tsx` (T1.3 — was converted from server to client to own the draw-in timeline)
-- `src/components/product/ProductCardMotion.tsx` (G3 — magnetic cursor tilt on every product card)
-- `src/components/sections/FeaturedProductsMotion.tsx` (T1.4)
-- `src/components/layout/HeaderShrinkObserver.tsx` (T1.5)
-- `src/components/shop/ShopGridFlip.tsx` (T1.6)
-- `src/components/product/ProductGalleryMotion.tsx` (T1.7)
-
-Server shells that hand data to the above:
-
-- `src/components/sections/Hero.tsx` (server — hands strings to HeroMotion)
-- `src/components/sections/MeetYarit.tsx` (server)
-- `src/components/sections/CategoryGrid.tsx` (server)
-- `src/components/sections/FeaturedProducts.tsx` (server — 50 lines, hands products + strings to FeaturedProductsMotion)
-- `src/app/(storefront)/[locale]/shop/page.tsx` (uses ShopGridFlip)
-- `src/app/(storefront)/[locale]/product/[slug]/page.tsx` (uses ProductGalleryMotion)
-- `src/components/layout/Header.tsx` (server — mounts HeaderShrinkObserver as a client sibling, `id="site-header"`, LanguageSwitcher moved out of `hidden md:flex`)
-- `src/app/(storefront)/[locale]/layout.tsx` (updated theme bootstrap — defaults to light, no more OS dark detection)
-
-### Admin language pill
-
-- `src/components/admin/payload/AdminLangSwitcher.tsx` — new client component registered as the first entry in `admin.components.actions` in `src/payload.config.ts`. Renders a `🌐 עברית` ↔ `🌐 English` pill in the top-right action cluster of every admin page.
-- `src/components/admin/payload/SidebarGreeting.tsx`, `SidebarFooter.tsx`, `HelpButton.tsx` — all three read `props.i18n?.language` and branch inline `strings` objects so the Hebrew/English flip reaches the full sidebar chrome.
-- `src/app/(payload)/admin-brand.css` — minor tweaks during the admin audit.
-
-### Messages
-
-- `src/messages/he.json` + `src/messages/en.json` — added `product.galleryThumbLabel` + `product.galleryMainLabel` for T1.7 accessibility.
-
-### Global CSS
-
-- `src/app/globals.css` — added a `@layer utilities { header#site-header { … } }` block for the header shrink state (T1.5). Added reduced-motion overrides for the header transitions.
-
-### Docs (what you should read before touching code)
-
-- `docs/STATE.md` — top section "Latest (2026-04-11)" has the full per-wave breakdown
-- `docs/NEXT-SESSION.md` — 5-min orientation to the repo
-- `docs/NEXT-SESSION-GSAP-PROMPT.md` — old GSAP Tier-1 roadmap, all 4 waves now marked as shipped
-- `docs/DECISIONS.md` — any new ADR for Flip registration is optional (the decision is captured in the file comment inside `src/lib/motion/gsap.ts`)
-
----
-
-## Known quirks you will bump into
-
-1. **Preview MCP scroll events.** Programmatic `window.scrollTo(y)` does not fire a native `scroll` event in the Preview MCP Chrome instance. ScrollTrigger piggybacks on those events, so during preview verification you may see cards stuck at opacity 0 because the tween never played. Dispatch `window.dispatchEvent(new Event('scroll'))` manually if you need to verify. **Real browsers emit scroll events normally — production is fine.**
-2. **Preview MCP screenshots.** `preview_screenshot` sometimes times out on this page because the storefront has a lot of always-animating backgrounds (ambient-breathe, KenBurns, DriftingLeaves, leaf-breathe, iridescent shimmer). Fall back to `preview_snapshot` + `preview_inspect` + `preview_eval` for measurements instead of relying on visual captures.
-3. **Seed data single-image limit.** Every dev product has a static-override entry in `src/lib/product-image.ts` that forces a single image. This means the T1.7 thumb-Flip path does not get exercised against the default seed. To test it locally, delete one override and create a multi-image product via `/admin/collections/products`.
-4. **Tailwind v4 layer order.** Utilities live in `@layer utilities`. If you add a rule that needs to beat a Tailwind utility class via specificity, put YOUR rule inside `@layer utilities { … }` too. An unlayered rule will LOSE to a layered utility via layer order even if your selector is more specific. T1.5's `header#site-header[data-scrolled="true"]` block relies on this.
-5. **GSAP Flip types bug (Windows).** Do NOT import Flip as `import { Flip } from 'gsap/Flip'`. Use `import { Flip } from 'gsap/dist/Flip'` instead. See the long comment in `src/lib/motion/gsap.ts` for the full explanation.
-6. **Fast Refresh + gsap.from initial state.** When HMR rebuilds a component in dev, `useGsapScope`'s setup re-runs, which re-applies the `gsap.from` initial state (opacity 0 etc.). If the user is scrolled PAST the trigger when HMR fires, the tween may not replay automatically because ScrollTrigger thinks it's already past its end. This is dev-only; production is unaffected. Reloading fixes it.
-7. **Vercel auto-deploy webhook.** The GitHub → Vercel webhook has been stalling intermittently since the 2026-04-10 sprint. After pushing, if Vercel doesn't pick up the commit within 2–3 minutes, run `npx vercel --prod` manually. Don't panic-re-push.
+Preview MCP: if you use `preview_start` from `.claude/launch.json`, note that Preview MCP's Chrome does NOT emit native `scroll` events on programmatic `window.scrollTo(y)` — ScrollTrigger won't auto-update during preview-driven tests. Dispatch `window.dispatchEvent(new Event('scroll'))` manually if you need to verify scroll-triggered behavior in the preview.
 
 ---
 
 ## Definition of done for this session
 
-Ship these in order. Stop and confirm with the user after each block if you're not sure.
+Whatever track(s) you run, the session is done when:
 
-### Block A — commit + push + deploy
+- [ ] Any Track A items that came in are wired, verified on prod, and documented in `docs/STATE.md`.
+- [ ] `tsc + lint + build` green after every code change.
+- [ ] `git push origin main` only after explicit user word.
+- [ ] Vercel auto-deploys OR you manually trigger `npx vercel --prod --yes`.
+- [ ] Prod smoke test covers at minimum the 16 routes from the 2026-04-11 late session (see `docs/STATE.md`).
+- [ ] `docs/STATE.md` has a new entry under "Latest (...)" describing what shipped.
+- [ ] If this is the FINAL session: write a Hebrew-language "your shop is live" summary for Yarit in chat and archive this `NEXT-SESSION-PROMPT.md` the same way the 2026-04-11 close-out prompt was archived.
 
-- [ ] `tsc`, `lint`, `build` all green (run them fresh on session start)
-- [ ] Stage the uncommitted changes in a sensible grouping (one big "Tier-1 finish + mobile audit" commit is fine if the user says "one commit")
-- [ ] Commit with a clear Hebrew + English-friendly message that mentions: T1.4-T1.7, mobile language switcher fix, theme bootstrap fix, and the a11y gallery aria-labels
-- [ ] Push to `origin main` ONLY after explicit user confirmation
-- [ ] Watch Vercel; fall back to `npx vercel --prod` if auto-deploy stalls
-- [ ] Smoke-test `https://yarit-shop.vercel.app` (desktop) — hero, shop, product detail, cart, language switcher, dark mode toggle
-- [ ] Wait for the user to smoke-test from their Poco X7 — both mobile fixes should pass visually
-
-### Block B — Track A credentials (whichever Yarit has handed over)
-
-- [ ] Resend email: paste env vars, redeploy, trigger a test checkout, verify order confirmation email arrives
-- [ ] Meshulam: reconcile `src/lib/payments/meshulam.ts` TODO hotspots against the PDF, sandbox test, then flip env to live
-- [ ] Legal markdown: drop files in `content/legal/*`, re-add footer links
-- [ ] Custom domain: add to Vercel project, update DNS records
-- [ ] Final product catalog: let Yarit edit live (no code needed)
-
-### Block C — handoff
-
-- [ ] Update `docs/STATE.md` with a new changelog entry
-- [ ] Update `docs/NEXT-SESSION.md` TL;DR
-- [ ] Mark this file (`NEXT-SESSION-PROMPT.md`) as completed at the top
-- [ ] Tell the user what's live, what's still blocked on external input (if anything), and what Yarit should try first
-
----
-
-**Good luck. The site is in great shape — restraint, editorial polish, botanical warmth throughout. Don't break the vocabulary. Slow over fast, restraint over flash, additive over replacement.**
+**Good luck. The site is in good shape. Restraint over flash. Slow over fast. Additive over replacement.**

@@ -2,9 +2,45 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom.
 
-## Latest (2026-04-11 — GSAP Tier-1 finish + mobile audit fixes)
+## Latest (2026-04-11 late — prod close-out deploy + SSG incident fix)
 
-**All four remaining GSAP Tier-1 upgrades shipped (T1.4 → T1.7) plus the two mobile UX regressions flagged from the Redmi Note Poco X7 audit. Local only — nothing committed or pushed. Production is still the 2026-04-10 build on Vercel.**
+**Tier-1 GSAP waves are LIVE on production (`https://yarit-shop.vercel.app`) and the storefront is verified end-to-end.** Session started with `e3a8a53` sitting unpushed locally; pushed + deployed + smoke-tested, hit a P0 regression on `/product/[slug]`, root-caused to a pre-existing SSG misconfiguration, fixed it, redeployed, re-verified. Meshulam is still parked per Yarit; all other Track A items are still paste-and-go with runbooks in `docs/NEXT-SESSION.md` + `docs/NEXT-SESSION-PROMPT.md`.
+
+### Sequence of events
+
+1. `git push origin main` pushed `e3a8a53` (T1.4–T1.7 + mobile audit) on top of `52599ef`.
+2. Vercel webhook stalled (quirk #7 from the prior NEXT-SESSION-PROMPT — known since 2026-04-10). Fell back to `npx vercel --prod --yes`; manual deploy `dpl_68nKwkUVchK5J6EK2SqzzEmNVe5S` landed in ~2 min and aliased to `yarit-shop.vercel.app`.
+3. Smoke test: `/`, `/en`, `/shop`, `/en/shop`, `/about`, `/contact`, `/admin/login`, `/robots.txt`, `/sitemap.xml` all 200. **`/product/<any slug>` returned 500 in both locales.** Root cause identified as `DYNAMIC_SERVER_USAGE` from Vercel runtime logs.
+4. Local reproduction: `next start` against a fresh `npm run build` repro'd the same 500 on `/product/*`, `/reset-password/*`, and `/account/orders/*` — all three routes that declared a `generateStaticParams` returning only `{locale}`.
+5. Also tested the **untouched** `52599ef` file locally → same 500. The bug had been latent since the Phase F.1 hardening sprint and shipped quietly in the 2026-04-10 prod deploy; nobody caught it because all prior verification used `npm run dev`, which serves every route dynamically regardless of `generateStaticParams`.
+6. Diagnosed via `export const dynamic = 'error'` debug flag — Next printed the real (non-scrubbed) error: *"Route /[locale]/product/[slug] with `dynamic = \"error\"` couldn't be rendered statically because it used `headers()`"*. The `headers()` call is inside `next-intl`'s `setRequestLocale` chain, which is disallowed in the SSG render context.
+7. Fix committed in `4ea4d90`: removed `generateStaticParams()` from all three affected pages. Also dropped the now-unused `routing` import. Each page picked up a short comment explaining *why* the function is intentionally absent, so future contributors don't re-add it.
+8. `tsc + lint + build` clean. All three routes flipped from `●` SSG to `ƒ` Dynamic in the route table. `next start` locally → all 16 smoke-test routes 200 (307 on `/account/orders/abc` is the auth-gate redirect to `/login`, expected).
+9. `git push origin main` pushed `4ea4d90`. Manual Vercel redeploy `dpl_Asz72xL4FqWDPHacoe6khgSf5gXV` landed in ~2 min. **Prod re-verified: all 16 routes 200. Product page HTML has `data-gallery-image` (T1.7), `id="site-header"` (T1.5), `lang="he" dir="rtl"`, and the real product title `מארז מתנה אלוורה לגוף — שורש`.**
+
+### Files changed in the fix (3)
+
+- `src/app/(storefront)/[locale]/product/[slug]/page.tsx`
+- `src/app/(storefront)/[locale]/reset-password/[token]/page.tsx`
+- `src/app/(storefront)/[locale]/account/orders/[id]/page.tsx`
+
+Each one lost its `generateStaticParams()` function and its unused `routing` import. Everything else (T1.7 `ProductGalleryMotion` integration, the next-intl calls, the Payload lookups) is untouched.
+
+### Root-cause post-mortem — why this was latent
+
+The `generateStaticParams() { return routing.locales.map((locale) => ({ locale })) }` pattern was presumably added thinking Next.js needed a hint for the `[locale]` segment. It does not — the locale segment is handled by next-intl's middleware, and every other storefront page (`/`, `/shop`, `/about`, etc.) ships with no `generateStaticParams` and is classified `ƒ` Dynamic cleanly.
+
+Returning only `{locale}` for a two-segment dynamic route (`[locale]/product/[slug]`) caused Next 16 to classify the route as `●` SSG. At build time Next couldn't actually prerender any slug/token/id (no slug data was provided), so the shell was treated as SSG-eligible. At runtime, when a user hit `/product/aloe-body-duo-gift-set`, Next tried to render on-demand **inside the static-generation context** (a specific Next 15+ behavior for `●`-classified dynamic-segment routes) — and that context disallows `headers()`. next-intl's `setRequestLocale` eventually reaches `headers()` via an `AsyncLocalStorage` fallback, which throws `DYNAMIC_SERVER_USAGE`, which surfaces to the user as a generic "An error occurred in the Server Components render" 500.
+
+**Why `npm run dev` hid it**: in dev mode, Next does not classify routes as SSG ahead of time — every request is rendered dynamically regardless of `generateStaticParams`, so the `headers()` call is allowed. The bug only manifests in a production build (`next build` + `next start`, or on Vercel prod). Every pre-launch verification in `docs/STATE.md` cites `npm run dev` as the runtime, which is why this bug survived from the Phase F.1 sprint through the 2026-04-10 prod deploy.
+
+**Prevention going forward**: any new SSG-capable route must either (a) return FULL params from `generateStaticParams` (locale × slug or locale × token) or (b) omit `generateStaticParams` entirely. **Never return partial params with only `{locale}`.** A lint rule or CI check could catch this if desired; for now it's a convention documented in `docs/CONVENTIONS.md` and the per-file comments on the three fixed pages.
+
+---
+
+## 2026-04-11 earlier (same day) — GSAP Tier-1 finish + mobile audit fixes
+
+**All four remaining GSAP Tier-1 upgrades shipped (T1.4 → T1.7) plus the two mobile UX regressions flagged from the Redmi Note Poco X7 audit. Committed in `e3a8a53`, pushed + deployed + verified in the close-out block above.**
 
 ### T1.4 — FeaturedProducts heading pin (desktop only)
 
