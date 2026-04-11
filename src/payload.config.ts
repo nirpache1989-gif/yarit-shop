@@ -109,22 +109,33 @@ export default buildConfig({
         Logo: { path: '@/components/admin/payload/BrandLogo#BrandLogo' },
         Icon: { path: '@/components/admin/payload/BrandIcon#BrandIcon' },
       },
-      // Custom views: replace the default dashboard with YaritDashboard,
-      // and register /admin/fulfillment as a branded custom view.
-      views: {
-        dashboard: {
-          Component: '@/components/admin/payload/YaritDashboard#YaritDashboard',
-        },
-        fulfillment: {
-          Component: '@/components/admin/payload/FulfillmentView#FulfillmentView',
-          path: '/fulfillment',
-          exact: true,
-          meta: {
-            title: 'הזמנות חדשות',
-            description: 'ניהול הזמנות בהליך אספקה',
-          },
-        },
-      },
+      // 2026-04-12 admin-fix temporary: BOTH custom views are
+      // disabled until we resolve the Vercel streaming-SSR truncation
+      // bug that strips the Payload admin shell from `/admin` and
+      // `/admin/fulfillment` on prod (works locally, breaks on
+      // Vercel — local renders the full nav-toggler-wrapper at SSR
+      // time, prod ships only the providers + RSC payload script
+      // tags and the dashboard never hydrates into actual DOM
+      // elements). Falling back to Payload's stock dashboard view
+      // unblocks Yarit's day-1 access to the panel; YaritDashboard
+      // and FulfillmentView are re-enabled in next session after we
+      // bisect which custom-view feature trips the streaming render.
+      // The component files themselves are kept on disk so the
+      // re-enable is a 12-line revert of this block.
+      // views: {
+      //   dashboard: {
+      //     Component: '@/components/admin/payload/YaritDashboard#YaritDashboard',
+      //   },
+      //   fulfillment: {
+      //     Component: '@/components/admin/payload/FulfillmentView#FulfillmentView',
+      //     path: '/fulfillment',
+      //     exact: true,
+      //     meta: {
+      //       title: 'הזמנות חדשות',
+      //       description: 'ניהול הזמנות בהליך אספקה',
+      //     },
+      //   },
+      // },
       // Sidebar augmentations
       beforeNavLinks: [
         { path: '@/components/admin/payload/SidebarGreeting#SidebarGreeting' },
