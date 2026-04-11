@@ -1,8 +1,78 @@
 # Next session — starting prompt (T2.9 homepage orchestration + closeout)
 
-> **Purpose:** This session is the "big motion" follow-up. The previous session (2026-04-11 cleanup + Tier-2 lite) landed a code/docs cleanup sweep, a task-oriented Yarit admin guide rewrite, a hotfix for a production GSAP `immediateRender` bug that left category tiles blank, and two safe Tier-2 additions (footer reveal, category tile magnetic hover). Your job is to ship **T2.9 — homepage scroll-linked storytelling** (the last big Tier-2 wave) and then close out the project.
+> **Purpose:** This session is the "big motion" follow-up. The previous session (2026-04-11 cleanup + Tier-2 lite + polish pass) landed a code/docs cleanup sweep, a task-oriented Yarit admin guide rewrite, a hotfix for a production GSAP `immediateRender` bug that left category tiles blank, two safe Tier-2 additions (footer reveal, category tile magnetic hover), and a pre-T2.9 polish pass (formatILS adoption, Lexical rich-text renderer, skip link, brand.config font drift fix, i18n cleanup). Your job is to ship **T2.9 — homepage scroll-linked storytelling** (the last big Tier-2 wave) and then close out the project.
 >
-> **Read this file top to bottom, then `CLAUDE.md`, then the top ~2 entries in `docs/STATE.md` ("2026-04-11 later — code + docs cleanup sweep" and whatever the 2026-04-11 evening entry is called). Only then start working.** The previous close-out prompts are archived at `docs/NEXT-SESSION-PROMPT-2026-04-11-close-out.md` (the original production close-out) and `docs/NEXT-SESSION-PROMPT-2026-04-11-cleanup-and-tier2-lite.md` (the immediately previous session). Both are historical — you don't need them unless you want context.
+> **Read this file top to bottom, then `CLAUDE.md`, then the top entry in `docs/STATE.md` ("2026-04-11 evening — motion hotfix + Tier-2 lite + ready-prompt for T2.9"). Only then start working.** The previous close-out prompts are archived at `docs/NEXT-SESSION-PROMPT-2026-04-11-close-out.md` (the original production close-out) and `docs/NEXT-SESSION-PROMPT-2026-04-11-cleanup-and-tier2-lite.md` (the previous cleanup session). Both are historical — you don't need them unless you want context.
+
+---
+
+## 🛟 SAFETY NET — READ THIS FIRST
+
+T2.9 is a big, ambitious motion wave touching 6 homepage sections. If it goes wrong, we want to be able to abandon the attempt and return to the last known-good production state with zero effort.
+
+**The last known-good commit is `d5a2a05`** (`chore: pre-T2.9 polish pass (5 items)`). This is what `origin/main` points at, what Vercel is deploying, and what Yarit sees when she opens `https://yarit-shop.vercel.app`. It is SAFE until you explicitly `git push` or `npx vercel --prod`.
+
+**Before you start T2.9, create a feature branch:**
+
+```bash
+cd C:/AI/YaritShop/yarit-shop
+git fetch origin
+git checkout origin/main
+git checkout -b feat/t2.9-homepage-orchestration
+```
+
+Work on this branch for the entire T2.9 session. Commit freely — you're not on `main`, so nothing you do affects prod until you merge.
+
+**If T2.9 goes well (all 6 beats land cleanly, verification passes, the user says "push"):**
+
+```bash
+git checkout main
+git merge --ff-only feat/t2.9-homepage-orchestration   # fast-forward merge, no merge commit
+git push origin main
+npx vercel --prod --yes                                 # manual deploy (webhook is flaky)
+```
+
+**If T2.9 goes wrong at any point:**
+
+- **Soft abort (recommended):** Leave the branch in place, notify the user, `git checkout main`. The branch stays as a record of the attempt. `main` is untouched. Prod is untouched.
+  ```bash
+  git checkout main
+  # main is at d5a2a05 (or wherever origin/main was when you started)
+  # Prod is unchanged.
+  ```
+
+- **Hard abort (clean slate):** Delete the branch entirely.
+  ```bash
+  git checkout main
+  git branch -D feat/t2.9-homepage-orchestration
+  ```
+
+- **Nuclear (if somehow main got dirty):** Force-restore `main` to the safe commit.
+  ```bash
+  git checkout main
+  git reset --hard d5a2a05
+  # Prod is STILL unchanged unless someone pushed after you started.
+  ```
+
+**What you must NEVER do during T2.9 without explicit user approval:**
+
+- `git push origin main` (even from the feature branch — use `git push origin feat/t2.9-homepage-orchestration` to share progress)
+- `npx vercel --prod` (the production alias stays on `d5a2a05` until the user says "push")
+- `git reset --hard` on any remote-tracking branch
+- `git rebase --onto main` anything
+- Force-push anything
+
+**What's safe:**
+
+- Editing files, committing locally to `feat/t2.9-homepage-orchestration`
+- Running `npm run dev`, `npm run build`, `npx next start -p 3009` locally
+- Running `preview_start` / Claude-in-Chrome MCP against localhost
+- Creating new files, new components, new motion helpers
+- Reading everything under `docs/`
+
+This branch-based safety workflow gives you full freedom to experiment with T2.9 without risking the working state. If the session fails entirely and the user decides to scrap it, they can just close the Claude Code session, delete the feature branch, and Yarit's shop continues running on `d5a2a05` without a single byte changed in production.
+
+---
 
 ---
 
