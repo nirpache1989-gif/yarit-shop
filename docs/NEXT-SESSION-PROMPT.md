@@ -10,7 +10,7 @@
 
 T2.9 is a big, ambitious motion wave touching 6 homepage sections. If it goes wrong, we want to be able to abandon the attempt and return to the last known-good production state with zero effort.
 
-**The last known-good commit is `d5a2a05`** (`chore: pre-T2.9 polish pass (5 items)`). This is what `origin/main` points at, what Vercel is deploying, and what Yarit sees when she opens `https://yarit-shop.vercel.app`. It is SAFE until you explicitly `git push` or `npx vercel --prod`.
+**The last known-good commit is `d495593`** (`fix: QA pass — P1 storefront bugs + visual polish + admin UX`). This is what `origin/main` points at, what Vercel is deploying, and what Yarit sees when she opens `https://yarit-shop.vercel.app`. It is SAFE until you explicitly `git push` or `npx vercel --prod`.
 
 **Before you start T2.9, create a feature branch:**
 
@@ -50,14 +50,14 @@ npx vercel --prod --yes                                 # manual deploy (webhook
 - **Nuclear (if somehow main got dirty):** Force-restore `main` to the safe commit.
   ```bash
   git checkout main
-  git reset --hard d5a2a05
+  git reset --hard d495593
   # Prod is STILL unchanged unless someone pushed after you started.
   ```
 
 **What you must NEVER do during T2.9 without explicit user approval:**
 
 - `git push origin main` (even from the feature branch — use `git push origin feat/t2.9-homepage-orchestration` to share progress)
-- `npx vercel --prod` (the production alias stays on `d5a2a05` until the user says "push")
+- `npx vercel --prod` (the production alias stays on `d495593` until the user says "push")
 - `git reset --hard` on any remote-tracking branch
 - `git rebase --onto main` anything
 - Force-push anything

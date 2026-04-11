@@ -2,6 +2,67 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom.
 
+## Latest (2026-04-11 late-evening — QA pass + P1 storefront fixes)
+
+**Commit `d495593`** ships 15 files of fixes driven by the user's manual QA report (npm test + npm run build + local environment + test orders + reset-password flow + production smoke). Four P1 storefront bugs, five visual bugs, and two admin UX issues fixed in a single coordinated pass. **Production is now at `d495593`** — the new last-known-good commit for the T2.9 session's branch-workflow safety net.
+
+### Summary of fixes
+
+**P1 storefront (4):**
+
+1. **CartDrawer stays open over `/checkout`.** The drawer lives in the root layout with its `isOpen` state in a Zustand store. Clicking the drawer's "checkout" button navigated to `/checkout` while leaving the drawer + backdrop mounted on top, blocking the order button. Fix: `usePathname` effect that `close()`s on every route change. `src/components/cart/CartDrawer.tsx`.
+2. **Footer + `/contact` still showed `brand.config` placeholders** (including the literal `hello@shoresh.example` email). New helper `src/lib/siteSettings.ts` fetches the SiteSettings global via Payload and merges each field with `brand.config.ts` as a fallback. Known-placeholder values (empty strings, the `shoresh.example` email) are treated as "not set" so they never leak. Footer is now an async server component using `getLocale` / `getTranslations` from `next-intl/server`. `/contact` receives resolved settings as props from its server parent.
+3. **Payment + email factories fail-closed in production.** Previously both silently defaulted to the `mock` provider when the env var was unset — a misconfigured Vercel environment would quietly accept "payments" that never reached a real gateway. New behavior: if `NODE_ENV === 'production'` AND `PAYMENT_PROVIDER` (or `EMAIL_PROVIDER`) is unset, the factory throws with an actionable error. Dev still defaults to mock. Exported `isMockPaymentProvider()` / `isMockEmailProvider()` for the UI.
+4. **"Test checkout" disclaimer leaking to customers.** `CheckoutForm` now only renders the mock notice when the checkout server page reports `isMockPaymentProvider() === true`. Prod with a real gateway hides the dev copy.
+
+**Visual bugs (5, all user-reported):**
+
+1. **Product-card cream border + hover-zoom "flash".** The image viewport had `p-6` padding around the photo, visible as a cream band that shrank when the CSS hover scaled the image. Reduced to `p-4` so the image fills more of the viewport and the hover transition is subtle. Added `overflow-hidden` on the inner Link so the scaled image is clipped cleanly. `src/components/product/ProductCard.tsx`.
+2. **"new arrival" eyebrow overlapped by product photos.** Plain text at `z-10` got visually covered when product photos had white backgrounds (specifically: aloe lip balm on the homepage). Swapped for a pill badge with `bg-surface/90 + backdrop-blur-sm + border`, raised to `z-20`, added `pointer-events-none`. Also localized via `product.newArrival` in `he.json` / `en.json` (already added in `d5a2a05`).
+3. **Featured product cards not same height.** The 3-up grid had wrapper divs sized to their own content. Added `h-full flex` to the wrapper and `w-full` to ProductCard so every card in a row stretches to the tallest row height. Verified via preview: 3 featured cards now all 518px tall.
+4. **Flash on refresh when scrolling to featured/category/meet.** The earlier `immediateRender: false` + `once: true` fix (`027ebda`) introduced a subtle artifact: when the scrollTrigger fired at `top 75%`/`top 80%`/`top 82%` the cards first SNAPPED to the `from` state and THEN animated back, producing a one-frame flash. Moved every affected trigger's `start` to `top bottom-=40` (fires the moment the section's top reaches 40px above the viewport bottom). The snap now happens while the cards are off-screen. Applied to `CategoryGridMotion.tsx`, `FeaturedProductsMotion.tsx`, `MeetYaritMotion.tsx`.
+5. **Mobile menu showed only "shoresh" on Android Chrome.** `MobileNav` used `ltr:right-0 rtl:left-0` + `border-l rtl:border-r`, which some Android Chrome builds rendered with an incorrect inline-start position. Swapped for CSS logical properties (`end-0`, `border-s`) which compile to `inset-inline-end` and `border-inline-start` — identical result in LTR, more predictable across mobile browsers.
+
+**Admin UX (2):**
+
+1. **HelpButton did nothing visible.** The previous version was a plain `mailto:` anchor. On Yarit's browser the default mail client wasn't configured so clicking produced zero feedback. Rewrote as a click-popover (client component) offering three contact paths with visible feedback on every click: (a) primary WhatsApp link with prefilled message, (b) email as selectable text with a copy-to-clipboard button and a "Copied ✓" toast, (c) the original `mailto:` as a small escape-hatch link. Fully localized Hebrew/English. `src/components/admin/payload/HelpButton.tsx`.
+2. **Language pill showed the target language instead of the current.** Confusing — the button looked backwards. Swapped for a two-label pill (`עברית · EN`) with the active language bold + full opacity and the inactive one dimmed. Clicking flips the emphasis. Standard multilingual-site UX pattern. `src/components/admin/payload/AdminLangSwitcher.tsx`.
+
+### Files touched (15)
+
+- `src/lib/siteSettings.ts` (new) — resolved SiteSettings + brand.config fallback helper
+- `src/lib/payments/index.ts` — fail-closed in prod + isMockPaymentProvider()
+- `src/lib/email/index.ts` — fail-closed in prod + isMockEmailProvider()
+- `src/components/cart/CartDrawer.tsx` — usePathname close effect
+- `src/components/layout/Footer.tsx` — async, uses getResolvedSiteSettings
+- `src/components/layout/MobileNav.tsx` — CSS logical properties
+- `src/components/product/ProductCard.tsx` — p-4 + new arrival pill + overflow-hidden
+- `src/components/sections/CategoryGridMotion.tsx` — trigger `top bottom-=40`
+- `src/components/sections/FeaturedProductsMotion.tsx` — h-full wrapper + trigger `top bottom-=40`
+- `src/components/sections/MeetYaritMotion.tsx` — trigger `top bottom-=40`
+- `src/components/checkout/CheckoutForm.tsx` — showMockNotice prop
+- `src/app/(storefront)/[locale]/checkout/page.tsx` — passes isMockPaymentProvider()
+- `src/app/(storefront)/[locale]/contact/page.tsx` — uses getResolvedSiteSettings
+- `src/components/admin/payload/HelpButton.tsx` — click-popover rewrite
+- `src/components/admin/payload/AdminLangSwitcher.tsx` — two-label pill
+
+### Quality gates
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors, 0 warnings
+- `npm run build` → 40 routes, all `ƒ` Dynamic or `○` Static, zero `●` SSG
+- Preview eval: 3 featured cards all 518px tall (h-full fix verified), 5 category cards at opacity 1 (2026-04-11 bug-fix regression test still passes)
+
+### Still deferred (owner-blocked or P3)
+
+- Legal markdown, about page content, contact-page copy, newsletter wiring — blocked on Yarit / her lawyer / content strategy
+- Real business info in SiteSettings — blocked on Yarit filling the admin form; Footer + contact will auto-pick up the values
+- Seed script independent-products gap (P3) — easy add in a separate commit
+- Admin dashboard + fulfillment custom-component copy Hebrew-only (P2) — the components don't read Payload's i18n bundle; can add translations via props in a follow-up
+- Admin docs sync (`YARIT-ADMIN-GUIDE.md` / `ADMIN-SURFACES.md`) — small label drift, P3
+
+---
+
 ## Latest (2026-04-11 evening — motion hotfix + Tier-2 lite + ready-prompt for T2.9)
 
 **Four commits shipped and pushed to prod in one sitting:** `027ebda` hotfix for a production GSAP bug that left the Categories + Featured sections blank on load, `9d4ddeb` T2.2 footer reveal, `593fad5` T2.8 category tile magnetic hover + CI guard regex fix, plus this docs update. Production is verified — eval on `https://yarit-shop.vercel.app` after the fix shows all 5 category cards + 3 featured cards at `opacity: 1` and correct natural-state transforms.
