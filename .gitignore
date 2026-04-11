@@ -36,6 +36,9 @@ yarn-error.log*
 .env.*.local
 .env.development
 .env.production
+.env.prod-pull
+.env.prod*
+.env.migration
 # .env.example IS committed (it's the template, no real values)
 !.env.example
 
