@@ -56,7 +56,9 @@
   "product": {
     "aboutThisProduct": "About this product",
     "addToCart": "Add to cart",
-    "outOfStock": "Out of stock"
+    "outOfStock": "Out of stock",
+    "galleryThumbLabel": "Image {index}",
+    "galleryMainLabel": "Main product image"
   },
   "cart": {
     "title": "Shopping cart",

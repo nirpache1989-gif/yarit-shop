@@ -2,15 +2,27 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-10, end of the admin audit + bulk-delete fix + hero image swap. Everything from the past three sprints (pre-launch hardening, Phase F.1 customer accounts, full design + animation sprint, admin bug fixes, new hero background) is committed and pushed. Vercel auto-deploy runs next.
+> **Last updated:** 2026-04-11, end of the GSAP Tier-1 finish sprint. **All four remaining Tier-1 waves (T1.4 FeaturedProducts pin / T1.5 header shrink / T1.6 shop filter Flip / T1.7 product gallery zoom + thumb Flip) are SHIPPED locally.** Mobile UX audit also landed two fixes: language switcher now always visible in the header (not just inside the hamburger), and the theme bootstrap no longer auto-follows the OS dark-mode setting — dark is now opt-in via the ThemeToggle. **Everything is local; nothing committed or pushed yet.** The project is READY for the final closing session whose job is: last round of polish/QA + commit + push + Vercel deploy + real-device test + remaining paste-in credentials (Meshulam, Resend, legal markdown, domain). See the new handoff prompt at `docs/NEXT-SESSION-PROMPT.md` for the copy-paste orchestration.
 
 ---
 
 ## TL;DR — where we are right now
 
-- 🚀 **Live on production at `https://yarit-shop.vercel.app`.** Phase F.1 (customer accounts, login/forgot/reset, my orders) is shipped. The pre-launch hardening sprint is DONE in code. **The design + animation sprint is also DONE in code as of the end of Session 2** — every per-page wave from `~/.claude/plans/humming-popping-turtle.md` has landed locally. We're now waiting on (a) production deploy of Sessions 1+2 and (b) Yarit unblocking Track A (credentials + content). See the "blocked" list below.
-- **NEW — design + animation sprint, complete.** Both sessions of the per-page motion pass have shipped. Session 1 landed Wave 0 (motion primitives: `useInView`, `Reveal`, `StaggeredReveal`, `KenBurns`, `ConfettiTrigger`, `SplitWords`) + Waves H / S / P / C / K / Y (homepage, shop, product, cart, checkout, success). Session 2 landed Waves L / A / O / B / T / G / 4 / D / F / M (auth, account, order detail, about, contact, legal, 404, admin dashboard, admin fulfillment, admin forms). Every wave kept the minimalist-luxurious language — slow spring/ease, no loud colors, per-keyframe `prefers-reduced-motion` guards. Zero new dependencies. See `docs/STATE.md` for the full per-wave changelog.
-- **NEW — storefront→admin theme-jump fix shipped.** The FOUC was fixed in Session 2 Wave D by having the storefront bootstrap mirror the resolved theme into the `payload-theme` cookie (which Payload's server-side `getRequestTheme` already reads), so `/admin` now renders the right `data-theme` on the first paint instead of flashing light-then-dark. `AdminThemeInit.tsx` downgraded to a safety net. See `STATE.md` Wave D entry for the full root-cause writeup.
+- 🚀 **Live on production at `https://yarit-shop.vercel.app`** — last push was 2026-04-10. Everything since then (admin language pill + GSAP G1/G2/G3 + T1.1/T1.2/T1.3 + now T1.4/T1.5/T1.6/T1.7 + mobile bug fixes) is LOCAL ONLY — not yet committed or pushed. The user explicitly holds git permission and will decide when to commit.
+- **NEW — GSAP Tier-1 completely done.** All four remaining waves (T1.4 → T1.7) shipped in one session plus mobile fixes. See `docs/STATE.md` top section "Latest (2026-04-11)" for the full file-level breakdown. Highlights: FeaturedProducts heading pins to viewport top on desktop while cards scroll past (`pinSpacing:false` + `gsap.matchMedia('(min-width: 768px)')` gate); sticky header shrinks its background opacity + shadow + logo size after 80px scroll via a tiny rAF-throttled observer writing `data-scrolled="true"` to `#site-header`; shop page filter chips now morph the product grid via GSAP Flip instead of hard-cutting; product detail gallery has smooth hover zoom (1 → 1.12 scale, 900ms) and thumb-click Flip morph into the main slot.
+- **NEW — Mobile UX audit fixed two regressions.** (1) `LanguageSwitcher` was hidden on mobile because it lived inside `<div className="hidden md:flex">`; a Redmi Note Poco X7 user couldn't find it. Fix: moved outside the hidden wrapper so it's visible at every breakpoint. (2) Theme bootstrap was auto-following OS dark mode preference, causing the Poco X7 user to land on the site in dark mode because their phone is OS-wide dark. The brand palette is warmer and more editorial in light mode and dark should be opt-in. Fix: the inline bootstrap script now defaults to light unless `localStorage.shoresh-theme` was explicitly set to `dark` by the user clicking the toggle. The ThemeToggle still works normally; dark mode is fully supported, just not auto-enabled.
+- **NEW — admin language switcher (visible pill).** New `AdminLangSwitcher.tsx` client component registered as the FIRST entry in `admin.components.actions` so it renders top-right on every admin page. One click flips `🌐 עברית` ↔ `🌐 English`. Uses `useTranslation()` + `switchLanguage()` from `@payloadcms/ui` — the same API Payload's built-in `/admin/account` dropdown uses internally, so the two controls stay in sync. Paired with localization of the three custom admin chrome components (`SidebarGreeting`, `SidebarFooter`, `HelpButton`) so the entire right-hand sidebar flips end-to-end — greeting, live-site/new-orders/sign-out shortcuts, help button, mailto subject+body, and Payload's built-in collection group labels (`📦 קטלוג` ↔ `📦 Catalog`) all swap cleanly. Round-trip verified in Preview MCP with real DOM queries. Root cause of the original bug report: Payload's built-in `LanguageSelector` IS rendered on `/admin/account`, but via `DocumentInfoProvider.AfterFields` which places it BELOW the user form fields — a 65-year-old non-technical user on a long Hebrew form doesn't scroll that far. The pill surfaces the same preference one click from anywhere.
+- **NEW — GSAP core 3 waves shipped (storefront only).** First new motion dependencies since the design sprint closed: `gsap@^3.13` + `@gsap/react@^2.1` (~42KB gzipped, tree-shaken so only the routes that import it pay the cost). Policy-break is intentional and approved. User explicitly scoped this to customer experience — **NO admin GSAP polish in this sprint.** Three waves:
+  - **G1 Foundation** — `src/lib/motion/gsap.ts` (single entry with `ScrollTrigger` pre-registered), `src/lib/motion/useGsapReducedMotion.ts` (reactive `useSyncExternalStore` hook), `src/components/motion/GsapScope.tsx` (the `useGsapScope(ref, setup)` helper that bundles `useGSAP()` + reduced-motion check).
+  - **G2 Hero master timeline + scroll parallax** — `Hero.tsx` split into a ~30-line server shell that fetches translations + a new `HeroMotion.tsx` client component that owns all 4 background layers + Container + logo + headline words + subheadline + CTAs. Entrance timeline: logo → headline words (stagger with `rotationX: -8°`) → subheadline → CTAs, ~2.1s total. Plus two scrubbed ScrollTriggers: Layer 1 botanical frame `yPercent 0 → -12` as hero exits, Layer 3 cream vignette `opacity 1 → 0.4`. Replaces the old `<SplitWords>` + inline `animationDelay` approach on the Hero ONLY; other pages keep using `SplitWords`.
+  - **G3 Product card magnetic hover** — new `ProductCardMotion.tsx` client component that renders the card's `<article>` root and attaches pointer listeners. On `pointermove`: `rotationY: nx * 3°`, `rotationX: -ny * 3°`, `transformPerspective: 1000`; inner `.product-image` gets a ±4px translate for parallax-of-depth. On `pointerleave`: 900ms `power3.out` return. Gated on `hover: hover` (skip on touch) + `prefers-reduced-motion` (skip entirely). Added `perspective: 1000px; transform-style: preserve-3d;` to `.product-card` in `globals.css`. Composes cleanly with the existing CSS hover lift because GSAP uses `matrix3d()` and CSS hover uses `matrix()`.
+- **NEW — GSAP Tier-1 safe waves T1.1, T1.2, T1.3 shipped.** Follow-up after G1/G2/G3. Three additive additions that layer on top of the existing design without removing or replacing any CSS keyframe or motion primitive outside their own scope:
+  - **T1.1 MeetYarit converge** — the 2-column editorial strip (image + text) now slides its two columns toward each other from opposite edges as the section enters the viewport. RTL-aware. New `MeetYaritMotion.tsx` (client) + simplified `MeetYarit.tsx` (server shell that passes strings). Replaces the old `<Reveal direction="start">` + `<StaggeredReveal>` on this section only.
+  - **T1.2 CategoryGrid expand-on-enter** — all 5 category cards now animate from `scale: 0.96, y: 24, opacity: 0` to settled state with a 90ms stagger via a single ScrollTrigger tween. New `CategoryGridMotion.tsx` is a thin wrapper replacing the previous `<StaggeredReveal>`. Each card has `data-category-card` so the GSAP selector finds them.
+  - **T1.3 BranchDivider SVG draw-in** — the 3 sprig dividers between homepage sections now draw themselves in. The central stem animates `stroke-dashoffset` from its measured total length → 0 (standard SVG "draw" trick), the two side hairlines extend via `scaleX: 0 → 1`, then the 5 leaves + 2 berries fade in with a stagger. Total sequence ~1.6s per divider. `BranchDivider.tsx` was converted from server to client component to own the GSAP timeline.
+- **GSAP waves G4, G5 and Tier-1 T1.4/T1.5/T1.6/T1.7 deferred** — the plan documents them (homepage scroll-linked storytelling + page transitions, FeaturedProducts heading pin, header shrink on scroll, shop filter Flip, product gallery Flip). The user chose "what's 100% safe" for this session and asked for the remaining Tier-1 items to land in the NEXT session via a standalone pasteable prompt — see `docs/NEXT-SESSION-GSAP-PROMPT.md`. Any future GSAP expansion builds on the G1 foundation — the primitives are in place.
+- **Design + animation sprint (previous sessions) — still in effect.** Every per-page wave from `~/.claude/plans/humming-popping-turtle.md` has landed. Session 1 landed Wave 0 (motion primitives: `useInView`, `Reveal`, `StaggeredReveal`, `KenBurns`, `ConfettiTrigger`, `SplitWords`) + Waves H / S / P / C / K / Y. Session 2 landed Waves L / A / O / B / T / G / 4 / D / F / M. Every wave kept the minimalist-luxurious language — slow spring/ease, no loud colors, per-keyframe `prefers-reduced-motion` guards. GSAP layers on top additively — it does NOT replace any of the existing primitives.
+- **Storefront→admin theme-jump fix** still in effect from the previous session. See `STATE.md` Wave D entry.
 - **Owner:** Yarit, a 65-year-old non-technical Hebrew-speaking merchant selling Forever Living + independent wellness products. She will use the admin panel every day.
 - **Tech stack:** Next.js 16.2.3 + Tailwind v4 + Payload CMS 3.82 + SQLite (dev) / Neon Postgres (prod) + next-intl 4.9 + Vercel.
 - **Admin login (dev only):** `admin@shoresh.example` / `admin1234` (created via `POST /api/dev/create-admin`).
@@ -24,7 +36,7 @@
 1. **Every admin provider MUST accept and render `{children}`** or the entire admin below it disappears. See the comment block at the top of `src/components/admin/payload/AdminThemeInit.tsx` for the full post-mortem. Round 4 introduced this bug when we went from 1 provider to 4; Round 4 fix commit `cfcba0e` restored the chain.
 2. **Vercel's GitHub webhook may still be stalled.** The auto-deploy chain broke after an Error deploy mid-session. Rounds 5 and 6 were deployed via `npx vercel --prod` as a workaround. On the next commit, check whether Vercel auto-builds from the push. If not, re-link the project in the Vercel dashboard.
 3. **`docs/ADMIN-SURFACES.md` is the canonical map** of every admin surface with "what / used for / why" for each. Read it before adding or removing ANY admin surface. The goal is purposeful minimalism — every entry point must exist for a reason Yarit understands.
-4. **Admin is Hebrew-only.** Any English string visible in the admin UI is a blocker. The admin-UI language switcher lives at `/admin/account` (field `שפה`), reachable via the 🔑 "חשבון, שפה וסיסמה" dashboard tile.
+4. **Admin supports Hebrew + English, Hebrew default.** As of this session the admin UI language can be flipped in one click via the `🌐` pill in the top-right action cluster (`AdminLangSwitcher.tsx` — first entry in `admin.components.actions`). Payload's built-in dropdown on `/admin/account` still works and stays in sync because both controls write to the same Payload preference via `switchLanguage()` from `@payloadcms/ui`. All three custom admin chrome components (`SidebarGreeting`, `SidebarFooter`, `HelpButton`) now read `props.i18n?.language` and branch inline `strings` objects, so the entire right-hand sidebar flips end-to-end. Hebrew is still the fallback language for first-visit users.
 5. **Storefront has light + dark mode.** Dark is Warm Night (#2A2012 base, sage-olive primary, warm ochre accent). The Hero section stays in light-mode parchment even in dark mode (intentional contrast cliff with the TrustBar below). Logo halo has a 14-stop radial gradient, NO blur filter (blur leaks through `isolation: isolate`).
 
 ---
@@ -317,6 +329,46 @@ them and the site ships fine without them:
   the `payload-theme` cookie on every page load. If you touch that
   script, make sure the cookie write stays, or the first paint of
   `/admin` will flash light then flip to dark.
+- **GSAP single-entry rule.** Never import `gsap` or
+  `gsap/ScrollTrigger` directly from any component. Always import
+  from `src/lib/motion/gsap.ts` — that file registers ScrollTrigger
+  exactly once and re-exports both. Direct imports from anywhere
+  else cause duplicate plugin registrations (GSAP dedupes but the
+  policy keeps the intent obvious).
+- **GSAP components MUST use `useGsapScope`.** Never call GSAP from
+  a raw `useEffect` — React 19 StrictMode double-mounts will leak
+  timelines. Always use `useGsapScope(ref, setup)` from
+  `src/components/motion/GsapScope.tsx` — it wraps
+  `useGSAP()` from `@gsap/react` (auto-cleanup on unmount +
+  dependency changes) AND injects a `reduced` flag from
+  `useGsapReducedMotion` so every setup can branch on reduced motion.
+  The setup may return a cleanup function for DOM listeners etc.
+- **Reduced motion is mandatory for every GSAP component.** Every
+  `useGsapScope` setup callback MUST check `reduced` first and fall
+  through to `gsap.set([...], { clearProps: 'all' })` to snap to the
+  settled state. See `HeroMotion.tsx` and `ProductCardMotion.tsx` for
+  the reference pattern.
+- **Server→client function-prop rule applies to GSAP components.**
+  `HeroMotion` / `ProductCardMotion` receive only strings, numbers,
+  and booleans from their server parents. Never pass a callback,
+  formatter, or translation function — Next 16 throws at render.
+- **GSAP's `ScrollTrigger` inline config works without importing
+  the class.** Any `gsap.to()` call can take `scrollTrigger: {...}`
+  directly because the plugin is pre-registered in
+  `src/lib/motion/gsap.ts`. If you destructure `ScrollTrigger` from
+  the `useGsapScope` context but don't actually use the class, ESLint
+  will flag it as unused. Just drop it from the destructure.
+- **HMR may leave stale error entries in the browser console** after
+  an iterative GSAP/React edit cycle. They're not real — trust
+  `preview_logs --level error` (server-side compile errors) as ground
+  truth, not `preview_console_logs --level error` (browser buffer).
+  A hard reload does NOT always flush them.
+- **Admin language flip persists across routes.** Payload stores the
+  preference in the user's `payload-preferences` document, so
+  switching on one admin page and navigating to another keeps the
+  new language. The custom sidebar components (`SidebarGreeting`,
+  `SidebarFooter`, `HelpButton`) re-read `props.i18n.language` on
+  every render so they always reflect the live state.
 
 Full per-wave details are in `docs/STATE.md` — read the changelog
 from the top for reverse-chronological history.

@@ -13,11 +13,12 @@ import type { Where } from 'payload'
 import { getPayloadClient } from '@/lib/payload'
 import { routing, type Locale } from '@/lib/i18n/routing'
 import { Container } from '@/components/ui/Container'
-import { ProductCard, type ProductCardData } from '@/components/product/ProductCard'
+import { type ProductCardData } from '@/components/product/ProductCard'
 import { Link } from '@/lib/i18n/navigation'
 import { cn } from '@/lib/cn'
 import { Reveal } from '@/components/motion/Reveal'
 import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
+import { ShopGridFlip } from '@/components/shop/ShopGridFlip'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -137,14 +138,11 @@ export default async function ShopPage({ params, searchParams }: Props) {
           </p>
         </Reveal>
       ) : (
-        <StaggeredReveal
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-          stagger={80}
-        >
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} locale={typedLocale} />
-          ))}
-        </StaggeredReveal>
+        /* Tier-1 upgrade T1.6: the grid is owned by ShopGridFlip,
+           a client component that runs a GSAP Flip tween every time
+           the URL filter changes. Cards morph smoothly between
+           layout states instead of hard-cutting. */
+        <ShopGridFlip products={products} locale={typedLocale} />
       )}
     </Container>
   )

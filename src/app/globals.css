@@ -523,6 +523,14 @@ html[dir="rtl"] .nav-link::after {
     transform 280ms ease,
     box-shadow 280ms ease,
     border-color 280ms ease;
+  /* Wave G3: perspective enables the 3D magnetic tilt from
+     ProductCardMotion. The CSS hover lift (translateY -4px) and the
+     GSAP rotationX/Y compose cleanly because GSAP uses matrix3d()
+     directly — no conflict with the 2D translate from the :hover
+     rule. Reduced-motion users and touch devices skip the GSAP path
+     entirely, so `perspective` becomes a no-op for them. */
+  perspective: 1000px;
+  transform-style: preserve-3d;
 }
 
 .product-card:hover {
@@ -687,6 +695,63 @@ html[dir="rtl"] .btn-lift:focus-visible::before {
   -webkit-background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+ * Header shrink on scroll — Tier-1 upgrade T1.5
+ * ----
+ * The sticky `<header id="site-header">` at the top of every
+ * storefront page starts at its full-size state (logo h-10, inner
+ * height h-16). When the user scrolls past 80px, the client
+ * component `HeaderShrinkObserver` writes `data-scrolled="true"`
+ * onto the header element, and the rules below smoothly collapse
+ * the header into its compact state: background grows more opaque
+ * for better contrast against dense content, a subtle shadow
+ * appears, the logo's height drops from 2.5rem to 2rem.
+ *
+ * Transitions are 280ms to match the existing 280ms product-card
+ * transition vocabulary. Gated on `@media (min-width: 768px)` so
+ * mobile (where the header is already compact) is unaffected.
+ * The reduced-motion switch at the bottom of this file kills the
+ * transitions so users who prefer reduced motion get an instant
+ * state change instead of a slide.
+ *
+ * Wrapped in `@layer utilities` on purpose — Tailwind v4 puts all
+ * its utility classes in `@layer utilities`, and the base Header
+ * component uses a `bg-[var(--color-surface-warm)]/92` Tailwind
+ * utility for its background. Without wrapping our overrides in
+ * the same layer, Tailwind's utility wins via layer-order despite
+ * our higher selector specificity. Inside the shared layer,
+ * specificity decides — `header#site-header[data-scrolled="true"]`
+ * (one id + one attribute + one type) beats the single-class
+ * utility cleanly.
+ * ============================================================ */
+@layer utilities {
+  header#site-header {
+    transition:
+      background-color 280ms ease,
+      box-shadow 280ms ease,
+      backdrop-filter 280ms ease;
+  }
+
+  header#site-header .leaf-breathe img {
+    transition: height 280ms ease;
+  }
+
+  @media (min-width: 768px) {
+    header#site-header[data-scrolled="true"] {
+      background-color: color-mix(
+        in oklab,
+        var(--color-surface-warm) 96%,
+        transparent
+      );
+      box-shadow: 0 6px 24px -18px rgba(24, 51, 41, 0.35);
+    }
+
+    header#site-header[data-scrolled="true"] .leaf-breathe img {
+      height: 2rem;
+    }
+  }
 }
 
 /* ============================================================
@@ -864,6 +929,14 @@ html[dir="rtl"] .btn-lift:focus-visible::before {
   .btn-lift,
   html,
   body {
+    transition: none !important;
+  }
+
+  /* Tier-1 T1.5: reduced-motion users get the scrolled-state visuals
+     instantly with zero transition. The observer still writes the
+     attribute, but the header snaps between states. */
+  header#site-header,
+  header#site-header .leaf-breathe img {
     transition: none !important;
   }
 }

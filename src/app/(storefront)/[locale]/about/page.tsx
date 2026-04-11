@@ -2,9 +2,15 @@
  * @file /about — Yarit's personal story page
  * @summary Editorial-luxe about page. Wave B motion: full-bleed
  *          Ken Burns'd hero image, scroll-driven paragraph reveals,
- *          an image callout between paragraphs, and an oversized
- *          serif pull quote. No new i18n keys — works entirely off
- *          the existing `about.*` translations shipped with F.1.
+ *          and an oversized serif pull quote. No new i18n keys —
+ *          works entirely off the existing `about.*` translations
+ *          shipped with F.1.
+ *
+ *          2026-04-10 trim pass: removed the mid-essay
+ *          `about-hands.jpg` image callout per user feedback —
+ *          it read as a duplicate of the hero image and made the
+ *          page feel longer than needed. Page now goes
+ *          hero → body paragraph → pull quote → back link.
  *
  *          Light-mode background stays on the storefront parchment;
  *          the hero illustration carries the seasonal/ambient tone.
@@ -21,6 +27,9 @@ import { Link } from '@/lib/i18n/navigation'
 import { Container } from '@/components/ui/Container'
 import { Reveal } from '@/components/motion/Reveal'
 import { KenBurns } from '@/components/motion/KenBurns'
+// Note: `about-hands.jpg` image callout removed 2026-04-10 per user
+// feedback (visually duplicated the hero image). File still lives in
+// /public/brand/ai/ for potential reuse in future waves.
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -103,7 +112,7 @@ function AboutContent() {
       </section>
 
       {/* Body essay */}
-      <Container className="py-16 md:py-24 max-w-3xl space-y-16">
+      <Container className="py-12 md:py-20 max-w-3xl space-y-12">
         <Reveal>
           <p
             className="text-lg md:text-xl text-[var(--color-primary-dark)] leading-[1.85] first-letter:text-5xl first-letter:font-extrabold first-letter:text-[var(--color-primary)] first-letter:me-2 first-letter:float-start first-letter:leading-none first-letter:mt-1"
@@ -111,21 +120,6 @@ function AboutContent() {
           >
             {t('body')}
           </p>
-        </Reveal>
-
-        {/* Image callout — about-hands with a slower Ken Burns */}
-        <Reveal delay={100}>
-          <figure className="relative overflow-hidden rounded-3xl border border-[var(--color-border-brand)] aspect-[16/9] shadow-[0_24px_60px_-30px_rgba(24,51,41,0.35)]">
-            <KenBurns variant="tr">
-              <Image
-                src="/brand/ai/about-hands.jpg"
-                alt=""
-                fill
-                sizes="(min-width: 768px) 768px, 100vw"
-                className="object-cover"
-              />
-            </KenBurns>
-          </figure>
         </Reveal>
 
         {/* Pull quote — oversized italic serif, reuses the heading

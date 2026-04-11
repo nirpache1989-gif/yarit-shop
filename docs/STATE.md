@@ -2,6 +2,85 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom.
 
+## Latest (2026-04-11 — GSAP Tier-1 finish + mobile audit fixes)
+
+**All four remaining GSAP Tier-1 upgrades shipped (T1.4 → T1.7) plus the two mobile UX regressions flagged from the Redmi Note Poco X7 audit. Local only — nothing committed or pushed. Production is still the 2026-04-10 build on Vercel.**
+
+### T1.4 — FeaturedProducts heading pin (desktop only)
+
+- New `src/components/sections/FeaturedProductsMotion.tsx` (client) owns the ambient newsletter-bg wash, Container, heading row, and the grid of ProductCards that the old `FeaturedProducts.tsx` rendered inline.
+- `src/components/sections/FeaturedProducts.tsx` reduced to a ~50-line server shell that fetches via `getPayloadClient()` + `getTranslations()` and hands the motion child a serialized `products` array + four locale strings (`featuredEyebrow`, `featuredHeadline`, `featuredSubheadline`, `seeAll`). Same data-flow split as `Hero.tsx → HeroMotion.tsx`.
+- The motion child uses `useGsapScope(scopeRef, ({ gsap, ScrollTrigger, reduced }) => …)`. On reduced, `gsap.set([…], { clearProps: 'all' })` and early-return.
+- **Pin**: wrapped in `gsap.matchMedia().add('(min-width: 768px)', …)` so desktop gets a `ScrollTrigger.create({ trigger: headingRef.current, start: 'top 100px', endTrigger: scopeRef.current, end: 'bottom 200px', pin: headingRef.current, pinSpacing: false })`. Mobile skips the pin entirely.
+- **Card entrance**: top-level (every viewport) `gsap.from('[data-featured-card]', { y: 32, opacity: 0, duration: 0.8, stagger: 0.11, ease: 'power2.out', scrollTrigger: { start: 'top 75%', toggleActions: 'play none none reverse' } })`.
+- **Heading fade-up**: desktop and mobile matchMedia branches both add a `gsap.from(headingRef.current, { y: 20, opacity: 0, duration: 0.9, start: 'top 85%' })` so the heading feels consistent everywhere.
+- **Critical gotcha fixed**: the section originally wrapped in `overflow-hidden` to clip the bg image. ScrollTrigger's pin uses `position: fixed` on descendants, which is broken by any ancestor with `overflow: hidden`. Fix: moved `overflow-hidden` OFF the section and ONTO the inner bg-wash wrapper div, keeping visual clipping while letting the pinned heading escape the section box. See `FeaturedProductsMotion.tsx` bg block comment.
+
+### T1.5 — Global header shrink on scroll
+
+- New `src/components/layout/HeaderShrinkObserver.tsx` (~40 lines, returns null). `useEffect` attaches a passive `scroll` listener on `window`, rAF-throttles it, and flips `data-scrolled="true"` / `"false"` on `#site-header` when `window.scrollY` crosses 80px. Not GSAP — a boolean DOM toggle doesn't need a timeline.
+- `src/components/layout/Header.tsx` stays a server component. Gained `id="site-header"` on the `<header>` element and mounts `<HeaderShrinkObserver />` as a client sibling inside a React fragment.
+- `src/app/globals.css` grew a new rule block **inside `@layer utilities`** (this is critical — Tailwind v4 puts all utility classes in the `utilities` layer, and an unlayered override loses to `bg-[var(--color-surface-warm)]/92` via layer-order even with higher selector specificity). Inside the shared layer, my `header#site-header[data-scrolled="true"]` (id + attribute + element) beats the single-class Tailwind utility cleanly.
+- Compact-state styling: background-color shifts to `color-mix(in oklab, var(--color-surface-warm) 96%, transparent)`, adds a subtle `box-shadow 0 6px 24px -18px rgba(24,51,41,0.35)`, and the `.leaf-breathe img` logo height drops from `2.5rem` to `2rem`. All transitions are 280ms ease. Gated behind `@media (min-width: 768px)` so mobile is unaffected.
+- `@media (prefers-reduced-motion: reduce)` block extended with `header#site-header, header#site-header .leaf-breathe img { transition: none !important }` so reduced-motion users get an instant state swap.
+
+### T1.6 — Shop filter grid Flip
+
+- `src/lib/motion/gsap.ts` gained `Flip` plugin registration alongside `ScrollTrigger`. Imported via `gsap/dist/Flip` (not `gsap/Flip`) to sidestep a packaged-types casing bug where `types/flip.d.ts` (lowercase) conflicts with the `./types/*.d.ts` subpath resolver that TypeScript tries to canonicalize as `types/Flip.d.ts` — case-insensitive filesystems raise TS1149 on the mismatch. The `dist/Flip` path uses a separate ambient module declaration inside `flip.d.ts` that bypasses the subpath resolver. Runtime JS resolution is identical. Full comment in `src/lib/motion/gsap.ts`.
+- New `src/components/shop/ShopGridFlip.tsx` (client). Receives `{ products, locale }`. Watches `usePathname()` + `useSearchParams()` to derive a `filterKey` string that changes whenever any URL query param flips.
+- **First-render entrance**: `useGSAP(() => gsap.from(grid.children, { y: 24, opacity: 0, duration: 0.7, stagger: 0.08, ease: 'power2.out' }), { scope: gridRef, dependencies: [] })`. Same stagger rhythm as the `<StaggeredReveal>` it replaces.
+- **Filter-change Flip**: two coordinated `useLayoutEffect`s (per the official GSAP @gsap/react Flip pattern). The first captures `Flip.getState(grid.querySelectorAll('[data-shop-card]'))` inside its CLEANUP (which runs before the next render commit). The second consumes that saved state in its BODY on the next render and plays `Flip.from(state, { duration: 0.7, ease: 'power2.inOut', absolute: true, onEnter, onLeave })`. `onEnter` fades + scales new cards in, `onLeave` fades + scales old cards out.
+- **Tilt interference fix**: immediately before every `Flip.from`, `gsap.set` all `.product-card` elements with `rotationX: 0, rotationY: 0, x: 0, y: 0, clearProps: 'transform'` so the ProductCardMotion cursor-tilt doesn't fight the Flip reflow. Tilt picks up again on the next pointermove naturally.
+- **Reduced-motion bypass**: if `useGsapReducedMotion()` returns true, renders a plain grid with no refs, no Flip. Cards hard-cut between filter states — identical to the pre-GSAP baseline.
+- `src/app/(storefront)/[locale]/shop/page.tsx`: the `<StaggeredReveal>` that wrapped the product grid was replaced by `<ShopGridFlip products={products} locale={typedLocale} />`. The `<Reveal>` header + filter chips + empty-state branch stay as-is.
+
+### T1.7 — Product detail gallery hover zoom + thumb Flip
+
+- New `src/components/product/ProductGalleryMotion.tsx` (client). Receives `{ images: {url,alt}[], title }` as serialized props from the server parent.
+- **Hover zoom**: `useEffect` attaches `pointerenter` / `pointerleave` listeners to the main image viewport. On enter, `gsap.to(img, { scale: 1.12, duration: 0.9, ease: 'power2.out' })`. On leave, back to 1 over 0.7s. Gated behind both `useGsapReducedMotion()` AND a `useSyncExternalStore`-backed `(hover: hover)` matchMedia subscription so touch devices skip the zoom entirely. Listeners are re-bound when `activeIdx` changes so the `img` query stays fresh after a thumb click.
+- **Thumb Flip morph**: `pendingFlipRef` captures `Flip.getState('[data-gallery-image]')` at click time, then `setActiveIdx` triggers a re-render, and a `useLayoutEffect` keyed on `activeIdx` consumes the pending state and calls `Flip.from(state, { duration: 0.7, ease: 'power2.inOut', absolute: true, onEnter, onLeave })`. Reduced-motion path just sets state without Flip.
+- **Accessibility**: the main image viewport is `role="img"` with `aria-label={t('product.galleryMainLabel')}`; each thumb is a `<button>` with `aria-label={t('product.galleryThumbLabel', { index })}` + `aria-pressed`. Both keys are now in `src/messages/{he,en}.json` under `product.galleryThumbLabel` / `product.galleryMainLabel`. This replaces an early draft that hardcoded `aria-label="תמונה ${i+1}"` in Hebrew only — the fix was flagged by the post-wave QA agent and applied before build.
+- `src/app/(storefront)/[locale]/product/[slug]/page.tsx`: the inline main-image + thumb-row JSX inside the `<Reveal direction="start">` block was replaced with `<ProductGalleryMotion images={images} title={product.title} />`. The `images` derivation (static override → mediaImages) stays in the server page. The surrounding 2-col grid + right-hand info column (title, price, CTA, LexicalText) are untouched.
+- **Dev data note**: every seeded product currently has a static-override entry in `src/lib/product-image.ts` that compresses all variants to ONE image per product. As a result the thumb row does not appear in dev against the default seed — the single-image case renders the main viewport with no thumbs. Multi-image products exist in the Payload Media collection; to exercise the thumb-Flip path locally, remove the override for a test product or seed a new product without the override. The code is correct; the dev data is the limiting factor.
+
+### Mobile UX fixes (flagged by the Redmi Note Poco X7 audit)
+
+1. **Language switcher now visible on mobile.** `src/components/layout/Header.tsx` used to wrap `<LanguageSwitcher />` inside the `hidden md:flex` div, meaning mobile visitors had no top-bar language toggle at all and had to find the hamburger menu. Fix: moved `<LanguageSwitcher />` OUT of the hidden wrapper so it's visible at every breakpoint. `<ThemeToggle />` stays inside `hidden md:flex` in the top bar AND is still mirrored inside the mobile hamburger panel in `MobileNav.tsx` (both copies stay).
+2. **Theme bootstrap defaults to light.** `src/app/(storefront)/[locale]/layout.tsx` used to read `localStorage.shoresh-theme` first then fall back to `window.matchMedia('(prefers-color-scheme: dark)').matches`. The Poco X7 user reported the site "goes dark automatically" because their phone is OS-wide dark. The brand palette is warmer and more editorial in light mode, and dark should be an opt-in. Fix: the bootstrap string now only honors an EXPLICIT `localStorage.shoresh-theme` value (`'dark'` or `'light'`), and defaults to `'light'` otherwise. The ThemeToggle still writes to localStorage on click, so users who prefer dark can still opt in — it's just not auto-detected from the OS anymore. The `payload-theme` cookie mirror still runs so the admin panel stays in sync across navigations.
+
+### Files added (5)
+
+- `src/components/sections/FeaturedProductsMotion.tsx`
+- `src/components/layout/HeaderShrinkObserver.tsx`
+- `src/components/shop/ShopGridFlip.tsx`
+- `src/components/product/ProductGalleryMotion.tsx`
+
+(No new JS dependencies — Flip was already in the `gsap` package since April 2024, just needed registration.)
+
+### Files modified (8)
+
+- `src/components/sections/FeaturedProducts.tsx` — reduced to server shell
+- `src/components/layout/Header.tsx` — added `id="site-header"`, mounted observer, moved LanguageSwitcher out of `hidden md:flex`
+- `src/app/globals.css` — header shrink CSS block inside `@layer utilities` + reduced-motion override
+- `src/lib/motion/gsap.ts` — Flip plugin registration via `gsap/dist/Flip`
+- `src/app/(storefront)/[locale]/shop/page.tsx` — uses `<ShopGridFlip>` instead of inline `<StaggeredReveal>`
+- `src/app/(storefront)/[locale]/product/[slug]/page.tsx` — uses `<ProductGalleryMotion>` instead of inline gallery
+- `src/app/(storefront)/[locale]/layout.tsx` — theme bootstrap no longer auto-follows OS
+- `src/messages/he.json` + `src/messages/en.json` — added `product.galleryThumbLabel` + `product.galleryMainLabel`
+
+### Quality gates
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors, 0 warnings
+- `npm run build` → all 40 static pages prerender, bundle builds clean
+- QA swept by three parallel Explore agents (storefront pages, mobile + a11y, build + i18n + routes). One blocker found (hardcoded Hebrew aria-label) and fixed in-wave before the final build.
+- End-to-end Preview MCP verification: pin fires (`position: fixed, top: ~80px`), card stagger plays on scroll-event dispatch, hover zoom animates to scale 1.12 on `pointerenter` and back to 1 on leave, header CSS rules apply correctly when `data-scrolled="true"` is set (bg alpha 0.92 → 0.96, box-shadow appears, logo height 40px → 33px). Note: Preview MCP Chrome does NOT dispatch native scroll events on programmatic `scrollTo`, so ScrollTrigger doesn't auto-update in the preview window — verified correctness by calling `ScrollTrigger.update()` manually. Real browsers emit scroll events normally; production is unaffected.
+
+### Known quirks / limitations
+
+- **Preview MCP scroll behavior.** Programmatic `window.scrollTo(0, y)` updates `scrollY` but does not emit a `scroll` event in the Preview MCP Chrome instance. ScrollTrigger's auto-update piggybacks on those events, so during preview-driven testing the card stagger + heading pin can look "stuck at opacity 0" even though the code is correct. Real browsers (Chrome, Firefox, Safari, mobile) fire the events normally. Verified by dispatching `window.dispatchEvent(new Event('scroll'))` manually and watching the opacities go to 1.
+- **Seed data thumb row.** All dev products use static-override single images, so the T1.7 thumb-click Flip path cannot be exercised without either removing an override in `src/lib/product-image.ts` or seeding a multi-image product directly through `/admin/collections/products`.
+
 ## Phase
 
 **🚀 PRODUCTION DEPLOY: LIVE at https://yarit-shop.vercel.app** (2026-04-10).
@@ -362,6 +441,93 @@ Background agent reviewed the homepage and reported it felt "empty" / not suffic
 - When adding a new collection, remember to import it into `src/payload.config.ts` AND register it in the `collections` array AND give it Hebrew `labels`/`description` for the admin UI (Yarit is non-technical).
 
 ## Changelog
+
+- **2026-04-10** — **GSAP Tier-1 safe waves T1.1 + T1.2 + T1.3 shipped.** Follow-on session after the user approved the original G1/G2/G3 core scope and asked for the next "zero risk" upgrades. User scoped to three additive items only, with the remaining Tier 1 (T1.4 FeaturedProducts pin, T1.5 header shrink, T1.6 shop filter Flip, T1.7 product gallery Flip) handed off as a complete next-session prompt so the next Claude can execute without re-planning. Everything in this entry is local; nothing committed yet.
+
+  **T1.1 — MeetYarit converge.** New `src/components/sections/MeetYaritMotion.tsx` (client, ~150 lines) + `src/components/sections/MeetYarit.tsx` simplified to a ~30-line server shell that fetches translations and delegates the full layout. Two ScrollTriggers: image column slides in from its visual edge, text column slides in from the opposite edge (40px horizontal travel, 1.0s, `power2.out`). RTL-aware: reads `document.documentElement.dir` at setup and flips the sign so the image comes in from the right in Hebrew, from the left in English. The text column's 4 children (eyebrow / heading / body / link) are marked `data-meet-text-block` and stagger at 120ms — the same rhythm the old StaggeredReveal used, plus the horizontal travel that StaggeredReveal couldn't do. Replaces the old `<Reveal direction="start">` + `<StaggeredReveal>` on the MeetYarit section ONLY; every other consumer of those primitives is untouched. KenBurns on the image stays.
+
+  **T1.2 — CategoryGrid expand-on-enter.** New `src/components/sections/CategoryGridMotion.tsx` (client, ~65 lines) — a thin wrapper that takes the server-rendered category `<Link>` cards as children and applies a single ScrollTrigger tween to every descendant carrying the data-category-card attribute (using the CSS attribute-selector syntax): `scale: 0.96 → 1, y: 24 → 0, opacity: 0 → 1` over 0.9s per card with 0.09s stagger and `power2.out`. The server `CategoryGrid.tsx` keeps its Payload fetch + `<SectionHeading>` wrapped in `<Reveal>`; only the `<StaggeredReveal>` around the grid was swapped for `<CategoryGridMotion>`. Every category link now has data-category-card. Hover behaviors (the existing hover translate-y and shadow utilities) are unchanged.
+
+  **T1.3 — BranchDivider SVG draw-in.** `src/components/ui/BranchDivider.tsx` converted from a pure server component to a client component that uses `useGsapScope` for a scroll-triggered draw-in sequence. The central stem path animates `stroke-dashoffset` from its measured total length → 0 (the standard SVG "draw" trick — measured via `path.getTotalLength()` at setup time), the two side hairlines extend via `scaleX: 0 → 1` with a 0.08s stagger, and the 5 leaves + 2 berries fade in after the stem finishes drawing (at `>-0.3` and `<0.1` timeline offsets respectively). Each SVG element carries a data attribute: `data-bd-stem` (1), `data-bd-leaf` (5), `data-bd-berry` (2), `data-bd-line` (2). Total sequence ~1.6s when triggered. Fires once per divider via `toggleActions: 'play none none reverse'`. The homepage has 3 BranchDivider instances (between Featured / Meet / Testimonials / Categories), so this animation runs three separate times as the user scrolls through the page.
+
+  **Files created (3):** `src/components/sections/MeetYaritMotion.tsx`, `src/components/sections/CategoryGridMotion.tsx` + `src/components/ui/BranchDivider.tsx` (replaced in place — was a ~55-line server component, now ~145-line client).
+
+  **Files modified (2):** `src/components/sections/MeetYarit.tsx` (reduced to ~30 lines that call `<MeetYaritMotion>`), `src/components/sections/CategoryGrid.tsx` (import swap + `<StaggeredReveal>` → `<CategoryGridMotion>` + `data-category-card` on each Link).
+
+  **Zero new dependencies.** All three waves reuse the GSAP foundation shipped in G1 (`src/lib/motion/gsap.ts`, `useGsapReducedMotion`, `useGsapScope`). Total GSAP bundle cost on the homepage stays at ~42KB gzipped because we're tree-shaken to the same primitives.
+
+  **Verified end-to-end:**
+  - `npx tsc --noEmit` → 0 errors
+  - `npm run lint` → 0 errors / 0 warnings
+  - `npm run build` → 0 errors, all 40 static pages generated
+  - SSR HTML verification via curl against `http://localhost:3000/he`: `data-meet-image` (1), `data-meet-text-block` (4), `data-category-card` (10 — 5 categories × 2 SSR+hydration markers), `data-bd-stem` (3), `data-bd-leaf` (15 — 5 leaves × 3 dividers), `data-bd-berry` (6), `data-bd-line` (6). All targets present in the server-rendered HTML exactly as expected.
+  - Preview MCP browser was stuck inside the Payload admin client state from the previous session's language-switcher test, which meant `window.location` writes got intercepted. This is a preview-tool quirk, NOT a code bug — the curl check proves the HTML is correct and the build proves it compiles.
+
+  **Reduced-motion path for all three:** `useGsapScope` checks `prefers-reduced-motion` before any tween is built; on reduced, every data-attributed element is snapped to its final state via `gsap.set([...], { clearProps: 'all' })`. Users who opt out see the same static layout as before the GSAP waves, no regression.
+
+  **What's NEXT (handed off to the next session, plan + prompt file ready):**
+  - T1.4 FeaturedProducts heading pin — requires ScrollTrigger `pin: true` which creates pin-spacer divs at runtime, slightly higher risk, deferred.
+  - T1.5 Global header shrink — touches `Header.tsx` which renders on every page, medium surface area, deferred.
+  - T1.6 Shop filter grid Flip — requires the `Flip` plugin and grid state management on `/shop`, deferred.
+  - T1.7 Product detail image gallery zoom + thumb Flip — also needs the Flip plugin + careful image swap logic, deferred.
+  - Full pasteable prompt for the next session is at `docs/NEXT-SESSION-GSAP-PROMPT.md`. The next Claude reads that file top-to-bottom and executes — no planning phase needed.
+
+- **2026-04-10** — **Admin language switcher (visible pill) + sidebar localization + GSAP core 3 waves (G1/G2/G3).** Plan: `~/.claude/plans/merry-skipping-pumpkin.md`. Two independent tracks in one sprint, approved by the user before any code landed:
+
+  **Track 1 — Admin UI language switcher.** Yarit reported she couldn't find any way to flip between Hebrew and English in the admin panel. Root cause verified by reading Payload's compiled source at `node_modules/@payloadcms/next/dist/views/Account/Settings/index.js` + `LanguageSelector.js` — Payload's built-in `/admin/account` view DOES render a `<LanguageSelector>` dropdown (it reads `languageOptions` from our `i18n.supportedLanguages` config in `payload.config.ts:226-229`), but the `Settings` component is rendered in the `DocumentInfoProvider.AfterFields` slot, which means it sits at the BOTTOM of a long form (email, password, name, role, ...). Yarit never scrolled down far enough to see it. Also confirmed the `.app-header__localizer { display: none }` rule from Round 6 does NOT hide the account-page selector — different class, different component. Fix:
+
+    1. **New `AdminLangSwitcher.tsx` permanent pill.** Client component registered as the FIRST entry in `admin.components.actions` so it renders in the top-right of EVERY admin page, one click from anywhere. Uses `useTranslation()` from `@payloadcms/ui` which exposes `{ i18n, switchLanguage }` — the same hook Payload's built-in selector uses internally. So clicking the pill and clicking the dropdown on `/admin/account` write the exact same preference and stay in sync. Shows the OPPOSITE language label (`🌐 English` when currently Hebrew, `🌐 עברית` when currently English) — standard toggle UX. Styled via new `.yarit-lang-switcher` block in `admin-brand.css` mirroring the `.yarit-view-on-site` pill treatment (transparent bg, sage border, hover lift). ⚠ PAYLOAD INTERNAL comment added: the `switchLanguage` hook is Payload-owned and a major version bump could rename it.
+
+    2. **SidebarGreeting / SidebarFooter / HelpButton localized.** All three were hardcoded Hebrew strings. Collection group labels (`📦 קטלוג` / `💰 מכירות` / etc.) were already localized `{ en, he }` objects and flipped automatically with the language preference — but the three custom components didn't. Each is now a server component that reads `props.i18n?.language` from Payload's `ServerProps` and branches a small inline `strings` object (no `next-intl` wiring — keeping the admin i18n local to each component is cleaner than mixing two translation systems for 3 components × 3 strings each). HelpButton also swaps the mailto subject + body to match the language. Removed the hardcoded `dir="rtl"` from SidebarGreeting + SidebarFooter so they inherit `html[dir]` correctly.
+
+    **Verified end-to-end in Preview MCP** with real DOM queries: pill → flip → pill swap (`🌐 English` ↔ `🌐 עברית`), greeting (`שלום, Yarit 🌿 / ברוכה הבאה לפאנל הניהול` ↔ `Hello, Yarit 🌿 / Welcome to the admin panel`), footer (`← לאתר החי / 📦 ההזמנות החדשות / ← יציאה` ↔ `→ Live site / 📦 New orders / → Sign out`), collection groups (`👥 לקוחות / 📦 קטלוג / 💰 מכירות / 🌿 הגדרות` ↔ `👥 People / 📦 Catalog / 💰 Sales / 🌿 Settings`), collection links (`משתמשים / קטגוריות / מוצרים / הזמנות` ↔ `Users / Categories / Products / Orders`), HelpButton (`?צריכה עזרה` ↔ `Need help?`), page title (`לוח מחוונים` ↔ `Dashboard`). Round-trip clean.
+
+  **Track 2 — GSAP motion sprint, Waves G1/G2/G3 (storefront only, core scope approved by user).**
+
+    **Wave G1 — Foundation.** Installed `gsap@^3.13` + `@gsap/react@^2.1` (first new dependencies since the motion sprint closed). Bundle cost ~42KB gzipped, tree-shaken so only routes that import the module get the weight (homepage, shop, product, others unaffected). Three new files:
+    - `src/lib/motion/gsap.ts` — single entry point that imports `gsap` + `ScrollTrigger` and calls `gsap.registerPlugin(ScrollTrigger)` exactly once (idempotent guard + SSR `typeof window` gate). All GSAP-using components import from here.
+    - `src/lib/motion/useGsapReducedMotion.ts` — reactive `prefers-reduced-motion` hook using `useSyncExternalStore` (same pattern as `src/lib/useHasMounted.ts`). Subscribes to the media query so the value updates live if the user toggles OS reduced-motion mid-session.
+    - `src/components/motion/GsapScope.tsx` — `useGsapScope(scopeRef, setupFn, deps)` helper that bundles `useGSAP()` from `@gsap/react` + reduced-motion check + cleanup return into one call. Setup callback receives `{ gsap, ScrollTrigger, reduced }` and may return a cleanup function for DOM listeners etc.
+
+    **Wave G2 — Hero master timeline + scroll parallax.** Split `Hero.tsx` into a ~30-line server shell that fetches translations + a new `HeroMotion.tsx` client component that owns all 4 background layers + Container + logo + headline words + subheadline + CTAs. The server parent passes only strings (respecting the CLAUDE.md server→client function-prop rule). Master timeline on mount (~2.1s total):
+
+    1. Logo fades up from `y: 20, opacity: 0`, 1.1s, `power3.out` — existing `.leaf-breathe` CSS keyframe continues underneath.
+    2. Headline words (split on whitespace in JSX) fade up from `y: 36, opacity: 0, rotationX: -8°`, 0.9s each with 0.14s stagger, `power2.out`, `transformOrigin: '50% 100%'`. This REPLACES the old `<SplitWords>` usage on the Hero (other pages keep `SplitWords` untouched).
+    3. Subheadline fades up from `y: 14, opacity: 0`, 0.8s, `power2.out`, offset 1.1s.
+    4. Both CTAs fade up from `y: 8, opacity: 0`, 0.65s each with 0.09s stagger, `power2.out`, offset 1.4s.
+
+    Plus two `ScrollTrigger`s (both `scrub: 0.6` for a gentle lag):
+    - Layer 1 (`[data-hero-bg]` = botanical frame wrapper around the KenBurns-wrapped hero-bg-2.png): `yPercent 0 → -12` as the hero exits the viewport. The 22s CSS KenBurns keyframe still runs on the inner wrapper — GSAP transform on the outer wrapper composes cleanly.
+    - Layer 3 (`[data-hero-vignette]` = cream radial gradient): `opacity 1 → 0.4` as the hero exits. Soft handoff to the TrustBar below.
+
+    Reduced-motion path: `gsap.set([...], { clearProps: 'all' })` snaps everything to the settled state; ScrollTriggers never attach. Verified in Preview MCP: after 2.8s wait, all elements at `opacity: 1` and `transform: matrix(1, 0, 0, 1, 0, 0)` (identity). After scrolling to `scrollY: 1000`, hero bg is at `matrix(1, 0, 0, 1, 0, -107.111)` and vignette at `opacity: 0.4`.
+
+    **Wave G3 — Product card magnetic hover.** New `ProductCardMotion.tsx` client component that renders the `<article>` root directly (no wrapper `<div>` — keeps the grid cell sizing clean). The existing `ProductCard.tsx` server component keeps data fetching + the locale-aware `<Link>` intact and just delegates its JSX into `<ProductCardMotion>`. Behavior:
+    - On `pointermove`, compute normalized (-1..1) cursor position relative to card center, then `gsap.to(el, { rotationY: nx * 3, rotationX: -ny * 3, duration: 0.6, transformPerspective: 1000, transformOrigin: 'center center' })`. Max tilt ±3° — restraint, not a carnival ride.
+    - Inner `.product-image` gets an extra `x: nx * 4, y: ny * 4` for a tiny parallax-of-depth.
+    - On `pointerleave`, tween back to rest over 0.9s with `power3.out` (slower return = momentum illusion).
+    - Gates: skip entirely on touch devices (`!window.matchMedia('(hover: hover)').matches`), skip entirely on reduced motion. Keyboard focus unaffected — `:focus-visible` outline still fires.
+    - Added `perspective: 1000px; transform-style: preserve-3d;` to `.product-card` in `globals.css` so the `rotationX/Y` actually reads as 3D. Composes cleanly with the existing CSS hover lift (`translateY(-4px)`) because GSAP uses `matrix3d()` and the CSS hover uses `matrix()` — separate transition layers.
+
+    Verified in Preview MCP on `/` (3 featured cards) and `/shop` (full grid with 7 cards): all cards render as `<article>` with `perspective: "1000px"` + `transformStyle: "preserve-3d"`. Simulated pointermove produces `matrix3d(0.999912, 0, -0.0132671, ...)` (3D), pointerleave decays back toward identity. No GSAP warnings in console.
+
+  **Files created (6):** `src/components/admin/payload/AdminLangSwitcher.tsx`, `src/lib/motion/gsap.ts`, `src/lib/motion/useGsapReducedMotion.ts`, `src/components/motion/GsapScope.tsx`, `src/components/sections/HeroMotion.tsx`, `src/components/product/ProductCardMotion.tsx`.
+
+  **Files modified (7):** `src/payload.config.ts` (add `AdminLangSwitcher` as first entry in `admin.components.actions`), `src/components/admin/payload/SidebarGreeting.tsx` (localize + accept `ServerProps`), `src/components/admin/payload/SidebarFooter.tsx` (localize + accept `ServerProps`), `src/components/admin/payload/HelpButton.tsx` (localize + accept `ServerProps`), `src/app/(payload)/admin-brand.css` (add `.yarit-lang-switcher` pill block + add `.yarit-lang-switcher` to reduced-motion transition-none list), `src/components/sections/Hero.tsx` (reduced to ~30-line server shell that delegates to `HeroMotion`), `src/components/product/ProductCard.tsx` (import + wrap body in `<ProductCardMotion>`), `src/app/globals.css` (add `perspective: 1000px; transform-style: preserve-3d;` to `.product-card`).
+
+  **Dependencies added:** `gsap@^3.13`, `@gsap/react@^2.1`. ⚠ This breaks the "zero new deps" policy from the design + animation sprint — documented and intentional. GSAP is fully free including all plugins since April 2024 (Webflow acquisition). No licensing concern.
+
+  **Quality gates:** `npx tsc --noEmit` → 0, `npm run lint` → 0 errors / 0 warnings, `npm run build` → 0 errors, 40/40 static pages generated. Preview MCP verified: homepage Hero settles, scroll parallax scrubbing, product card tilt firing on pointer events, admin language switcher full he↔en round-trip on every surface (pill + greeting + footer + groups + collection links + help button + title). Dev server console reports no server errors after fresh reload.
+
+  **What's deferred (documented for a future session as approved core scope left the door open):** Waves G4 (homepage scroll-linked storytelling — FeaturedProducts pin, MeetYarit converge, Testimonials sprig parallax, CategoryGrid expand-on-enter, BranchDivider SVG draw-in), G5 (page transitions with Next's View Transitions API + GSAP fallback), and all admin GSAP polish (explicitly excluded — user scoped this track to customer experience only).
+
+  **Gotchas documented for next session:**
+  - GSAP components must use the `@gsap/react` `useGSAP()` hook (wrapped by `useGsapScope`), NOT raw `useEffect` — React 19 StrictMode double-mounts will leak timelines otherwise.
+  - `src/lib/motion/gsap.ts` is the single entry point — never import `gsap` or `gsap/ScrollTrigger` directly from any other file, or you'll get duplicate plugin registrations.
+  - Every new GSAP component MUST call `useGsapScope` and check `reduced` before building any timeline, then fall through to `gsap.set([...], { clearProps: 'all' })` to snap to the final state. The shared `useGsapReducedMotion` hook handles the media query subscription; the `useGsapScope` helper passes `reduced` into the setup callback.
+  - Server components cannot pass function props to client GSAP components (`HeroMotion`, `ProductCardMotion`). Pass only strings / numbers / booleans. `CountUp`, `HeroMotion`, and `ProductCardMotion` all follow this rule — use them as the reference pattern.
+  - GSAP `scrollTrigger: {...}` inline config works on any `gsap.to()` call without explicitly referencing the `ScrollTrigger` class (the plugin is pre-registered in `src/lib/motion/gsap.ts`). If you destructure `ScrollTrigger` from `useGsapScope`'s context but don't actually use the class directly, ESLint will flag it as unused — just drop it from the destructure.
+  - HMR during iterative GSAP edits can leave stale error entries in the browser console that don't flush on reload. Trust `preview_logs --level error` (server-side compile errors) as ground truth, not `preview_console_logs --level error` (browser buffer).
 
 - **2026-04-10** — **Admin audit + bulk-delete fix + hero image swap (pre-push hardening).** User ran a live walkthrough of the admin panel and flagged four concrete bugs. All four fixed in one sprint before the big push to production:
 

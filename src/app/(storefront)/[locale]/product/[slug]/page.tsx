@@ -8,7 +8,6 @@
  *          404s if the slug doesn't match a published product.
  */
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
@@ -21,6 +20,7 @@ import type { ProductCardData } from '@/components/product/ProductCard'
 import { STATIC_IMAGE_OVERRIDES } from '@/lib/product-image'
 import { Reveal } from '@/components/motion/Reveal'
 import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
+import { ProductGalleryMotion } from '@/components/product/ProductGalleryMotion'
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yarit-shop.vercel.app'
@@ -183,44 +183,13 @@ export default async function ProductPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="grid md:grid-cols-2 gap-10">
-        {/* Gallery — slides in from the start edge, primary image
-            has a slow subtle pan on hover (same .product-image
-            class the card uses). */}
-        <Reveal direction="start" className="space-y-4">
-          <div className="group product-card relative aspect-square rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border-brand)] overflow-hidden">
-            {images[0] ? (
-              <Image
-                src={images[0].url}
-                alt={images[0].alt}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-                className="product-image object-contain p-6"
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-[var(--color-muted)]">
-                —
-              </div>
-            )}
-          </div>
-          {images.length > 1 && (
-            <div className="grid grid-cols-4 gap-2">
-              {images.slice(0, 4).map((img, i) => (
-                <div
-                  key={i}
-                  className="relative aspect-square rounded-lg bg-[var(--color-surface)] border border-[var(--color-border-brand)] overflow-hidden transition-all duration-300 hover:border-[var(--color-primary)]/40 hover:scale-[1.03] cursor-pointer"
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.alt}
-                    fill
-                    sizes="120px"
-                    className="object-contain p-2"
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Gallery — Tier-1 upgrade T1.7. ProductGalleryMotion (client)
+            owns the main image viewport, the thumb row, the hover zoom,
+            and the thumb-click Flip morph. The server parent still
+            resolves the images array from Payload / static overrides
+            and passes a plain {url, alt}[] prop across the boundary. */}
+        <Reveal direction="start">
+          <ProductGalleryMotion images={images} title={product.title} />
         </Reveal>
 
         {/* Info — every piece reveals in order: badges, title, short

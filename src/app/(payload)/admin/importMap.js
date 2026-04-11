@@ -23,6 +23,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BrandIcon as BrandIcon_202e9744fead022414559124ef9fc8c6 } from '@/components/admin/payload/BrandIcon'
 import { BrandLogo as BrandLogo_973eb6bf15c826b2df632361ed684413 } from '@/components/admin/payload/BrandLogo'
+import { AdminLangSwitcher as AdminLangSwitcher_bdb1d146fe59b4b27e3b34b5ed6d714d } from '@/components/admin/payload/AdminLangSwitcher'
 import { HelpButton as HelpButton_0e1de4f045b3520212eb6a33e31f7371 } from '@/components/admin/payload/HelpButton'
 import { ViewOnSite as ViewOnSite_7087317569c8e4c2ce7b9fc9b5f82b9c } from '@/components/admin/payload/ViewOnSite'
 import { SidebarFooter as SidebarFooter_bf65492784b3f2386a3e89f43b154fc1 } from '@/components/admin/payload/SidebarFooter'
@@ -61,6 +62,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/payload/BrandIcon#BrandIcon": BrandIcon_202e9744fead022414559124ef9fc8c6,
   "@/components/admin/payload/BrandLogo#BrandLogo": BrandLogo_973eb6bf15c826b2df632361ed684413,
+  "@/components/admin/payload/AdminLangSwitcher#AdminLangSwitcher": AdminLangSwitcher_bdb1d146fe59b4b27e3b34b5ed6d714d,
   "@/components/admin/payload/HelpButton#HelpButton": HelpButton_0e1de4f045b3520212eb6a33e31f7371,
   "@/components/admin/payload/ViewOnSite#ViewOnSite": ViewOnSite_7087317569c8e4c2ce7b9fc9b5f82b9c,
   "@/components/admin/payload/SidebarFooter#SidebarFooter": SidebarFooter_bf65492784b3f2386a3e89f43b154fc1,

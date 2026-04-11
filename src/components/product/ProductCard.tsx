@@ -30,6 +30,7 @@ import { Link } from '@/lib/i18n/navigation'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { cn } from '@/lib/cn'
 import { resolveProductImage } from '@/lib/product-image'
+import { ProductCardMotion } from './ProductCardMotion'
 
 type Media = { id: number | string; url?: string; alt?: string }
 
@@ -65,7 +66,7 @@ export function ProductCard({ product, locale, className }: Props) {
     : null
 
   return (
-    <article
+    <ProductCardMotion
       className={cn(
         'product-card group relative flex flex-col h-full rounded-[var(--radius-card)] border border-[var(--color-border-brand)]/70 bg-[var(--color-surface-warm)] overflow-hidden',
         className,
@@ -146,7 +147,7 @@ export function ProductCard({ product, locale, className }: Props) {
           />
         </div>
       </div>
-    </article>
+    </ProductCardMotion>
   )
 }
 

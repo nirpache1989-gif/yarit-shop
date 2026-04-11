@@ -33,14 +33,20 @@ import { DriftingLeaves } from '@/components/ui/DriftingLeaves'
 import '@/app/globals.css'
 
 /*
- * Design Round 3 — theme bootstrap.
+ * Design Round 3 — theme bootstrap (updated 2026-04-11 mobile audit).
  * Runs synchronously in <head> BEFORE React hydration so the
- * correct data-theme is on <html> before the first paint. This
- * prevents a flash of light mode for dark-mode users.
+ * correct data-theme is on <html> before the first paint.
  *
- *   1. Check localStorage for a user preference (`shoresh-theme`)
- *   2. Fall back to the OS preference (`prefers-color-scheme`)
- *   3. Fall back to light mode if localStorage is blocked
+ *   1. Check localStorage for an EXPLICIT user preference
+ *      (`shoresh-theme` — only set when the user clicks the toggle).
+ *   2. If no explicit preference, default to LIGHT mode regardless
+ *      of the OS-wide dark-mode setting. We learned from a Redmi
+ *      Note Poco X7 user that "it goes dark automatically" felt
+ *      like a bug because their phone is set to dark OS-wide; the
+ *      brand palette is warmer and more editorial in light mode,
+ *      and dark mode should be an opt-in via the ThemeToggle.
+ *   3. Fall back to light mode if localStorage is blocked (private
+ *      browsing, etc.).
  *
  * Must stay a plain string (not a template literal that references
  * runtime values) so Next.js can serialise it into the server HTML.
@@ -49,11 +55,9 @@ import '@/app/globals.css'
  * Also mirror the resolved theme into the `payload-theme` cookie so
  * that when the user navigates from the storefront to the admin
  * (/admin), Payload's server-side `getRequestTheme` reads the same
- * value and renders `<html data-theme="dark">` on the first paint,
- * instead of defaulting to 'light' and then flashing to dark once
- * the client-side AdminThemeInit provider kicks in.
+ * value and renders matching <html data-theme> on the first paint.
  */
-const themeBootstrap = `(function(){try{var s=localStorage.getItem('shoresh-theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;var t=s||(d?'dark':'light');document.documentElement.setAttribute('data-theme',t);document.cookie='payload-theme='+t+';path=/;max-age=31536000;samesite=lax';}catch(e){}})();`
+const themeBootstrap = `(function(){try{var s=localStorage.getItem('shoresh-theme');var t=(s==='dark'||s==='light')?s:'light';document.documentElement.setAttribute('data-theme',t);document.cookie='payload-theme='+t+';path=/;max-age=31536000;samesite=lax';}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],

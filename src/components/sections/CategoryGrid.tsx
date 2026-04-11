@@ -11,7 +11,7 @@ import { Container } from '@/components/ui/Container'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { Link } from '@/lib/i18n/navigation'
 import { Reveal } from '@/components/motion/Reveal'
-import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
+import { CategoryGridMotion } from './CategoryGridMotion'
 import type { Locale } from '@/lib/i18n/routing'
 
 type Props = {
@@ -58,10 +58,7 @@ export async function CategoryGrid({ locale }: Props) {
             className="mb-12"
           />
         </Reveal>
-        <StaggeredReveal
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5"
-          stagger={90}
-        >
+        <CategoryGridMotion className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
           {categories.map((c, i) => {
             const payloadImg =
               typeof c.image === 'object' && c.image ? c.image : null
@@ -71,6 +68,7 @@ export async function CategoryGrid({ locale }: Props) {
               <Link
                 key={c.id}
                 href={`/shop?category=${c.slug}`}
+                data-category-card
                 className="group relative aspect-[4/5] rounded-[var(--radius-card)] border border-[var(--color-border-brand)] bg-[var(--color-surface-warm)] overflow-hidden flex flex-col justify-end p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:border-[var(--color-primary)]/40"
               >
                 {imgUrl && (
@@ -103,7 +101,7 @@ export async function CategoryGrid({ locale }: Props) {
               </Link>
             )
           })}
-        </StaggeredReveal>
+        </CategoryGridMotion>
       </Container>
     </section>
   )

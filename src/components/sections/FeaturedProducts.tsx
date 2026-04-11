@@ -1,21 +1,26 @@
 /**
  * @file Featured products carousel (homepage)
  * @summary Server component that fetches featured products from Payload
- *          and renders them in a horizontally-scrollable grid.
+ *          and hands them off to `<FeaturedProductsMotion>` (client).
  *
- *          Phase C+ polish: uses the newsletter-bg botanical wash as a
- *          very subtle background layer (per design review punchlist B3)
- *          and a serif SectionHeading with an eyebrow line.
+ *          Why the split: Tier-1 GSAP upgrade T1.4 pins the heading
+ *          row to the viewport while cards scroll past it. That
+ *          requires a coordinated ScrollTrigger that owns the whole
+ *          section as a useGsapScope — which means a client component
+ *          with DOM refs. Keeping the Payload fetch + translations in
+ *          the server parent and passing already-resolved strings +
+ *          data down honors the CLAUDE.md rule against passing
+ *          function props from server to client components.
+ *
+ *          Same data-flow pattern as `Hero.tsx` → `HeroMotion.tsx`.
+ *
+ *          If the query returns zero featured products, we render
+ *          nothing (same behavior as before the split).
  */
-import Image from 'next/image'
 import { getTranslations } from 'next-intl/server'
 import { getPayloadClient } from '@/lib/payload'
-import { Container } from '@/components/ui/Container'
-import { SectionHeading } from '@/components/ui/SectionHeading'
-import { ProductCard, type ProductCardData } from '@/components/product/ProductCard'
-import { Button } from '@/components/ui/Button'
-import { Reveal } from '@/components/motion/Reveal'
-import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
+import { type ProductCardData } from '@/components/product/ProductCard'
+import { FeaturedProductsMotion } from './FeaturedProductsMotion'
 import type { Locale } from '@/lib/i18n/routing'
 
 type Props = {
@@ -43,43 +48,13 @@ export async function FeaturedProducts({ locale }: Props) {
   if (products.length === 0) return null
 
   return (
-    <section className="relative overflow-hidden py-16">
-      {/* Ambient botanical wash (reusing the unused newsletter-bg asset) */}
-      <div className="absolute inset-0 -z-0 opacity-20" aria-hidden>
-        <Image
-          src="/brand/ai/newsletter-bg.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-background)] via-transparent to-[var(--color-background)]" />
-      </div>
-
-      <Container className="relative">
-        <Reveal>
-          <div className="flex items-end justify-between mb-10">
-            <SectionHeading
-              eyebrow={t('featuredEyebrow')}
-              title={t('featuredHeadline')}
-              subheading={t('featuredSubheadline')}
-              align="start"
-            />
-            <Button href="/shop" variant="ghost" size="md" className="hidden sm:inline-flex">
-              {t('seeAll')} →
-            </Button>
-          </div>
-        </Reveal>
-
-        <StaggeredReveal
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"
-          stagger={110}
-        >
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} locale={locale} />
-          ))}
-        </StaggeredReveal>
-      </Container>
-    </section>
+    <FeaturedProductsMotion
+      locale={locale}
+      products={products}
+      eyebrow={t('featuredEyebrow')}
+      headline={t('featuredHeadline')}
+      subheadline={t('featuredSubheadline')}
+      seeAllLabel={t('seeAll')}
+    />
   )
 }

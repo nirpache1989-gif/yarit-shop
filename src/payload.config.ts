@@ -132,11 +132,16 @@ export default buildConfig({
       afterNavLinks: [
         { path: '@/components/admin/payload/SidebarFooter#SidebarFooter' },
       ],
-      // Permanent help button + "view on site" link in the top-right
-      // of the admin. ViewOnSite opens the storefront in a new tab so
-      // Yarit can jump between editing and the live preview without
-      // losing her admin position.
+      // Permanent top-right action cluster. Order here is the order
+      // Payload renders them into `.app-header__actions` (right-to-left
+      // in RTL, so the first entry lands leftmost in the cluster).
+      //   1. AdminLangSwitcher — Hebrew/English toggle. Surfaces the
+      //      built-in /admin/account language preference in one click
+      //      from any page. See its JSDoc for root cause.
+      //   2. HelpButton — `mailto:` support pill.
+      //   3. ViewOnSite — opens storefront in a new tab.
       actions: [
+        { path: '@/components/admin/payload/AdminLangSwitcher#AdminLangSwitcher' },
         { path: '@/components/admin/payload/HelpButton#HelpButton' },
         { path: '@/components/admin/payload/ViewOnSite#ViewOnSite' },
       ],

@@ -1400,6 +1400,45 @@ body > .payload__modal-container {
   outline-offset: 2px;
 }
 
+/* ─── AdminLangSwitcher: Hebrew/English toggle in admin header actions ─
+   Mirrors the .yarit-view-on-site pill treatment so the top-right
+   action bar (🌐 language | 🌿 view on site | ? help) reads as one
+   coherent cluster. Uses the same sage outline instead of the accent
+   gold so it doesn't visually compete with the save button.
+   See: AdminLangSwitcher.tsx */
+
+.yarit-lang-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: var(--color-success-400) !important;
+  border: 1px solid var(--theme-border-color);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    background 220ms ease,
+    transform 180ms ease,
+    border-color 220ms ease;
+  white-space: nowrap;
+}
+
+.yarit-lang-switcher:hover {
+  background: color-mix(in srgb, var(--color-success-400) 8%, transparent);
+  border-color: var(--color-success-400);
+  transform: translateY(-1px);
+}
+
+.yarit-lang-switcher:focus-visible {
+  outline: 2px solid var(--color-success-400);
+  outline-offset: 2px;
+}
+
 /* ============================================================
  * Wave D + F + M — admin design sprint polish
  * ============================================================
@@ -1657,6 +1696,7 @@ html[data-theme="dark"] .yarit-dashboard > * {
 
   .yarit-fulfillment__empty-cta,
   .yarit-view-on-site,
+  .yarit-lang-switcher,
   .driver-popover-next-btn,
   .driver-popover-done-btn,
   .driver-popover-prev-btn {

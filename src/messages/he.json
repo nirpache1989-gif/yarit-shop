@@ -56,7 +56,9 @@
   "product": {
     "aboutThisProduct": "על המוצר",
     "addToCart": "הוסף לעגלה",
-    "outOfStock": "אזל מהמלאי"
+    "outOfStock": "אזל מהמלאי",
+    "galleryThumbLabel": "תמונה {index}",
+    "galleryMainLabel": "תמונת המוצר הראשית"
   },
   "cart": {
     "title": "עגלת הקניות",
