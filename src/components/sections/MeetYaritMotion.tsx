@@ -80,22 +80,27 @@ export function MeetYaritMotion({
     const textStartX = rtl ? -40 : 40
 
     // The whole entrance is one scroll-triggered tween per column.
-    // `toggleActions: 'play none none reverse'` plays forward the
-    // first time the section enters the viewport and reverses if the
-    // user scrolls back above it — matches the existing Reveal
-    // primitives which also run once per view. `start: 'top 80%'`
-    // means the animation fires when the top of the section hits
-    // 80% down the viewport (slightly before it's fully in view),
-    // same trigger point the rest of the site's reveals use.
+    // `start: 'top 80%'` means the animation fires when the top of
+    // the section hits 80% down the viewport (slightly before it's
+    // fully in view), same trigger point the rest of the site's
+    // reveals use.
+    //
+    // ⚠ Bug-fix (2026-04-11): `immediateRender: false` + `once: true`
+    // keeps the columns at their natural state if the ScrollTrigger
+    // fails to fire on initial hydration (see the matching comment
+    // in CategoryGridMotion.tsx for the full post-mortem — same
+    // failure mode affected multiple homepage motion sections on
+    // production).
     gsap.from('[data-meet-image]', {
       x: imageStartX,
       opacity: 0,
       duration: 1.0,
       ease: 'power2.out',
+      immediateRender: false,
       scrollTrigger: {
         trigger: scopeRef.current,
         start: 'top 80%',
-        toggleActions: 'play none none reverse',
+        once: true,
       },
     })
 
@@ -105,10 +110,11 @@ export function MeetYaritMotion({
       duration: 1.0,
       stagger: 0.12,
       ease: 'power2.out',
+      immediateRender: false,
       scrollTrigger: {
         trigger: scopeRef.current,
         start: 'top 80%',
-        toggleActions: 'play none none reverse',
+        once: true,
       },
     })
   })

@@ -80,16 +80,24 @@ export function FeaturedProductsMotion({
     // ─── Card entrance stagger — runs on every viewport ──────────────
     // This is outside the matchMedia block so the cards animate in on
     // mobile + tablet + desktop. Only the pin is desktop-gated.
+    //
+    // ⚠ Bug-fix (2026-04-11): `immediateRender: false` + `once: true`
+    // keeps cards at their natural state if the ScrollTrigger fails
+    // to fire on hydration. Same failure mode as CategoryGridMotion
+    // — Yarit reported the Featured strip rendering as empty boxes
+    // on production. See CategoryGridMotion.tsx for the full post-
+    // mortem comment.
     gsap.from('[data-featured-card]', {
       y: 32,
       opacity: 0,
       duration: 0.8,
       stagger: 0.11,
       ease: 'power2.out',
+      immediateRender: false,
       scrollTrigger: {
         trigger: scopeRef.current,
         start: 'top 75%',
-        toggleActions: 'play none none reverse',
+        once: true,
       },
     })
 
@@ -107,10 +115,11 @@ export function FeaturedProductsMotion({
         opacity: 0,
         duration: 0.9,
         ease: 'power2.out',
+        immediateRender: false,
         scrollTrigger: {
           trigger: scopeRef.current,
           start: 'top 85%',
-          toggleActions: 'play none none reverse',
+          once: true,
         },
       })
 
@@ -118,6 +127,10 @@ export function FeaturedProductsMotion({
       // div that would break the Next.js + Tailwind grid flow below
       // the section. endTrigger is the section element, so the pin
       // releases when the section bottom approaches the viewport top.
+      // The pin is NOT a `gsap.from` entrance — it's an independent
+      // ScrollTrigger that positions the heading while the user
+      // scrolls past the section, so it doesn't need the
+      // `immediateRender: false` guard.
       ScrollTrigger.create({
         trigger: headingRef.current,
         start: 'top 100px',
@@ -136,10 +149,11 @@ export function FeaturedProductsMotion({
         opacity: 0,
         duration: 0.9,
         ease: 'power2.out',
+        immediateRender: false,
         scrollTrigger: {
           trigger: scopeRef.current,
           start: 'top 85%',
-          toggleActions: 'play none none reverse',
+          once: true,
         },
       })
     })
