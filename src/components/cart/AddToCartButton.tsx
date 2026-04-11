@@ -17,7 +17,7 @@
  */
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { useCartStore } from '@/lib/cart/store'
 import { useCartDrawerStore } from '@/components/cart/drawerStore'
@@ -26,6 +26,7 @@ import type { ProductCardData } from '@/components/product/ProductCard'
 import { resolveProductImage } from '@/lib/product-image'
 import { cn } from '@/lib/cn'
 import { fireConfetti } from '@/components/motion/ConfettiTrigger'
+import { gsap } from '@/lib/motion/gsap'
 
 type Props = {
   product: ProductCardData
@@ -49,6 +50,13 @@ export function AddToCartButton({
   const addItem = useCartStore((s) => s.addItem)
   const openDrawer = useCartDrawerStore((s) => s.open)
   const [justAdded, setJustAdded] = useState(false)
+  // 2026-04-11 Track D.3 — press-feedback bounce. The button element
+  // is captured via this ref so the click handler can fire a tiny
+  // GSAP scale bounce (0.96 → 1). Works on both variants. No-op
+  // under reduced motion (gsap respects the global flag when set
+  // via gsap.globalTimeline or individual tweens; we also short-
+  // circuit if the ref isn't wired yet).
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const handleClick = (e?: React.MouseEvent) => {
     // Prevent the click from bubbling to the parent Link (product card
@@ -56,6 +64,23 @@ export function AddToCartButton({
     // to navigate when someone clicks "Add to bag" inside the card).
     e?.preventDefault()
     e?.stopPropagation()
+
+    // Press bounce — fire BEFORE the cart mutation so it feels
+    // physically tied to the click. `overwrite: 'auto'` lets a rapid
+    // double-click replay the bounce instead of stacking two tweens.
+    // Respects `prefers-reduced-motion: reduce` via the global
+    // `gsap.matchMedia` reducedMotion handling we inherit from the
+    // single entry point. Duration is deliberately short (100ms down,
+    // 200ms up) so the rest of the click flow (confetti, drawer) feels
+    // simultaneous, not sequential.
+    if (buttonRef.current && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.killTweensOf(buttonRef.current)
+      gsap
+        .timeline({ overwrite: 'auto' })
+        .to(buttonRef.current, { scale: 0.96, duration: 0.1, ease: 'power2.out' })
+        .to(buttonRef.current, { scale: 1, duration: 0.22, ease: 'back.out(1.8)' })
+    }
+
     // Use the shared resolver so the cart drawer and /cart page show
     // the same image the customer clicked on in the product grid.
     const imageUrl = resolveProductImage(product)
@@ -94,10 +119,11 @@ export function AddToCartButton({
   if (variant === 'ghost-link') {
     return (
       <button
+        ref={buttonRef}
         type="button"
         onClick={handleClick}
         className={cn(
-          'text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] hover:underline underline-offset-4 transition-colors whitespace-nowrap',
+          'text-xs font-bold uppercase tracking-wider text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] hover:underline underline-offset-4 transition-colors whitespace-nowrap inline-block',
           justAdded && 'animate-pulse-added',
           className,
         )}
@@ -109,9 +135,10 @@ export function AddToCartButton({
 
   return (
     <Button
+      ref={buttonRef}
       variant="primary"
       size={size}
-      onClick={() => handleClick()}
+      onClick={(e) => handleClick(e)}
       className={cn(className, justAdded && 'animate-pulse-added', 'btn-lift')}
     >
       {displayLabel}

@@ -1,62 +1,87 @@
 /**
- * @file HeaderShrinkObserver — client-only scroll observer that toggles `data-scrolled` on the site header
- * @summary Tier-1 upgrade T1.5. A tiny client component that watches
- *          `window.scrollY` and writes `data-scrolled="true"` onto
- *          `#site-header` when the user has scrolled past 80px,
- *          `"false"` otherwise. The CSS in `globals.css` picks up the
- *          attribute and animates background opacity, box-shadow, and
- *          logo size over 280ms.
+ * @file HeaderShrinkObserver — client-only scroll observer that drives sticky-header compression
+ * @summary Tier-1 upgrade T1.5 + 2026-04-11 Track D.1 scroll-scrubbed
+ *          upgrade. Watches `window.scrollY` and writes TWO things on
+ *          `#site-header` on every paint frame:
+ *
+ *          1. `data-scrolled="true|false"` — binary attribute, flipped
+ *             once the user crosses `SCROLL_THRESHOLD_END`. Kept as
+ *             the reduced-motion fallback + as a CSS hook for rules
+ *             that want a hard on/off state (e.g. blur enabled/disabled).
+ *
+ *          2. `--header-scroll-progress: {0..1}` — a CSS custom
+ *             property that smoothly interpolates from 0 (top of
+ *             page) to 1 (past `SCROLL_THRESHOLD_END`). CSS rules in
+ *             globals.css use this with `calc()` to drive a continuous
+ *             shrink of the logo, a continuous bg alpha ramp, and a
+ *             continuous box-shadow ramp — so the compression feels
+ *             like a smooth scrub rather than a 280ms binary snap at
+ *             a single scroll point.
  *
  *          Why a dedicated client sibling instead of `useGsapScope`:
- *          this is a boolean DOM-attribute toggle, not a tween
- *          timeline. Pulling GSAP in just to flip a string attribute
- *          is overkill — plain `useEffect` + rAF-throttled scroll
- *          listener is 40 lines and has zero bundle cost beyond React
- *          itself.
+ *          we only need a scalar 0→1 value written onto an element.
+ *          Pulling GSAP in just for a rAF-throttled DOM write is
+ *          overkill — plain useEffect + rAF is 50 lines and has zero
+ *          bundle cost beyond React itself. The CSS does all the
+ *          interpolation via calc().
  *
  *          The parent `Header.tsx` stays a server component. This
  *          file is mounted as a client sibling inside the same React
  *          fragment so the observer hooks onto the rendered header
  *          element by id.
  *
- *          RTL: the observer is purely vertical, so RTL is irrelevant.
- *          Mobile: the CSS rule is gated behind a min-width media
- *          query, so on narrow viewports the attribute is still
- *          written but the visual transition is skipped. See
- *          `globals.css` header#site-header block.
- *          Reduced motion: the CSS transition is disabled in the
- *          existing `@media (prefers-reduced-motion: reduce)` block,
- *          so the shrink snaps instantly — no JS change needed.
+ *          RTL: purely vertical, RTL is irrelevant.
+ *          Mobile: the CSS interpolation rules are gated on
+ *          `min-width: 768px`, so on narrow viewports the progress
+ *          value is still written but has no visual effect.
+ *          Reduced motion: the CSS `prefers-reduced-motion: reduce`
+ *          block overrides the interpolation with a static
+ *          `data-scrolled="true"` snap. No JS change needed.
  *
- *          Returns `null` — no visible output, just the attribute
- *          side-effect.
+ *          Returns `null` — no visible output, just the DOM side-effects.
  */
 'use client'
 
 import { useEffect } from 'react'
 
-// 80px is the threshold the user crosses before the shrink kicks in.
-// Kept as a module constant so the value is findable via grep if the
-// design team wants it tuned later.
-const SCROLL_THRESHOLD = 80
+// Scroll-scrub range. Progress is 0 at scrollY <= START, 1 at
+// scrollY >= END, linear between. END also doubles as the threshold
+// for the binary `data-scrolled` attribute so the two stay in sync.
+const SCROLL_THRESHOLD_START = 0
+const SCROLL_THRESHOLD_END = 120
 
 export function HeaderShrinkObserver() {
   useEffect(() => {
     const el = document.getElementById('site-header')
     if (!el) return
 
-    // Cache the last-written state so we only call setAttribute when
-    // the boolean actually flips. Avoids writing the same string to
-    // the DOM on every scroll frame.
-    let scrolled: boolean | null = null
+    // Cache the last-written state so we avoid no-op DOM writes. The
+    // progress value is rounded to 3 decimal places before comparison
+    // so sub-pixel scroll jitter doesn't spam setProperty on every
+    // frame.
+    let lastProgress = -1
+    let lastScrolled: boolean | null = null
     let rafId: number | null = null
 
     const applyState = () => {
       rafId = null
-      const next = window.scrollY > SCROLL_THRESHOLD
-      if (next === scrolled) return
-      scrolled = next
-      el.setAttribute('data-scrolled', next ? 'true' : 'false')
+      const scrollY = window.scrollY
+      const raw =
+        (scrollY - SCROLL_THRESHOLD_START) /
+        (SCROLL_THRESHOLD_END - SCROLL_THRESHOLD_START)
+      const progress = Math.max(0, Math.min(1, raw))
+      const rounded = Math.round(progress * 1000) / 1000
+
+      if (rounded !== lastProgress) {
+        lastProgress = rounded
+        el.style.setProperty('--header-scroll-progress', String(rounded))
+      }
+
+      const scrolled = scrollY > SCROLL_THRESHOLD_END
+      if (scrolled !== lastScrolled) {
+        lastScrolled = scrolled
+        el.setAttribute('data-scrolled', scrolled ? 'true' : 'false')
+      }
     }
 
     const onScroll = () => {
@@ -67,7 +92,7 @@ export function HeaderShrinkObserver() {
     }
 
     // Run once on mount so a page that loaded already scrolled gets
-    // the right initial attribute without waiting for the first user
+    // the right initial state without waiting for the first user
     // scroll event.
     applyState()
 

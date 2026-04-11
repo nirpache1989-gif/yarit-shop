@@ -58,6 +58,14 @@ const IMAGE_PARALLAX_PX = 4 // translate range on the inner image
 const HOVER_DURATION = 0.6 // seconds, tween while cursor moves
 const LEAVE_DURATION = 0.9 // seconds, tween back on pointerleave
 
+// Ken Burns entrance (2026-04-11 Track D.2). Scroll-triggered one-shot
+// on the product-image: the card's photo pops in at scale 1.08 and
+// settles to 1.0 the first time it enters the viewport. Pairs with
+// the existing T1.2 card blooming entrance — cards bloom up, and the
+// photos inside them breathe down to rest.
+const KEN_BURNS_FROM_SCALE = 1.08
+const KEN_BURNS_DURATION = 1.4 // seconds, slow Ken Burns settle
+
 export function ProductCardMotion({ children, className }: Props) {
   const ref = useRef<HTMLElement>(null)
 
@@ -66,8 +74,33 @@ export function ProductCardMotion({ children, className }: Props) {
     const el = ref.current
     if (!el) return
 
-    // Touch-only devices don't emit reliable hover events, so skip.
-    // This matches the `.product-card:hover` CSS fallback behavior.
+    // Cache the child image reference once. The query stays scoped
+    // to the article so sibling cards don't bleed events.
+    const image = el.querySelector('.product-image')
+
+    // ─── Ken Burns scroll-into-view (Track D.2) ──────────────────
+    // Fires ONCE per card the first time it enters the viewport,
+    // on every device (including touch) — unlike the hover tilt
+    // below which is hover-only. Uses the 2026-04-11 bug-fix pattern
+    // (`immediateRender: false + once: true + start: 'top bottom-=40'`)
+    // to avoid the hydration-race blank-card incident. See CLAUDE.md
+    // rule #12.
+    if (image) {
+      gsap.from(image, {
+        scale: KEN_BURNS_FROM_SCALE,
+        duration: KEN_BURNS_DURATION,
+        ease: 'power2.out',
+        immediateRender: false,
+        scrollTrigger: {
+          trigger: el,
+          start: 'top bottom-=40',
+          once: true,
+        },
+      })
+    }
+
+    // Touch-only devices don't emit reliable hover events, so skip
+    // the tilt + parallax layer below. Ken Burns above still fires.
     if (
       typeof window !== 'undefined' &&
       window.matchMedia &&
@@ -75,10 +108,6 @@ export function ProductCardMotion({ children, className }: Props) {
     ) {
       return
     }
-
-    // Cache the child image reference once. The query stays scoped
-    // to the article so sibling cards don't bleed events.
-    const image = el.querySelector('.product-image')
 
     const onMove = (e: PointerEvent) => {
       const rect = el.getBoundingClientRect()

@@ -32,6 +32,11 @@
   /* ===== Night Apothecary — LIGHT mode tokens (default) ===== */
   --color-background: #f6efdc;      /* warmer parchment */
   --color-surface-warm: #fdf8e8;    /* lighter parchment — cards */
+  /* Surface-warm as an rgb triplet so rules can build `rgba(r, g, b, alpha)`
+     with a calc() alpha — needed by the scroll-scrubbed sticky header
+     in `header#site-header`. Keep in sync with `--color-surface-warm`
+     whenever the hex above changes. */
+  --color-surface-warm-rgb: 253, 248, 232;
   --color-surface: #ffffff;         /* product image viewports only */
   --color-primary: #2d4f3e;         /* marine-forest, 7.96:1 AAA */
   --color-primary-dark: #183329;    /* near-black forest, headings */
@@ -61,6 +66,7 @@
 [data-theme="dark"] {
   --color-background: #1e1609;      /* deep warm molasses */
   --color-surface-warm: #2a2012;    /* warm coffee — card bg */
+  --color-surface-warm-rgb: 42, 32, 18;
   --color-surface: #362a1a;         /* elevated warm panel */
   --color-primary: #8aaf6f;         /* muted sage-olive, warm-friendly */
   --color-primary-dark: #6a8e52;    /* darker sage for hover */
@@ -738,29 +744,89 @@ html[dir="rtl"] .btn-lift:focus-visible::before {
  * utility cleanly.
  * ============================================================ */
 @layer utilities {
+  /* 2026-04-11 Track D.1 — scroll-scrubbed header compression.
+     `HeaderShrinkObserver.tsx` writes `--header-scroll-progress`
+     (0..1) onto this element on every scroll frame. The rules below
+     use `calc()` with this custom property to interpolate the
+     logo height, bg alpha, and box-shadow opacity CONTINUOUSLY as
+     the user scrolls — so the compression feels like a smooth scrub
+     instead of a binary 280ms snap at a single scroll point.
+
+     Default `--header-scroll-progress: 0` is declared on the
+     selector itself so the custom property is always defined even
+     before the JS observer mounts (avoids a flash of "no progress =
+     inherited unset" on the first paint). */
   header#site-header {
+    --header-scroll-progress: 0;
+
+    /* A short CSS transition still covers the tail end of any DOM
+       writes that get batched (e.g. scroll-end momentum), and also
+       provides a graceful fallback if the JS observer fails to
+       mount. Much shorter than the old 280ms because the scrub
+       already smooths most of the motion. */
     transition:
-      background-color 280ms ease,
-      box-shadow 280ms ease,
-      backdrop-filter 280ms ease;
+      background-color 120ms linear,
+      box-shadow 120ms linear,
+      backdrop-filter 120ms linear;
   }
 
   header#site-header .leaf-breathe img {
-    transition: height 280ms ease;
+    transition: height 120ms linear;
   }
 
   @media (min-width: 768px) {
-    header#site-header[data-scrolled="true"] {
-      background-color: color-mix(
-        in oklab,
-        var(--color-surface-warm) 96%,
-        transparent
+    /* Continuous scrub: interpolate between the hero-top state
+       (bg ~46% opaque cream + no shadow + logo h-10) and the
+       compressed state (bg ~96% opaque cream + soft shadow + logo
+       h-8) using the scroll progress. We use rgba() with an
+       explicit parchment color instead of color-mix(var(...))
+       because calc() inside color-mix percentages isn't reliable
+       across engines — rgba + calc alpha is bulletproof. The
+       #FDF8E8 value matches --color-surface-warm in brand.config.ts. */
+    header#site-header {
+      background-color: rgba(
+        var(--color-surface-warm-rgb),
+        calc(0.46 + 0.5 * var(--header-scroll-progress))
       );
-      box-shadow: 0 6px 24px -18px rgba(24, 51, 41, 0.35);
+      box-shadow: 0
+        calc(6px * var(--header-scroll-progress))
+        calc(24px * var(--header-scroll-progress))
+        -18px
+        rgba(24, 51, 41, calc(0.35 * var(--header-scroll-progress)));
     }
 
-    header#site-header[data-scrolled="true"] .leaf-breathe img {
-      height: 2rem;
+    header#site-header .leaf-breathe img {
+      height: calc(
+        2.5rem - 0.5rem * var(--header-scroll-progress)
+      );
+    }
+
+    /* Keep the old binary rules as a reduced-motion fallback — when
+       the user prefers reduced motion we skip the scrub entirely
+       and just snap between the two end states. */
+    @media (prefers-reduced-motion: reduce) {
+      header#site-header {
+        background-color: color-mix(
+          in oklab,
+          var(--color-surface-warm) 46%,
+          transparent
+        );
+        box-shadow: none;
+      }
+      header#site-header[data-scrolled="true"] {
+        background-color: color-mix(
+          in oklab,
+          var(--color-surface-warm) 96%,
+          transparent
+        );
+        box-shadow: 0 6px 24px -18px rgba(24, 51, 41, 0.35);
+      }
+      header#site-header .leaf-breathe img {
+        height: 2.5rem;
+      }
+      header#site-header[data-scrolled="true"] .leaf-breathe img {
+        height: 2rem;
+      }
     }
   }
 }

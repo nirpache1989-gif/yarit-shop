@@ -21,8 +21,14 @@ type CommonProps = {
 type ButtonProps = CommonProps & {
   href?: undefined
   type?: 'button' | 'submit'
-  onClick?: () => void
+  /** Click handler. Receives the MouseEvent so callers can read the
+   *  click coordinates (for click-located confetti in AddToCartButton)
+   *  or fire preventDefault on a nested Link. */
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
   disabled?: boolean
+  /** React 19 ref-as-prop — lets AddToCartButton's press-bounce
+   *  GSAP tween target the underlying <button> element directly. */
+  ref?: React.Ref<HTMLButtonElement>
 }
 
 type LinkProps = CommonProps & {
@@ -63,9 +69,9 @@ export function Button(props: ButtonProps | LinkProps) {
     )
   }
 
-  const { type = 'button', onClick, disabled } = props as ButtonProps
+  const { type = 'button', onClick, disabled, ref } = props as ButtonProps
   return (
-    <button type={type} onClick={onClick} disabled={disabled} className={classes}>
+    <button ref={ref} type={type} onClick={onClick} disabled={disabled} className={classes}>
       {children}
     </button>
   )

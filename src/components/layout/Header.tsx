@@ -31,9 +31,14 @@ export async function Header() {
           handles the shrink transition. No GSAP — plain useEffect +
           rAF throttled scroll listener. */}
       <HeaderShrinkObserver />
+      {/* 2026-04-11 Track D.1: background-color is now owned by the
+          scroll-scrubbed `header#site-header` rule in globals.css,
+          which interpolates it continuously via
+          `--header-scroll-progress`. We intentionally do NOT set a
+          Tailwind bg utility here or it would override the scrub. */}
       <header
         id="site-header"
-        className="sticky top-0 z-30 bg-[var(--color-surface-warm)]/92 backdrop-blur-sm border-b border-[var(--color-primary)]/15"
+        className="sticky top-0 z-30 backdrop-blur-sm border-b border-[var(--color-primary)]/15"
       >
         <Container className="h-16 flex items-center justify-between gap-4">
           <Link
