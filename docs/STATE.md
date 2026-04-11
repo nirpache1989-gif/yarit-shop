@@ -2,6 +2,105 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom.
 
+## Latest (2026-04-11 evening — motion hotfix + Tier-2 lite + ready-prompt for T2.9)
+
+**Four commits shipped and pushed to prod in one sitting:** `027ebda` hotfix for a production GSAP bug that left the Categories + Featured sections blank on load, `9d4ddeb` T2.2 footer reveal, `593fad5` T2.8 category tile magnetic hover + CI guard regex fix, plus this docs update. Production is verified — eval on `https://yarit-shop.vercel.app` after the fix shows all 5 category cards + 3 featured cards at `opacity: 1` and correct natural-state transforms.
+
+### The motion bug Yarit reported and why it matters
+
+During the cleanup sweep's follow-up conversation, Yarit reported that the homepage Categories section rendered as an empty block in production — the "קטגוריות" heading was there but the 5 tiles below were invisible. A root-cause eval against the live site (via Claude-in-Chrome MCP) showed all 5 cards at exactly `opacity: 0; transform: matrix(0.96, 0, 0, 0.96, 0, 24)` — the precise `from` state declared in `CategoryGridMotion`'s `gsap.from` call. The server HTML was fine (the AI fallback tiles `/brand/ai/cat-nutrition.jpg` etc. were correctly in the HTML, hrefs were valid, data-attributes present), and the card elements existed in the DOM — they were just stuck invisible because the ScrollTrigger that should have animated them in never fired on initial hydration.
+
+The same failure mode was visible one section up in `FeaturedProductsMotion` (3 empty card slots under the "המומלצים שלנו" heading) and latent in `MeetYaritMotion`. All three used the same pattern:
+
+```ts
+gsap.from('[data-X]', {
+  opacity: 0, y: 24, ...,
+  scrollTrigger: { trigger: ref.current, start: 'top 80%', toggleActions: 'play none none reverse' },
+})
+```
+
+The default `immediateRender: true` on `gsap.from` applies the FROM values to the elements **immediately on mount** (before any ScrollTrigger has fired), relying on the ScrollTrigger to subsequently play the animation into the natural state when the trigger enters the viewport. When the ScrollTrigger fails to fire reliably — because of a flaky hydration race, browser scroll restoration, back/forward navigation, React 19 Strict Mode double-mount in dev, or a slow mobile network that hasn't finished laying out the trigger element by the time ScrollTrigger takes its measurement — the elements stay at the FROM state permanently.
+
+### The fix (027ebda)
+
+Three motion components patched with the bug-tolerant pattern:
+
+- `src/components/sections/CategoryGridMotion.tsx` (T1.2 card stagger)
+- `src/components/sections/MeetYaritMotion.tsx` (T1.1 image + text columns)
+- `src/components/sections/FeaturedProductsMotion.tsx` (T1.4 card stagger + heading fade-up on desktop + mobile — the heading pin itself is an independent `ScrollTrigger.create`, not a `gsap.from`, so it's unchanged)
+
+Every vulnerable `gsap.from(...).scrollTrigger` call now has:
+
+- **`immediateRender: false`** — don't apply the from-values until the ScrollTrigger actually fires. Elements render at their natural state out of the box, so if the trigger never fires, they stay visible. This is the bug-tolerant default and is now **a mandatory non-negotiable** for any future `gsap.from` + scrollTrigger motion.
+- **`once: true`** — plays the animation once and destroys the ScrollTrigger. Removes the "reverse on scroll-up-past-start" branch that was another latent way to leave elements invisible. Keeps the entrance playing exactly once per page visit, which is what the design intended.
+
+Every patched file carries a ⚠ Bug-fix comment pointing at this commit and the post-mortem. Animation timings, eases, triggers, and visual behavior are all unchanged — only the initialization semantics are now bug-tolerant.
+
+**Also updated `docs/CLAUDE.md` (entry-point rules)**: none yet — `CLAUDE.md` doesn't currently encode the rule. **Add it in the next session** under "Critical rules" as rule #12: "Every new `gsap.from` + scrollTrigger MUST include `immediateRender: false` + `once: true`."
+
+### Verification
+
+Via Chrome MCP navigate + eval on `https://yarit-shop.vercel.app/?cachebust=027ebda`:
+
+```
+beforeScroll: { cats: '5 cards', cats_opacities: '1,1,1,1,1', feats: '3 cards', feats_opacities: '1,1,1' }
+afterScroll:  { cats: '5 cards', cats_opacities: '1,1,1,1,1', feats: '3 cards', feats_opacities: '1,1,1' }
+```
+
+Both before and after scroll, all cards are at opacity 1 — the fix works. The elements were blank-but-visible (the `transform: matrix(1, 0, 0, 1, 0, 0)` is the natural identity, not the `matrix(0.96, 0, 0, 0.96, 0, 24)` GSAP from-state).
+
+### T2.2 — footer reveal on scroll (9d4ddeb)
+
+Tier-2 safe addition. Wraps the 4-column footer grid and the bottom social/copyright strip in the existing `Reveal` primitive so the footer fades up as the user reaches the bottom of the page. Uses the **IntersectionObserver**-backed `Reveal` primitive from `src/components/motion/Reveal.tsx`, NOT GSAP. IntersectionObserver is a browser-native API and is immune to the ScrollTrigger init bug — if the observer were flaky the Footer would stay invisible, but `useInView` has been in use across the site (404, homepage sections, product pages) for weeks without incident.
+
+- Main grid: `Reveal` default (720ms fade + 16px y-translate)
+- Bottom strip: `Reveal delay:180` so it arrives in a small cascade after the grid
+
+No existing content moved or removed. `prefers-reduced-motion` is handled inside `useInView` + reinforced by the global guard in `globals.css`.
+
+### T2.8 — category tile magnetic hover (593fad5)
+
+Tier-2 addition. Each of the 5 category tiles on the homepage now picks up the same magnetic ±3° tilt + 4px image parallax that `ProductCardMotion` (G3) already uses on product cards. The hover lives INSIDE `CategoryGridMotion.tsx` (already a client component) rather than wrapping each tile in a new `CategoryCardMotion` wrapper — keeping it in-place avoids an extra render hop per tile and keeps the `CategoryGrid` server component unchanged.
+
+- On `pointermove` within a tile's bounds → rotate ±3° in both axes following the cursor, translate inner `<img>` ±4px for parallax-of-depth
+- On `pointerleave` → tween back to rest over 900ms with `power3.out`
+- Gated on `(hover: hover)` matchMedia (touch devices skip and keep the existing CSS `hover:-translate-y-1` fallback) + reduced-motion (skipped entirely)
+- Layers cleanly on top of the T1.2 entrance: the entrance plays once with `once: true` (fixed in 027ebda) and then the hover takes over — no interference because the entrance's transform is fully unwound before any pointermove fires
+
+### CI guard regex fix (593fad5)
+
+The cleanup commit (0897df5) added a CI step to prevent recurrence of the 2026-04-11 SSG incident by grepping for partial `generateStaticParams` patterns. The grep regex was broken — it used `[^)]*` between `.map(` and `=>` which couldn't cross the `)` at the end of the `(locale)` parameter, so the guard matched zero files and was silently a no-op. The old guard would never have caught the original bug pattern.
+
+Rewrote the guard as a `find` that lists files in nested dynamic routes (paths containing a `[bracket]` segment AFTER `[locale]`) and greps each for `routing.locales.map`. This correctly identifies the four at-risk files today (`account/orders/[id]`, `legal/[slug]`, `product/[slug]`, `reset-password/[token]`) and fails CI if any of them re-introduce a locale-only `generateStaticParams`. Single-segment routes like `/[locale]/about` are intentionally excluded — they can legally return `routing.locales.map((locale) => ({ locale }))` because they only have one dynamic segment to enumerate.
+
+### Yarit admin guide rewrite (90911c6 — earlier in the day)
+
+Full task-oriented rewrite of `docs/YARIT-ADMIN-GUIDE.md`, ~330 lines. Separately committed earlier in the same day. 7 numbered sections (First-time setup → Daily workflow → Products → Site content → Customers → Account settings → Troubleshooting) + 3 appendices (sidebar diagram, URL reference, Nir contact). Every section answers "how do I ..." keyed to the real Hebrew field labels in `src/collections/Products.ts` + `src/globals/SiteSettings.ts`.
+
+### Files touched this evening (8)
+
+- `src/components/sections/CategoryGridMotion.tsx` — bug fix + T2.8 hover
+- `src/components/sections/MeetYaritMotion.tsx` — bug fix
+- `src/components/sections/FeaturedProductsMotion.tsx` — bug fix
+- `src/components/layout/Footer.tsx` — T2.2 reveal
+- `.github/workflows/ci.yml` — CI guard regex + filter fix
+- `docs/STATE.md` — this entry
+- `docs/NEXT-SESSION-PROMPT.md` — rewritten as the T2.9 ready prompt for the next session
+- `docs/NEXT-SESSION-PROMPT-2026-04-11-cleanup-and-tier2-lite.md` — the old prompt, archived
+
+### Quality gates
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors, 0 warnings
+- `npm run build` → 40 routes, all `ƒ` Dynamic or `○` Static, zero `●` SSG
+- Chrome MCP prod verification: cards at `opacity: 1` on load, before and after scroll
+
+### What the next session inherits
+
+Production is at `593fad5`. The `docs/NEXT-SESSION-PROMPT.md` is a fresh, detailed ready-prompt for **T2.9 — homepage scroll-linked storytelling** (Hero exit parallax tightening, TrustBar sequential pulse, MeetYarit word cascade, CategoryGrid desktop pin, Testimonials horizontal cascade, section-to-section connective tissue via BranchDivider coordination). The prompt spells out non-negotiables, critical files, the verification workflow, and the definition of done. Secondary closeout tasks (drop unused swc deps, link the Yarit guide from `HelpButton`, Track A external inputs, Track D final handoff note in Hebrew) are deferred to the end of that session or a final closeout session.
+
+---
+
 ## Latest (2026-04-11 later — code + docs cleanup sweep)
 
 **Track C cleanup pass.** No Yarit inputs had landed (legal folders empty, no Resend/Meshulam env vars on disk), so per the close-out prompt's instructions the session ran the "leave no trace" sweep instead. Production is still live at `4ea4d90` via `dpl_Asz72xL4FqWDPHacoe6khgSf5gXV`; this pass is docs + tooling + one targeted warning fix, no runtime behavior changed.

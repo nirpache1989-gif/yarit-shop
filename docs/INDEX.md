@@ -41,6 +41,7 @@ just cloned it. Everything else is reference material.
 
 | File / Folder | Purpose |
 |---|---|
+| [`NEXT-SESSION-PROMPT-2026-04-11-cleanup-and-tier2-lite.md`](NEXT-SESSION-PROMPT-2026-04-11-cleanup-and-tier2-lite.md) | Archived starting prompt from the 2026-04-11 cleanup + Tier-2 lite session (code + docs cleanup sweep, guide rewrite, motion bug fix, footer reveal, category hover). Historical reference only — do not edit. |
 | [`NEXT-SESSION-PROMPT-2026-04-11-close-out.md`](NEXT-SESSION-PROMPT-2026-04-11-close-out.md) | Archived starting prompt from the 2026-04-11 late close-out session (prod deploy + SSG incident fix). Historical reference only — do not edit. |
 | [`NEXT-SESSION-GSAP-PROMPT.md`](NEXT-SESSION-GSAP-PROMPT.md) | Archived GSAP Tier-1 roadmap. All waves (G1–G3, T1.1–T1.7) shipped 2026-04-11. Kept as a vocabulary reference for any future motion work. |
 | [`round-4-admin-verify/`](round-4-admin-verify/) | Round 4 admin verification sweep — screenshots, markup checks, CSS target inventory. Reference for "what did we check last time" before the next visual pass. |

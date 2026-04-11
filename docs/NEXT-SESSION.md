@@ -2,7 +2,7 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-11 late, end of the prod close-out deploy session. `e3a8a53` (GSAP Tier-1 finish + mobile audit) + `4ea4d90` (SSG incident fix — see `docs/STATE.md` 2026-04-11 late for the post-mortem) are BOTH pushed and live on production at `https://yarit-shop.vercel.app`. All 16 smoke-test routes return 200. The remaining work is whatever Yarit hasn't sent yet: Resend keys, Meshulam PDF + sandbox creds, legal markdown, and custom domain. See `docs/NEXT-SESSION-PROMPT.md` for the next-session menu (Track A paste-and-go / Track B GSAP Tier-2 / Track C QA polish / Track D final handoff).
+> **Last updated:** 2026-04-11 evening, end of the cleanup + Tier-2 lite + motion hotfix session. Commits `0897df5` (code + docs cleanup sweep) → `90911c6` (Yarit admin guide task-oriented rewrite) → `027ebda` (⚠ motion hotfix — 3 homepage sections were rendering blank on prod due to a `gsap.from` + `immediateRender: true` + scrollTrigger bug) → `9d4ddeb` (T2.2 footer reveal) → `593fad5` (T2.8 category tile magnetic hover + CI guard regex fix) are all pushed and live. Production is at `https://yarit-shop.vercel.app`, verified via Chrome MCP eval — all 5 category + 3 featured cards at `opacity: 1`. The next session's primary task is **T2.9 — homepage scroll-linked storytelling** (the last big Tier-2 wave). Full ready-prompt in `docs/NEXT-SESSION-PROMPT.md`.
 
 ---
 
