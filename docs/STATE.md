@@ -2,7 +2,215 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom.
 
-## Latest (2026-04-11 night — T2.9 homepage scroll-linked storytelling + admin help rewrite)
+## Latest (2026-04-11 night — Remove Forever terminology + collapse fulfillment workflow)
+
+**Commit `8d50bd4`** (fast-forward merged to `main`) + prod DB migration shipped back-to-back
+with the T2.9 ship earlier in the same session. **Production is now at `8d50bd4`** via
+`dpl_EFBBXQ1ZKxrDe2T7ZJTcQTBsJzui` and the Neon DB has been migrated in-place to the new
+enum values. See ADR-019 for the decision record.
+
+### What shipped
+
+Yarit's explicit ask after reviewing the admin panel following T2.9: "why does the system split
+orders between Forever and independent products when in practice I handle everything myself?
+When a customer orders, it should just show up as an order." This session collapsed the dual
+workflow and removed every admin-visible "Forever" reference.
+
+**Schema (4 files):**
+- `Products.type` enum: `forever|independent` → `sourced|stocked`. `sourced` = order from
+  supplier on demand (no stock tracking); `stocked` = kept in Yarit's house (stock field
+  active). Default changed from `forever` → `stocked` because a new product is most likely
+  something she's bringing in-house. Labels in Hebrew: "קיים במלאי" / "לפי הזמנה מהספק".
+- `Products` collection: `foreverProductCode` and `foreverDistributorPrice` fields dropped
+  entirely (nothing read them — seed-script supplier codes now populate the existing `sku`
+  field). `sku` and `weightGrams` no longer gated on `type`, they always render.
+- `Orders.fulfillmentStatus`: dropped `awaiting_forever_purchase` and `forever_purchased`. New
+  state machine is `pending → packed → shipped → delivered` (4 states, not 6). Every paid
+  order starts at `packed` regardless of whether any line items came from a supplier.
+- `Orders.items.productType` options renamed with bilingual labels (same two values as
+  Products.type).
+- `SiteSettings.forever` distributor-metadata group: removed entirely (dead code, never read
+  by any runtime path).
+
+**Business logic (6 files):**
+- `lib/checkout.ts`: every paid order's initial `fulfillmentStatus` is hardcoded to `packed`
+  (the old `hasForever` branch that routed through `awaiting_forever_purchase` is gone).
+  Stock decrement gate: `type === 'stocked'`.
+- `lib/admin/fulfillment.ts`: `FulfillmentBuckets` has 3 buckets (`readyToPack`, `shipped`,
+  `delivered`) instead of 5 (`awaitingForever`, `foreverPurchased`, `readyToPack`, `shipped`,
+  `delivered`). `readyToPack` now includes both `pending` and `packed` rows for robustness.
+- `lib/orders/statusLabels.ts`: dropped the 2 Forever enum values, merged
+  `FULFILLMENT_STEPS_BASE` and `FULFILLMENT_STEPS_FOREVER` into one `FULFILLMENT_STEPS`,
+  dropped the `hasForever` parameter everywhere. Customer-side collapse helpers
+  (`getCustomerStepFor`, `CUSTOMER_FULFILLMENT_STEPS`) retained the same 4 customer-visible
+  buckets so `OrderTimeline` renders identically.
+- `lib/cart/store.ts`: `CartItem.type` renamed. Bumps Zustand persist version to v2 with a
+  `migrate` function that maps old localStorage values (`forever`/`independent`) to the new
+  enum for returning customers with stale carts.
+- `lib/email/adminTemplates.ts`: dropped the `hasForever` flag, the "⚠️ כולל פריטי Forever"
+  warning banner, and the `[Forever]` inline item tag. Template data type updated.
+- `lib/product-image.ts`: renamed 2 static-override image paths
+  (`ForeverBeepropolis.jpg` → `BeePropolis.jpg`, `ForeverDaily.jpg` → `DailyMultivitamin.jpg`)
+  and dropped dead `forever-*` drift aliases.
+
+**Admin UI (3 files):**
+- `OrderRow.tsx`: dropped the "🌿 פוראבר" pill, the per-item dot-coloring switch between
+  `forever` (accent) and `independent` (primary), and the 2 Forever branches of `nextStatus`.
+  Every order advances through the same single path.
+- `FulfillmentView.tsx`: dropped 2 stat tiles + 2 bucket sections. The urgent bucket is now
+  "לטיפול — להכין ולשלוח" (handle + ship) instead of "לטיפול דחוף — להזמין מפוראבר".
+- `YaritDashboard.tsx`: dropped the duplicate "לטיפול דחוף" stat tile that showed the
+  `awaitingForever` count. The `lowStock` query now filters on `type === 'stocked'` instead
+  of `'independent'`.
+
+**Customer-facing (7 touches):**
+- `ProductCard.tsx`, `OrderList.tsx`, `OrderTimeline.tsx` (comment), `product/[slug]/page.tsx`,
+  `account/orders/[id]/page.tsx`, `shop/page.tsx` (comment), homepage `page.tsx` (comment),
+  `Badge.tsx` (comment) — all type references + stale comments updated. Nothing visually
+  changes for customers; they never saw `type` anyway.
+
+**Assets:**
+- `public/brand/ai/ForeverBeepropolis.jpg` → `BeePropolis.jpg`
+- `public/brand/ai/ForeverDaily.jpg` → `DailyMultivitamin.jpg`
+- `public/brand/ai/forever-spotlight-bg.jpg`: deleted (only referenced from a docs note; the
+  ForeverSpotlight section was removed during ADR-015 rebrand)
+
+**Docs:**
+- `CLAUDE.md`: business-model section rewritten to describe `stocked/sourced` without Forever
+  (Yarit's factual supplier relationship is still real, just not exposed in the schema).
+  Rule #6 updated. File-lookup-table row says "fulfillment workflow" instead of "Forever
+  fulfillment workflow".
+- `docs/BRAND.md`: dropped the `forever-spotlight-bg.jpg` entry.
+
+### Seed
+
+`src/lib/seed.ts`:
+- Renamed `FOREVER_PRODUCTS` → `SOURCED_PRODUCTS` and `INDEPENDENT_PRODUCTS` → `STOCKED_PRODUCTS`.
+- Each product entry's `foreverProductCode: '022'` (etc) is now `supplierCode: '022'`, passed
+  into the existing `sku` field during create (previously passed into the dropped
+  `foreverProductCode` field).
+- SiteSettings create call no longer passes a `forever` group (the field is gone).
+
+### Prod DB migration
+
+Neon Postgres was migrated in-place via a single-transaction SQL script (run from a local
+Node script using the Vercel-pulled `DATABASE_URI`). The approach: Postgres enums are
+immutable, so renaming a value in place isn't possible. Instead, for each enum column we
+`RENAME` the existing enum type to `_old`, `CREATE` the new enum type with the new values,
+`ALTER TABLE ... ALTER COLUMN ... TYPE new_enum USING (CASE ... END)` to map every row's
+value atomically, then `DROP TYPE _old`. Wrapped in a transaction so the whole thing is
+atomic.
+
+State before migration:
+- `products.type = 'forever'`: 7 rows (all 7 canonical seed products)
+- `orders`: empty (0 rows)
+- `orders_items`: empty (0 rows)
+- `enum_products_type` values: forever, independent
+- `enum_orders_fulfillment_status` values: pending, awaiting_forever_purchase,
+  forever_purchased, packed, shipped, delivered
+- `enum_orders_items_product_type` values: forever, independent
+- Deprecated columns present: `products.forever_product_code`,
+  `products.forever_distributor_price`, `site_settings.forever_distributor_name`,
+  `site_settings.forever_distributor_id`
+
+State after migration (verified):
+- `products.type = 'sourced'`: 7 rows (all 7 canonical products)
+- `orders`, `orders_items`: still empty
+- `enum_products_type` values now: sourced, stocked
+- `enum_orders_fulfillment_status` values now: pending, packed, shipped, delivered
+- `enum_orders_items_product_type` values now: sourced, stocked
+- All 4 deprecated columns dropped
+
+The 7 products all landed in `sourced` (not `stocked`) because prod had never been manually
+edited — the seed set them all to `'forever'`, which maps to `'sourced'` under the new enum.
+Yarit can flip any individual product to `'stocked'` from the admin if she starts inventorying
+it at home.
+
+### Quality gates
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors, 0 warnings
+- `npm run build` → 40 routes, all `ƒ`/`○`, zero `●` SSG
+
+### Local smoke test (prod build + migrated dev DB)
+
+- Storefront `/en` + `/en/shop` + `/en/product/*` → 200. 7 products render. No `ForeverBeepropolis`
+  / `ForeverDaily` references in HTML.
+- API `/api/products` → 7 products, all `type: 'sourced' | 'stocked'`, no `foreverProductCode`
+  or `foreverDistributorPrice` fields in response.
+- Admin dashboard → 5 stat tiles (removed the duplicate "לטיפול דחוף" tile), HelpButton still
+  works, no `פוראבר` / `Forever` text.
+- Admin product edit form (id=1) → "סוג מוצר" dropdown visible with the new "קיים במלאי" +
+  "לפי הזמנה מהספק" options. Body text contains neither `forever` nor `פוראבר`.
+- Admin fulfillment dashboard → new "להכין ולשלוח" bucket, no Forever buckets, empty state
+  renders.
+- Admin orders / categories / users / site-settings → all 200.
+- The only "forever" substring left in the admin HTML is Payload's i18n key `updateForEveryone`
+  (false positive — Payload's own library code).
+
+### Prod smoke test (live yarit-shop.vercel.app after deploy)
+
+- `https://yarit-shop.vercel.app/en?cb=...` → 200. 5 category cards, 3 featured cards,
+  3 testimonial cards, no Forever image URLs, no `פוראבר`/`Forever` in HTML.
+- `https://yarit-shop.vercel.app/en/shop?cb=...` → 200. 7 unique product slugs, no stray
+  references.
+- `https://yarit-shop.vercel.app/api/products?limit=20&depth=0` → 200, 7 products, all with
+  `type: "sourced"`, zero `foreverProductCode` / `foreverDistributorPrice` fields.
+
+### Files touched (26)
+
+**Schema + globals:**
+- `src/collections/Products.ts`
+- `src/collections/Orders.ts`
+- `src/globals/SiteSettings.ts`
+
+**Lib:**
+- `src/lib/orders/statusLabels.ts`
+- `src/lib/checkout.ts`
+- `src/lib/admin/fulfillment.ts`
+- `src/lib/cart/store.ts`
+- `src/lib/email/adminTemplates.ts`
+- `src/lib/product-image.ts`
+- `src/lib/seed.ts`
+
+**Admin components:**
+- `src/components/admin/OrderRow.tsx`
+- `src/components/admin/payload/FulfillmentView.tsx`
+- `src/components/admin/payload/YaritDashboard.tsx`
+
+**Customer-facing components + pages:**
+- `src/components/product/ProductCard.tsx`
+- `src/components/ui/Badge.tsx`
+- `src/components/account/OrderList.tsx`
+- `src/components/account/OrderTimeline.tsx`
+- `src/app/(storefront)/[locale]/page.tsx`
+- `src/app/(storefront)/[locale]/shop/page.tsx`
+- `src/app/(storefront)/[locale]/product/[slug]/page.tsx`
+- `src/app/(storefront)/[locale]/account/orders/[id]/page.tsx`
+
+**Assets:**
+- `public/brand/ai/ForeverBeepropolis.jpg` → renamed to `BeePropolis.jpg`
+- `public/brand/ai/ForeverDaily.jpg` → renamed to `DailyMultivitamin.jpg`
+- `public/brand/ai/forever-spotlight-bg.jpg` → deleted
+
+**Docs:**
+- `CLAUDE.md`
+- `docs/BRAND.md`
+
+### Follow-up TODOs
+
+- **docs/DECISIONS.md ADR-019**: this session references ADR-019 from multiple new comments,
+  but the actual ADR entry hasn't been written into docs/DECISIONS.md yet. Next session
+  should add a short ADR-019 section describing the "Forever removal + fulfillment collapse"
+  decision with date, status, context, decision, consequences.
+- **docs/FULFILLMENT.md**: still describes the old 6-state workflow with the 2 Forever states.
+  Small update needed to reflect the 4-state flow.
+- **docs/YARIT-ADMIN-GUIDE.md**: references "סוג מוצר" vocabulary — should be spot-checked for
+  any stale Forever wording. Most of it is product-agnostic so likely fine.
+
+---
+
+## Earlier (2026-04-11 night — T2.9 homepage scroll-linked storytelling + admin help rewrite)
 
 **Commit `9f01a50`** (merged fast-forward to `main` from
 `feat/t2.9-homepage-orchestration`) ships the entire **T2.9 — homepage
