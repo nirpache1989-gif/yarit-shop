@@ -4,6 +4,69 @@ Every significant architectural or product decision is logged here with a date a
 
 ---
 
+## ADR-020 — Rename Shoresh → Copaia + wholesale catalog replacement
+
+**Date:** 2026-04-11
+**Status:** Accepted
+**Context:** After ADR-019 (Forever removal) shipped, Yarit reviewed the live site one more time and decided the brand identity needed to change entirely. The word "Shoresh" (שורש, "root") was a placeholder picked in Phase A before she had a final name. Her chosen name is "Copaia" (קופאה, pronounced ko-PA-eh). At the same time, she delivered a new tree-with-roots logo illustration and a fresh set of 18 product photos covering 8 products — 4 of which are not in the current catalog.
+
+The rename + catalog swap needed to ship together because:
+1. The new product photos don't match the old 7 canonical slugs 1-for-1.
+2. Some of the old slugs (`aloe-lip-balm`, `aloe-vera-gel`, `aloe-body-duo-gift-set`) have no corresponding new photos; they're being retired.
+3. Leaving the code identity as "Shoresh" while the UI says "Copaia" would create a confusing dual-brand state in admin labels, email templates, i18n strings, and the Payload title suffix.
+
+**Decision:**
+
+- **Identity:** `brand.name.he = 'קופאה' / brand.name.en = 'Copaia'`. Tagline (`'שורשים של בריאות'` / `'Rooted in wellness'`) and description (`'Natural wellness shop — a curated personal selection from Yarit'`) are kept unchanged — the new tree-and-roots logo is literally a visual pun on "rooted" and the description is brand-agnostic. Only the etymology (the wordplay on שורש = root) is lost; the imagery-match actually improves.
+
+- **Code rename scope:** every user-visible and technical reference to "Shoresh" / "שורש" outside historical docs is renamed. This covers 55 hits across i18n messages (he/en.json), email templates (Users.ts password-reset + adminTemplates.ts new-order alert), admin chrome (BrandLogo/BrandIcon refactored to read `brand.name.he` instead of hardcoding), Payload config (`titleSuffix`, email adapter rename `shoreshEmailAdapter → copaiaEmailAdapter`), product OG descriptions, `.env.example`, `.gitignore`, `scripts/reset-db.mjs`, the dev create-admin route, and the `globals.css:203` CSS selector `header img[alt="Shoresh"]` that would have silently broken dark-mode logo glow.
+
+- **localStorage keys (`shoresh-theme`, `shoresh-cart`) are kept as-is.** Renaming them would reset theme + cart state for returning customers on the prod site. These are internal keys never surfaced in the UI — the mismatch between code name and LS key is acceptable in exchange for zero returning-user disruption.
+
+- **SQLite dev filename renamed** `shoresh-dev.db → copaia-dev.db`. Both names are kept in `.gitignore` and `scripts/reset-db.mjs`'s cleanup list during a grace period so developers who pull the branch with an existing local DB don't get confused.
+
+- **Logo asset:** the new Copaia JPG source is run through a PIL brightness-threshold color-key (brightness > 248 → fully transparent, 240–248 → linear fade) to produce a clean transparent PNG at `public/brand/copaia.png`. `rembg` was tried first but its AI segmentation mistook the cream leaf highlights for background and stripped the canopy — the explicit RGB threshold is more reliable for source images with a near-white background. File is renamed `logo.png → copaia.png` to force Turbopack's in-process Next Image cache to invalidate (clearing `.next/cache/images` alone was insufficient).
+
+- **Catalog:** replaced wholesale with **8 products** (not the old 7):
+  - **Dropped:** `aloe-lip-balm`, `aloe-vera-gel`, `aloe-body-duo-gift-set`
+  - **Kept unchanged:** `aloe-toothgel`, `bee-propolis`, `daily-multivitamin`
+  - **Renamed:** `aloe-soothing-spray → aloe-first-spray` (same Forever Aloe First product — the new name matches the supplier's marketing)
+  - **New:** `aloe-drink` (Forever Aloe Peaches, 3 images), `aloe-heat-lotion`, `aloe-deodorant`, `bee-pollen`
+  - SKUs for the 4 new products are left as `'TBD'` for Yarit to fill in from the admin (same pattern as the earlier `aloe-body-duo-gift-set`).
+  - Featured slugs reshuffled to `aloe-drink` + `aloe-toothgel` + `daily-multivitamin` — the first two show off the new 3-image gallery.
+
+- **`STATIC_IMAGE_OVERRIDES` removed entirely** from `src/lib/product-image.ts` + `src/lib/checkout.ts` + the product detail page. The map was both stale (it pointed at AI watercolor renderings of the old 7 slugs) and a structural blocker — it forced the detail page to render a single hardcoded image per slug, preventing the 3-image gallery from rendering even if the Media collection had multiple images. `resolveProductImage()` now falls through to `product.images[0].image.url` → `PRODUCT_PLACEHOLDER` fallback.
+
+- **JSON-LD `Product.image`** on the product detail page now emits the full image array (was single-image only). Google Rich Results docs recommend an array for product schema.
+
+**Consequences:**
+
+- Every admin string, email subject, and OG title that a real human reads now says "Copaia" / "קופאה". No hybrid-brand leaks.
+- Storefront is **not reseeded to prod** during this session — the dev DB was wiped and reseeded with the new 8-product catalog, but prod Neon still holds the old 7 Forever-era products. The next session's job is to either (a) have Yarit manually rebuild the catalog via the admin (21 image uploads, ~20 min of her time) or (b) write a one-off migration script (like the 2026-04-11 Remove-Forever migration) that uses Payload's local API to upload + swap the catalog atomically. Recommendation: option (a) — Yarit's eyes on every image is a feature, not a bug.
+- Historical docs (`docs/STATE.md`, `docs/NEXT-SESSION-PROMPT*.md`, earlier ADRs) are **not rewritten**. Every existing entry still references "Shoresh" as the brand of record at the time the entry was written. The rename is current-state; historical facts stay historical.
+- The 4 new products have draft descriptions based on the public Forever Living product line. Yarit can refine them via the admin after the prod swap.
+- `public/brand/logo-parchment.jpg` and `public/brand/logo.png` (the Shoresh-era logo files) are deleted. `public/brand/ai/herobg3.jpg` is a new user-provided hero backdrop that replaces the previously-used `hero-bg-2.png` (not yet deleted — Track G can drop it in a follow-up).
+
+---
+
+## ADR-019 — Remove Forever terminology + collapse fulfillment workflow
+
+**Date:** 2026-04-11
+**Status:** Accepted
+**Context:** After T2.9 shipped and the site went live, Yarit reviewed the admin panel and pushed back on the `Forever | Independent` product-type split plus the associated 2-extra-state fulfillment workflow. Her feedback: "Why does the system split orders between Forever and independent products when in practice I handle everything myself? When a customer orders, it should just show up as an order." The supplier-vs-stock distinction was a product-level reality she handled mentally by glancing at order line items — not something the system needed to enforce as a workflow state machine.
+
+**Decision:** Collapse the fulfillment state machine from 6 states (`pending / awaiting_forever_purchase / forever_purchased / packed / shipped / delivered`) to 4 (`pending / packed / shipped / delivered`). Rename the product `type` enum from `forever | independent` to `sourced | stocked` to reflect the actual distinction — "do I inventory this at home" vs "do I order it from a supplier when someone buys". Remove the word "Forever" from every admin-visible label, schema, help text, asset filename, and i18n string. Drop the `foreverProductCode`, `foreverDistributorPrice` fields and the `SiteSettings.forever` distributor-metadata group entirely — they were dead code that nothing read at runtime.
+
+**Consequences:**
+
+- Yarit's per-order click count drops from 5 (for Forever orders) / 3 (for independent) to a uniform 3. The Fulfillment Dashboard renders 3 buckets instead of 5.
+- The `Products.type` default changes from `forever` → `stocked` (a new product is most likely something she's bringing in-house, not outsourcing).
+- **Prod DB migration required and shipped:** recreated 3 enum types (`enum_products_type`, `enum_orders_items_product_type`, `enum_orders_fulfillment_status`) in a transaction + dropped 4 deprecated columns. See `docs/STATE.md` 2026-04-11 night entry for the full migration SQL + verification. All 7 products landed in `sourced` (the seed had set them all to `forever`, which mapped to `sourced` under the new enum).
+- The factual business relationship (Yarit sources some products from a specific supplier per-order) is unchanged — just no longer exposed in the schema.
+- Backward compat: the Zustand cart store's persist-layer has a v1 → v2 migration for returning customers whose localStorage still holds `forever` / `independent` values.
+
+---
+
 ## ADR-018 — No partial `generateStaticParams` on dynamic routes
 
 **Date:** 2026-04-11

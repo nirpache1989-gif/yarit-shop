@@ -175,18 +175,25 @@ export function FeaturedProductsMotion({
       data-section="featured"
       className="relative py-16"
     >
-      {/* Ambient botanical wash (reusing the unused newsletter-bg asset).
-          The overflow-hidden lives on this wrapper — NOT on the section —
-          because the section has to keep overflow:visible so ScrollTrigger's
-          pinned heading (position:fixed under the hood) can escape its
-          parent bounds. A parent with overflow:hidden breaks position:fixed
-          on descendants. See prompt gotcha #4. */}
+      {/* Ambient botanical wash — 2026-04-11 Yarit swapped the old
+          newsletter-bg for `recommendedBG.jpg` (watercolor rolling
+          hills with trees, warmer + more directional than the
+          previous wash). Opacity bumped down from 0.20 → 0.14 so
+          the richer landscape doesn't compete with the product
+          cards for focal attention.
+
+          The overflow-hidden lives on this wrapper — NOT on the
+          section — because the section has to keep overflow:visible
+          so ScrollTrigger's pinned heading (position:fixed under the
+          hood) can escape its parent bounds. A parent with
+          overflow:hidden breaks position:fixed on descendants. See
+          prompt gotcha #4. */}
       <div
-        className="absolute inset-0 -z-0 overflow-hidden opacity-20"
+        className="absolute inset-0 -z-0 overflow-hidden opacity-[0.14]"
         aria-hidden
       >
         <Image
-          src="/brand/ai/newsletter-bg.jpg"
+          src="/brand/ai/recommendedBG.jpg"
           alt=""
           fill
           sizes="100vw"

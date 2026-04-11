@@ -1,17 +1,19 @@
-# The Forever fulfillment workflow
+# The fulfillment workflow
 
-> Phase E shipped the Fulfillment Dashboard at `/admin/fulfillment` (registered via `admin.components.views.fulfillment` in `src/payload.config.ts`; reusable loader at `src/lib/admin/fulfillment.ts`). This doc describes the workflow and state machine that dashboard implements.
+> Phase E shipped the Fulfillment Dashboard at `/admin/fulfillment` (registered via `admin.components.views.fulfillment` in `src/payload.config.ts`; reusable loader at `src/lib/admin/fulfillment.ts`). ADR-019 (2026-04-11) collapsed the state machine from 6 states to 4 and removed every Forever-brand admin label. ADR-020 (2026-04-11) renamed the shop from Shoresh to Copaia. This doc describes the workflow as it is today.
 
 ## Summary
 
 Yarit sells two categories of products on Copaia:
 
-1. **Independent products** — she stocks them at home. Normal e-commerce fulfillment: order arrives, she picks from her own stock, packages, ships.
-2. **Forever Living products** — she does NOT stock them. When an order arrives, she goes to Forever, buys the items at her distributor price, receives them at her home, then repackages and ships to the customer.
+1. **Stocked products** (`type: 'stocked'`) — Yarit keeps these at home. The `Products.stock` field tracks current inventory and the admin warns her when stock drops below 5.
+2. **Sourced products** (`type: 'sourced'`) — Yarit orders these from her supplier when a customer buys. No local inventory, no stock tracking. The admin form hides the `stock` field for these items.
 
-Both types go through the same customer-facing flow: add to cart → checkout → pay (via Meshulam or whichever gateway is chosen) → order confirmed. The difference only matters **to Yarit**, not to the customer.
+Both types go through the **same** customer-facing flow: add to cart → checkout → pay (Meshulam or whichever gateway is active) → order confirmed. And both types go through the **same** fulfillment pipeline on Yarit's side. The `stocked` vs `sourced` distinction is purely a product-level concern that controls stock-tracking visibility in the admin — it does NOT affect orders, cart, checkout, or the fulfillment state machine.
 
-## Order state machine (target)
+When Yarit opens a paid order she glances at the line items and knows by muscle memory which ones need sourcing from her supplier. The system does not need to enforce this as a workflow state. (See ADR-019 for the rationale.)
+
+## Order state machine
 
 ```
 orderStatus:
@@ -20,56 +22,60 @@ orderStatus:
 fulfillmentStatus:
   pending
     │
-    ▼  (order paid, has Forever items)
-  awaiting_forever_purchase
-    │
-    ▼  (Yarit confirms she bought from Forever)
-  forever_purchased
-    │
-    ▼  (Yarit packs the full order at home)
+    ▼  (order paid — hardcoded jump in lib/checkout.ts)
   packed
     │
-    ▼  (Yarit hands to courier)
+    ▼  (Yarit clicks "סימנתי שנארז" in /admin/fulfillment)
   shipped
     │
-    ▼  (customer confirms or delivery tracking update)
+    ▼  (Yarit clicks "סימנתי שנשלח" OR delivery tracking update)
   delivered
 ```
 
-For an order with ONLY independent products, the flow skips the `awaiting_forever_purchase` and `forever_purchased` states and goes straight from `pending` → `packed` once payment is confirmed (assuming stock is available).
+**Key mechanics:**
 
-For a mixed order (Forever + independent items), the Forever workflow takes priority: the order is stuck in `awaiting_forever_purchase` until Yarit confirms she's sourced the Forever items.
+- Every paid order jumps straight to `packed` the moment payment is confirmed. There's no longer a "waiting on supplier" bucket — that was the `awaiting_forever_purchase` state in the pre-ADR-019 workflow, removed because Yarit found it redundant. Sourced items are still sourced per-order in real life; the system just doesn't model that as a workflow state.
+- `pending` exists only as a transient value between order creation and payment confirmation. Once the payment webhook fires, `checkout.ts` sets `fulfillmentStatus = 'packed'` in the same transaction as `paymentStatus = 'paid'`.
+- The customer-facing `OrderTimeline` component collapses `pending` + `packed` into a single "preparing your order" step so the customer doesn't see intermediate admin states.
 
-## Fulfillment Dashboard (Phase E)
+## Fulfillment Dashboard (`/admin/fulfillment`)
 
-Custom admin view at `/admin/fulfillment`. See plan §5 for UX requirements. Key features:
+Custom admin view registered via `admin.components.views.fulfillment`. Loader at `src/lib/admin/fulfillment.ts`, view component at `src/components/admin/payload/FulfillmentView.tsx`.
 
-- Sorted by newest unhandled order first
-- Shows: order number, customer, items (with type indicator icon for Forever), total paid, status
-- Action buttons: "סימנתי שרכשתי מפוראבר", "סימנתי שנארז", "סימנתי שנשלח"
-- Filter: Forever-sourced / independent / all
-- Mobile-first — Yarit should be able to handle an order from her phone
+**Layout:**
+
+- **Stat row** at the top — "להכין ולשלוח" (to-handle), "בדרך ללקוחה" (in transit), "נמסרו" (delivered)
+- **3 bucket sections** rendered one below the other:
+  1. **להכין ולשלוח** — `pending` + `packed` orders. This is the "action required" bucket; both states share the same bucket for robustness in case a transient row stays stuck at `pending`.
+  2. **בדרך ללקוחה** — `shipped` orders, waiting for delivery confirmation.
+  3. **נמסרו** — `delivered` orders, for reference / history.
+
+**Row actions:**
+
+- "סימנתי שנארז" (marked as packed) — advances `pending → packed` if Yarit needs to nudge a stuck row manually.
+- "סימנתי שנשלח" (marked as shipped) — advances `packed → shipped`. This is the most-clicked button.
+- "סימנתי שנמסר" (marked as delivered) — advances `shipped → delivered`. Typically fires automatically from a delivery tracking webhook if one is wired up, but Yarit can click it manually.
+
+**Pagination cap:** 500 rows per query (see `FULFILLMENT_CAP` in `lib/admin/fulfillment.ts`). At Copaia's expected scale (~1 order/day) that's ~16 months of orders, well above any practical working window. Real cursor pagination is a post-launch follow-up.
+
+**Mobile-first:** The view works at 375px (iPhone SE) — Yarit can handle an order from her phone.
 
 ## Notifications
 
 When a new order is paid, Yarit is notified via:
-1. **Email** (Resend) — immediately on webhook receipt. Subject: order number + total. Body: item list + direct link to `/admin/fulfillment` on production. Filters allow her to route these into a dedicated inbox folder.
-2. **In-admin badge** — when she opens `/admin`, a red count badge shows unhandled orders (`paid` + `fulfillmentStatus !== 'delivered'`).
-3. **WhatsApp** (Phase G, optional) — via WhatsApp Business API or a relay service like CallMeBot.
 
-The notification goes to Yarit only by default. If the developer wants a dev-time copy during Phase E testing, `ADMIN_NOTIFICATION_EMAIL` can be a comma-separated list.
+1. **Email** (Resend) — fires from the Orders `afterChange` hook on `paymentStatus: 'paid'`. Subject: `קופאה — הזמנה חדשה`. Body: order number, customer, item list (no Forever badges — every item renders the same), total, and a direct link to `/admin/fulfillment`. Template lives at `src/lib/email/adminTemplates.ts`.
+2. **In-admin badge** — `/admin` dashboard shows a red count badge on the "ההזמנות החדשות" tile when there are paid-but-unfulfilled orders.
+3. **Dashboard recent-orders section** (2026-04-11 Track B.3) — shows the 3 most recent paid orders with quick links to each order's edit page, visible right below the stats row.
 
-## Cash flow implications (Yarit's awareness)
-
-For Forever orders, Yarit receives the customer's full retail payment immediately, but has to pay Forever up-front to source the items. If Forever's turnaround is slow, she's floating the cash for a few days. This is usually fine for a small shop but should be tracked — the admin Fulfillment Dashboard could eventually show a "cash outstanding to Forever" summary.
-
-Independent products have no such lag — she already owns the stock.
+The admin-alert email goes to `SiteSettings.contact.email` by default, with an `ADMIN_NOTIFICATION_EMAIL` env var override for multi-recipient routing during launch.
 
 ## Returns and warranty
 
-Yarit is the merchant of record for **all** sales. Customers interact with her, not Forever. This means:
-- Returns policy applies to both product types
-- Warranty claims go through her (she then relays to Forever if needed)
-- She needs to keep sales records for Israeli tax authority compliance (handled via Meshulam receipts + Payload Orders)
+Yarit is the merchant of record for **every** sale regardless of product type. Customers interact with her, not with her supplier. This means:
 
-This is why T&Cs / Returns / Privacy policies are a launch blocker (see `docs/TASKS.md`).
+- Returns policy applies uniformly to all products
+- Warranty claims go through her (she then relays to her supplier if needed for sourced items)
+- She keeps sales records for Israeli tax authority compliance (handled via Meshulam receipts + Payload Orders)
+
+The legal markdown under `content/legal/{privacy,returns,shipping,terms}/` covers this — but those folders are still empty pending input from Yarit's lawyer (see `docs/TASKS.md`).
