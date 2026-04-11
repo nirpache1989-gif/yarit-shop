@@ -36,12 +36,16 @@ export default async function HomePage({ params }: Props) {
     <>
       <Hero />
       <TrustBar />
-      <BranchDivider />
+      {/* T2.9 #6 — each divider binds its draw-in scroll trigger to
+          the next section via `dataFor`, so the sprig animates at the
+          exact moment the consumer section starts revealing. See
+          BranchDivider.tsx for the data-section lookup. */}
+      <BranchDivider dataFor="featured" />
       <FeaturedProducts locale={typedLocale} />
-      <BranchDivider />
+      <BranchDivider dataFor="meetyarit" />
       <MeetYarit locale={typedLocale} />
       <Testimonials locale={typedLocale} />
-      <BranchDivider />
+      <BranchDivider dataFor="categories" />
       <CategoryGrid locale={typedLocale} />
     </>
   )

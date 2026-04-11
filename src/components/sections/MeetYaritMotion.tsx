@@ -140,6 +140,7 @@ export function MeetYaritMotion({
   return (
     <section
       ref={scopeRef}
+      data-section="meetyarit"
       className="py-20 md:py-28 bg-[var(--color-surface-warm)]"
     >
       <Container>

@@ -31,93 +31,129 @@ import { useRef } from 'react'
 import { cn } from '@/lib/cn'
 import { useGsapScope } from '@/components/motion/GsapScope'
 
+/** Identifier of the next section below this divider. When set, the
+ *  divider's scroll trigger binds to the section's outer element
+ *  (via `[data-section="<value>"]`) so the draw-in plays at the
+ *  exact moment the next section starts revealing. When omitted,
+ *  the divider self-triggers on its own bounds (legacy behavior). */
+type DividerFor = 'featured' | 'meetyarit' | 'categories'
+
 type Props = {
   className?: string
+  dataFor?: DividerFor
 }
 
-export function BranchDivider({ className }: Props) {
+export function BranchDivider({ className, dataFor }: Props) {
   const scopeRef = useRef<HTMLDivElement>(null)
 
-  useGsapScope(scopeRef, ({ gsap, reduced }) => {
-    if (reduced) {
-      gsap.set(
-        [
-          '[data-bd-stem]',
+  useGsapScope(
+    scopeRef,
+    ({ gsap, reduced }) => {
+      if (reduced) {
+        gsap.set(
+          [
+            '[data-bd-stem]',
+            '[data-bd-leaf]',
+            '[data-bd-berry]',
+            '[data-bd-line]',
+          ],
+          { clearProps: 'all' },
+        )
+        return
+      }
+
+      // Measure the stem path's total length at setup time so we can
+      // set the dasharray/dashoffset to exactly that value. The getTotalLength
+      // trick is how SVG "draw" animations work: you set the dasharray
+      // equal to the length (so the dashes cover the whole path once)
+      // and then animate the dashoffset from `length` → 0, revealing
+      // the path character-by-character as the "gap" shrinks.
+      const stem = scopeRef.current?.querySelector(
+        '[data-bd-stem]',
+      ) as SVGPathElement | null
+      if (!stem) return
+      const stemLength = stem.getTotalLength()
+      gsap.set(stem, {
+        strokeDasharray: stemLength,
+        strokeDashoffset: stemLength,
+      })
+
+      // Initial states for the rest of the elements — hidden, ready to
+      // be revealed after the stem finishes drawing.
+      gsap.set('[data-bd-leaf]', { opacity: 0, scale: 0.9, transformOrigin: 'center center' })
+      gsap.set('[data-bd-berry]', { opacity: 0, scale: 0 })
+      gsap.set('[data-bd-line]', { scaleX: 0, transformOrigin: 'center center' })
+
+      // T2.9 #6 — connective tissue. When `dataFor` is supplied, find
+      // the next section below this divider and use IT as the scroll
+      // trigger, with the same `top bottom-=40` start semantics the
+      // section itself uses. The divider's draw-in then plays at the
+      // exact moment the next section starts revealing, so scrolling
+      // the homepage feels like a coordinated narrative rather than
+      // a sequence of independent entrance animations. If the lookup
+      // fails (no `[data-section="..."]` element found) we fall back
+      // to the legacy self-trigger so the divider always animates.
+      const nextSection =
+        dataFor && typeof document !== 'undefined'
+          ? document.querySelector(`[data-section="${dataFor}"]`)
+          : null
+
+      const triggerEl: Element | null = nextSection ?? scopeRef.current
+      const triggerStart = nextSection ? 'top bottom-=40' : 'top 85%'
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: triggerEl,
+          start: triggerStart,
+          // When bound to the next section, play once and drop the
+          // reverse behavior — we want the divider to stay drawn after
+          // the section reveals, same as the section entrance. When
+          // self-triggered (legacy), keep the play/reverse toggle so
+          // the original behavior is preserved for any other consumer.
+          ...(nextSection
+            ? { once: true }
+            : { toggleActions: 'play none none reverse' }),
+        },
+        defaults: { ease: 'power2.out' },
+      })
+
+      tl.to('[data-bd-line]', {
+        scaleX: 1,
+        duration: 0.7,
+        stagger: 0.08,
+      })
+        .to(
+          stem,
+          {
+            strokeDashoffset: 0,
+            duration: 1.1,
+            ease: 'power1.inOut',
+          },
+          0.15,
+        )
+        .to(
           '[data-bd-leaf]',
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.55,
+            stagger: 0.08,
+          },
+          '>-0.3',
+        )
+        .to(
           '[data-bd-berry]',
-          '[data-bd-line]',
-        ],
-        { clearProps: 'all' },
-      )
-      return
-    }
-
-    // Measure the stem path's total length at setup time so we can
-    // set the dasharray/dashoffset to exactly that value. The getTotalLength
-    // trick is how SVG "draw" animations work: you set the dasharray
-    // equal to the length (so the dashes cover the whole path once)
-    // and then animate the dashoffset from `length` → 0, revealing
-    // the path character-by-character as the "gap" shrinks.
-    const stem = scopeRef.current?.querySelector(
-      '[data-bd-stem]',
-    ) as SVGPathElement | null
-    if (!stem) return
-    const stemLength = stem.getTotalLength()
-    gsap.set(stem, {
-      strokeDasharray: stemLength,
-      strokeDashoffset: stemLength,
-    })
-
-    // Initial states for the rest of the elements — hidden, ready to
-    // be revealed after the stem finishes drawing.
-    gsap.set('[data-bd-leaf]', { opacity: 0, scale: 0.9, transformOrigin: 'center center' })
-    gsap.set('[data-bd-berry]', { opacity: 0, scale: 0 })
-    gsap.set('[data-bd-line]', { scaleX: 0, transformOrigin: 'center center' })
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: scopeRef.current,
-        start: 'top 85%',
-        toggleActions: 'play none none reverse',
-      },
-      defaults: { ease: 'power2.out' },
-    })
-
-    tl.to('[data-bd-line]', {
-      scaleX: 1,
-      duration: 0.7,
-      stagger: 0.08,
-    })
-      .to(
-        stem,
-        {
-          strokeDashoffset: 0,
-          duration: 1.1,
-          ease: 'power1.inOut',
-        },
-        0.15,
-      )
-      .to(
-        '[data-bd-leaf]',
-        {
-          opacity: 1,
-          scale: 1,
-          duration: 0.55,
-          stagger: 0.08,
-        },
-        '>-0.3',
-      )
-      .to(
-        '[data-bd-berry]',
-        {
-          opacity: 1,
-          scale: 1,
-          duration: 0.4,
-          stagger: 0.1,
-        },
-        '<0.1',
-      )
-  })
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.4,
+            stagger: 0.1,
+          },
+          '<0.1',
+        )
+    },
+    [dataFor],
+  )
 
   return (
     <div

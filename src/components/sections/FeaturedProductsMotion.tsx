@@ -172,6 +172,7 @@ export function FeaturedProductsMotion({
   return (
     <section
       ref={scopeRef}
+      data-section="featured"
       className="relative py-16"
     >
       {/* Ambient botanical wash (reusing the unused newsletter-bg asset).
