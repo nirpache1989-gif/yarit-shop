@@ -29,6 +29,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { DriftingLeaves } from '@/components/ui/DriftingLeaves'
+import { SkipLink } from '@/components/layout/SkipLink'
 
 import '@/app/globals.css'
 
@@ -137,6 +138,11 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
         <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
       </head>
       <body className="min-h-full flex flex-col bg-[var(--color-background)] text-[var(--color-foreground)]">
+        {/* Accessibility: skip link. Invisible until focused, then
+            jumps the keyboard user past the header straight into the
+            main content. The `common.skipToContent` key exists in
+            messages; we read it via next-intl. */}
+        <SkipLink />
         {/* Ambient radial gradient layer — shifts focus between two
             brand accent colors over 18s, very subtly. Lives under
             everything else (z-index 0) and doesn't intercept clicks. */}
@@ -144,7 +150,9 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
         <DriftingLeaves />
         <NextIntlClientProvider>
           <Header />
-          <main className="flex-1 relative z-10">{children}</main>
+          <main id="main-content" className="flex-1 relative z-10">
+            {children}
+          </main>
           <Footer />
           <CartDrawer />
         </NextIntlClientProvider>

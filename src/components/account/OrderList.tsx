@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/Button'
 import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
 import { KenBurns } from '@/components/motion/KenBurns'
 import { Reveal } from '@/components/motion/Reveal'
+import { formatILS } from '@/lib/format'
 import {
   getCustomerFulfillmentStatusLabel,
   getPaymentStatusLabel,
@@ -156,7 +157,7 @@ export async function OrderList({ orders, locale }: Props) {
 
             <div className="flex items-center gap-4 md:flex-col md:items-end md:gap-2">
               <span className="text-xl font-extrabold text-[var(--color-primary-dark)] tabular-nums">
-                ₪{order.total.toLocaleString()}
+                {formatILS(order.total)}
               </span>
               <Link
                 href={`/account/orders/${order.id}`}

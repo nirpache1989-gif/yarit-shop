@@ -72,10 +72,15 @@ export const brand = {
    * Fonts — loaded via next/font/google in the storefront layout.
    * The CSS variable names are set there and referenced by Tailwind
    * utilities in globals.css.
+   *
+   * The display font was swapped from Frank Ruhl Libre to Bellefair
+   * in Design Round 3 (see src/app/(storefront)/[locale]/layout.tsx
+   * for the commentary). The CSS variable name `--font-frank-ruhl`
+   * is kept for backwards compatibility with admin-brand.css.
    */
   fonts: {
     sans: 'Heebo',
-    display: 'Frank Ruhl Libre', // optional, used for hero headlines
+    display: 'Bellefair', // higher-contrast editorial serif, single weight (400)
   },
 
   /**

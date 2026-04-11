@@ -36,14 +36,12 @@ import {
   ProductCard,
   type ProductCardData,
 } from '@/components/product/ProductCard'
-import type { Locale } from '@/lib/i18n/routing'
 
 type Props = {
   products: ProductCardData[]
-  locale: Locale
 }
 
-export function ShopGridFlip({ products, locale }: Props) {
+export function ShopGridFlip({ products }: Props) {
   const reduced = useGsapReducedMotion()
   const gridRef = useRef<HTMLDivElement>(null)
   // The previous Flip state — captured from the CURRENT DOM before
@@ -155,7 +153,7 @@ export function ShopGridFlip({ products, locale }: Props) {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
         {products.map((p) => (
           <div key={p.id} data-shop-card>
-            <ProductCard product={p} locale={locale} />
+            <ProductCard product={p} />
           </div>
         ))}
       </div>
@@ -169,7 +167,7 @@ export function ShopGridFlip({ products, locale }: Props) {
     >
       {products.map((p) => (
         <div key={p.id} data-shop-card>
-          <ProductCard product={p} locale={locale} />
+          <ProductCard product={p} />
         </div>
       ))}
     </div>

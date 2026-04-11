@@ -46,10 +46,8 @@ import {
   type ProductCardData,
 } from '@/components/product/ProductCard'
 import { useGsapScope } from '@/components/motion/GsapScope'
-import type { Locale } from '@/lib/i18n/routing'
 
 type Props = {
-  locale: Locale
   products: ProductCardData[]
   eyebrow: string
   headline: string
@@ -58,7 +56,6 @@ type Props = {
 }
 
 export function FeaturedProductsMotion({
-  locale,
   products,
   eyebrow,
   headline,
@@ -213,7 +210,7 @@ export function FeaturedProductsMotion({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((p) => (
             <div key={p.id} data-featured-card>
-              <ProductCard product={p} locale={locale} />
+              <ProductCard product={p} />
             </div>
           ))}
         </div>

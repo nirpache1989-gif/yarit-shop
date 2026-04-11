@@ -24,6 +24,7 @@ import {
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import { useHasMounted } from '@/lib/useHasMounted'
+import { formatILS } from '@/lib/format'
 
 type ShippingRate = {
   region: string
@@ -276,7 +277,7 @@ export function CheckoutForm({ initialRates }: Props) {
                     {rate.name}
                   </span>
                   <span className="text-sm font-bold text-[var(--color-primary-dark)]">
-                    {rate.price === 0 ? t('free') : `₪${rate.price}`}
+                    {rate.price === 0 ? t('free') : formatILS(rate.price)}
                   </span>
                 </label>
               ))}
@@ -317,24 +318,18 @@ export function CheckoutForm({ initialRates }: Props) {
                 <span className="text-[var(--color-muted)]"> × {item.quantity}</span>
               </span>
               <span className="text-sm font-bold text-[var(--color-primary-dark)]">
-                ₪{(item.price * item.quantity).toLocaleString()}
+                {formatILS(item.price * item.quantity)}
               </span>
             </li>
           ))}
         </ul>
         <div className="space-y-1 pt-2 border-t border-[var(--color-border-brand)]">
-          <Row label={t('subtotal')} value={`₪${subtotal.toLocaleString()}`} />
+          <Row label={t('subtotal')} value={formatILS(subtotal)} />
           <Row
             label={t('shipping')}
-            value={
-              shippingCost === 0 ? t('free') : `₪${shippingCost.toLocaleString()}`
-            }
+            value={shippingCost === 0 ? t('free') : formatILS(shippingCost)}
           />
-          <Row
-            label={t('total')}
-            value={`₪${total.toLocaleString()}`}
-            bold
-          />
+          <Row label={t('total')} value={formatILS(total)} bold />
         </div>
         <Button
           type="submit"

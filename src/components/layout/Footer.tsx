@@ -12,7 +12,7 @@
  *          channels are hidden. All copy in `messages/{he,en}.json`
  *          under the `footer` namespace.
  */
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/navigation'
 import { Container } from '@/components/ui/Container'
 import { Eyebrow } from '@/components/ui/Eyebrow'
@@ -23,6 +23,7 @@ import { brand } from '@/brand.config'
 export function Footer() {
   const t = useTranslations('footer')
   const tNav = useTranslations('nav')
+  const locale = useLocale() as 'he' | 'en'
   const year = new Date().getFullYear()
 
   return (
@@ -47,7 +48,7 @@ export function Footer() {
               className="text-2xl font-bold text-[var(--color-primary-dark)]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {brand.name.he}
+              {brand.name[locale] ?? brand.name.he}
             </div>
             <p className="text-sm text-[var(--color-muted)] leading-relaxed max-w-xs">
               {t('brandBlurb')}
@@ -162,7 +163,7 @@ export function Footer() {
             )}
           </ul>
           <div className="text-xs text-[var(--color-muted)]">
-            © {year} {brand.name.en} — {t('allRightsReserved')}
+            © {year} {brand.name[locale] ?? brand.name.en} — {t('allRightsReserved')}
           </div>
         </Reveal>
       </Container>

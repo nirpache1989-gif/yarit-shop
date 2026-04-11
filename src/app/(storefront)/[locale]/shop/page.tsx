@@ -142,7 +142,7 @@ export default async function ShopPage({ params, searchParams }: Props) {
            a client component that runs a GSAP Flip tween every time
            the URL filter changes. Cards morph smoothly between
            layout states instead of hard-cutting. */
-        <ShopGridFlip products={products} locale={typedLocale} />
+        <ShopGridFlip products={products} />
       )}
     </Container>
   )

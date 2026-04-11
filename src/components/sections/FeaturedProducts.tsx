@@ -49,7 +49,6 @@ export async function FeaturedProducts({ locale }: Props) {
 
   return (
     <FeaturedProductsMotion
-      locale={locale}
       products={products}
       eyebrow={t('featuredEyebrow')}
       headline={t('featuredHeadline')}

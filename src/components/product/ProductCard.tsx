@@ -25,11 +25,15 @@
  *
  *          See: plan §Track B Move 5.
  */
+'use client'
+
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/lib/i18n/navigation'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
 import { cn } from '@/lib/cn'
 import { resolveProductImage } from '@/lib/product-image'
+import { formatILS } from '@/lib/format'
 import { ProductCardMotion } from './ProductCardMotion'
 
 type Media = { id: number | string; url?: string; alt?: string }
@@ -49,20 +53,20 @@ export type ProductCardData = {
 
 type Props = {
   product: ProductCardData
-  locale: 'he' | 'en'
   className?: string
 }
 
-export function ProductCard({ product, locale, className }: Props) {
+export function ProductCard({ product, className }: Props) {
+  const t = useTranslations('product')
   const imageUrl = resolveProductImage(product)
   const firstImage = product.images?.[0]?.image
   const imageAlt =
     (firstImage && typeof firstImage === 'object' && firstImage.alt) ||
     product.title
 
-  const priceText = formatPrice(product.price, locale)
+  const priceText = formatILS(product.price)
   const compareText = product.compareAtPrice
-    ? formatPrice(product.compareAtPrice, locale)
+    ? formatILS(product.compareAtPrice)
     : null
 
   return (
@@ -96,7 +100,7 @@ export function ProductCard({ product, locale, className }: Props) {
               className="italic text-[11px] tracking-[0.1em] text-[var(--color-accent-deep)]"
               style={{ fontFamily: 'var(--font-display)' }}
             >
-              {locale === 'he' ? 'חדש בחנות' : 'new arrival'}
+              {t('newArrival')}
             </span>
           </div>
         )}
@@ -143,7 +147,7 @@ export function ProductCard({ product, locale, className }: Props) {
             product={product}
             variant="ghost-link"
             className="ms-auto"
-            label={locale === 'he' ? 'להוסיף לסל' : 'Add to bag'}
+            label={t('addToBag')}
           />
         </div>
       </div>
@@ -151,15 +155,3 @@ export function ProductCard({ product, locale, className }: Props) {
   )
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────
-function formatPrice(amount: number, locale: 'he' | 'en'): string {
-  try {
-    return new Intl.NumberFormat(locale === 'he' ? 'he-IL' : 'en-IL', {
-      style: 'currency',
-      currency: 'ILS',
-      maximumFractionDigits: 0,
-    }).format(amount)
-  } catch {
-    return `₪${amount}`
-  }
-}

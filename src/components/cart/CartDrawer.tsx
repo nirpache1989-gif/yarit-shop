@@ -16,6 +16,7 @@ import Image from 'next/image'
 import { useCartStore, selectCartSubtotal } from '@/lib/cart/store'
 import { useCartDrawerStore } from '@/components/cart/drawerStore'
 import { Button } from '@/components/ui/Button'
+import { formatILS } from '@/lib/format'
 
 export function CartDrawer() {
   const t = useTranslations('cart')
@@ -136,7 +137,7 @@ export function CartDrawer() {
                       {item.title}
                     </p>
                     <p className="text-xs text-[var(--color-muted)]">
-                      {formatPrice(item.price)}
+                      {formatILS(item.price)}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
                       <button
@@ -173,7 +174,7 @@ export function CartDrawer() {
                     </div>
                   </div>
                   <div className="text-sm font-bold text-[var(--color-primary-dark)] whitespace-nowrap">
-                    {formatPrice(item.price * item.quantity)}
+                    {formatILS(item.price * item.quantity)}
                   </div>
                 </li>
               ))}
@@ -185,7 +186,7 @@ export function CartDrawer() {
                   {t('subtotal')}
                 </span>
                 <span className="text-xl font-bold text-[var(--color-primary-dark)]">
-                  {formatPrice(subtotal)}
+                  {formatILS(subtotal)}
                 </span>
               </div>
               <div className="flex flex-col gap-2">
@@ -204,6 +205,3 @@ export function CartDrawer() {
   )
 }
 
-function formatPrice(amount: number) {
-  return `₪${amount.toLocaleString('en-IL', { maximumFractionDigits: 0 })}`
-}

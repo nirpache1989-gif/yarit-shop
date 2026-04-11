@@ -12,6 +12,7 @@ import { useCartStore, selectCartSubtotal } from '@/lib/cart/store'
 import { Container } from '@/components/ui/Container'
 import { Button } from '@/components/ui/Button'
 import { useHasMounted } from '@/lib/useHasMounted'
+import { formatILS } from '@/lib/format'
 
 export default function CartPage() {
   const t = useTranslations('cart')
@@ -88,7 +89,7 @@ export default function CartPage() {
                     {item.title}
                   </p>
                   <p className="text-sm text-[var(--color-muted)] mt-0.5">
-                    ₪{item.price.toLocaleString()}
+                    {formatILS(item.price)}
                   </p>
                   <div className="mt-3 flex items-center gap-2">
                     <button
@@ -125,7 +126,7 @@ export default function CartPage() {
                   </div>
                 </div>
                 <div className="text-lg font-bold text-[var(--color-primary-dark)] whitespace-nowrap">
-                  ₪{(item.price * item.quantity).toLocaleString()}
+                  {formatILS(item.price * item.quantity)}
                 </div>
               </li>
             ))}
@@ -148,7 +149,7 @@ export default function CartPage() {
                 className="text-2xl font-bold text-[var(--color-primary-dark)] tabular-nums"
                 style={{ fontFamily: 'var(--font-display)' }}
               >
-                ₪{subtotal.toLocaleString()}
+                {formatILS(subtotal)}
               </span>
             </div>
             <p className="text-xs text-[var(--color-muted)] italic">

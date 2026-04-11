@@ -23,6 +23,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { routing, type Locale } from '@/lib/i18n/routing'
 import { verifyOrderToken } from '@/lib/orderToken'
 import { CheckoutCelebration } from '@/components/account/CheckoutCelebration'
+import { formatILS } from '@/lib/format'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -148,7 +149,7 @@ export default async function CheckoutSuccessPage({
                 <span className="text-[var(--color-muted)]"> × {item.quantity}</span>
               </span>
               <span className="text-sm font-bold text-[var(--color-primary-dark)]">
-                ₪{(item.price * item.quantity).toLocaleString()}
+                {formatILS(item.price * item.quantity)}
               </span>
             </li>
           ))}
@@ -157,18 +158,18 @@ export default async function CheckoutSuccessPage({
           <div className="flex items-center justify-between text-sm text-[var(--color-muted)]">
             <span>{t('subtotal')}</span>
             <span className="text-[var(--color-primary-dark)]">
-              ₪{order.subtotal.toLocaleString()}
+              {formatILS(order.subtotal)}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm text-[var(--color-muted)]">
             <span>{t('shipping')}</span>
             <span className="text-[var(--color-primary-dark)]">
-              ₪{order.shippingCost.toLocaleString()}
+              {formatILS(order.shippingCost)}
             </span>
           </div>
           <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border-brand)] text-lg font-extrabold text-[var(--color-primary-dark)]">
             <span>{t('total')}</span>
-            <span>₪{order.total.toLocaleString()}</span>
+            <span>{formatILS(order.total)}</span>
           </div>
         </div>
       </section>

@@ -27,6 +27,7 @@ import { getCurrentUser } from '@/lib/auth/getCurrentUser'
 import { getPayloadClient } from '@/lib/payload'
 import { Link, redirect } from '@/lib/i18n/navigation'
 import { type Locale } from '@/lib/i18n/routing'
+import { formatILS } from '@/lib/format'
 import {
   getCustomerFulfillmentStatusLabel,
   getPaymentStatusLabel,
@@ -224,7 +225,7 @@ export default async function OrderDetailPage({ params }: Props) {
                   </span>
                 </span>
                 <span className="text-sm font-bold text-[var(--color-primary-dark)] tabular-nums">
-                  ₪{(item.price * item.quantity).toLocaleString()}
+                  {formatILS(item.price * item.quantity)}
                 </span>
               </li>
             ))}
@@ -233,13 +234,13 @@ export default async function OrderDetailPage({ params }: Props) {
             <div className="flex items-center justify-between text-sm text-[var(--color-muted)]">
               <span>{t('subtotal')}</span>
               <span className="text-[var(--color-primary-dark)] tabular-nums">
-                ₪{order.subtotal.toLocaleString()}
+                {formatILS(order.subtotal)}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm text-[var(--color-muted)]">
               <span>{t('shipping')}</span>
               <span className="text-[var(--color-primary-dark)] tabular-nums">
-                ₪{order.shippingCost.toLocaleString()}
+                {formatILS(order.shippingCost)}
               </span>
             </div>
             <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border-brand)] text-lg font-extrabold text-[var(--color-primary-dark)]">
