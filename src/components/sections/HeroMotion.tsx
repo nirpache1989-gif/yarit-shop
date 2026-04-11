@@ -155,12 +155,20 @@ export function HeroMotion({
         )
 
       // ─── Phase 2: scroll parallax (scrubbed) ──────────────────────
+      // T2.9 #1 — Hero exit parallax tightening. Bigger drift distance
+      // on the botanical frame (-12 → -18), deeper cream-vignette fade
+      // (0.4 → 0.25), and `power1.inOut` ease so the scrubbed motion
+      // accelerates into the mid-scroll and settles at the end rather
+      // than binding 1:1 to the scroll position. Combined with the
+      // existing `scrub: 0.6` smoothing timer, this is the "buttery"
+      // handoff from Hero to TrustBar that T2.9 calls for.
+      //
       // One ScrollTrigger for the botanical background counter-drift.
       // yPercent is relative to the element's own height, which is
       // more stable than hard pixel values across viewports.
       gsap.to('[data-hero-bg]', {
-        yPercent: -12,
-        ease: 'none',
+        yPercent: -18,
+        ease: 'power1.inOut',
         scrollTrigger: {
           trigger: scopeRef.current,
           start: 'top top',
@@ -172,8 +180,8 @@ export function HeroMotion({
       // One ScrollTrigger for the cream vignette fade. Separate from
       // the bg parallax so they can be tuned independently.
       gsap.to('[data-hero-vignette]', {
-        opacity: 0.4,
-        ease: 'none',
+        opacity: 0.25,
+        ease: 'power1.inOut',
         scrollTrigger: {
           trigger: scopeRef.current,
           start: 'top top',
