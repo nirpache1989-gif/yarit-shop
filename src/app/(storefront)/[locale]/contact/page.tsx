@@ -19,6 +19,7 @@
  *          No new dependencies. Icons are hand-rolled SVG paths so
  *          we don't pull in react-icons just for three glyphs.
  */
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import { useTranslations } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
@@ -182,7 +183,28 @@ function ContactContent({ whatsapp, email, phone }: ContactContentProps) {
   const tCommon = useTranslations('common')
 
   return (
-    <Container className="py-16 md:py-24 max-w-4xl">
+    <section className="relative overflow-hidden">
+      {/* 2026-04-11 — ambient watercolor backdrop added by Yarit
+          (`ContactBG1.jpg`: eucalyptus + herbs framing the bottom,
+          cream center). Rendered at 0.55 opacity (per Yarit's
+          "make it stand out more" feedback, up from an initial
+          0.18) so the watercolor eucalyptus framing reads clearly
+          as the page's personality while still leaving the
+          contact cards fully legible. The top + bottom gradient
+          fade blends the image into the page background color so
+          there's no hard edge at the section boundaries. */}
+      <div className="absolute inset-0 -z-0 opacity-[0.55]" aria-hidden>
+        <Image
+          src="/brand/ai/ContactBG1.jpg"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-background)] via-transparent to-[var(--color-background)]" />
+      </div>
+
+      <Container className="relative py-16 md:py-24 max-w-4xl">
       <header className="text-center space-y-4 mb-12 md:mb-16">
         <Reveal>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[var(--color-accent-deep)]">
@@ -257,6 +279,7 @@ function ContactContent({ whatsapp, email, phone }: ContactContentProps) {
           </Link>
         </div>
       </Reveal>
-    </Container>
+      </Container>
+    </section>
   )
 }

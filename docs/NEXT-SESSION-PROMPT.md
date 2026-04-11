@@ -8,20 +8,24 @@
 
 ## Inherited state
 
-- **`feat/brand-rename`** is 5 commits ahead of `main` (`a3b767d`):
-  - `1ae5a73` — hero backdrop swap to `herobg3.jpg` @ 85% + featured backdrop swap to `recommendedBG.jpg` @ 14%
+- **`feat/brand-rename`** is 9 commits ahead of `main` (`a3b767d`):
+  - **polish batch** — contact-page `ContactBG1.jpg` @ 55% opacity + shop grid first-render stagger removed (was causing "cards jumping into position" on page load)
+  - `3d67cf9` — Track G cleanup (@swc devDeps + 25 unused AI brand assets)
+  - `f7fb0b8` — MobileNav `createPortal` fix (escape Header's `backdrop-filter` containing block so the dialog covers the full viewport instead of a 288×64 strip)
+  - `8053c70` — Track F docs + `recommendedBG.jpg` featured section swap @ 14%
+  - `1ae5a73` — hero backdrop swap to `herobg3.jpg` @ 85%
   - `fe8b97d` — Track B admin UX (thumbnail col, stock +/-, recent orders, live preview)
   - `20a9e2d` — Track D GSAP polish (sticky header scrub, card Ken Burns, add-to-cart press bounce)
   - `f489808` — Track A brand rename + catalog + 3-image gallery
 - **Prod:** still at `8d50bd4` via `dpl_EFBBXQ1ZKxrDe2T7ZJTcQTBsJzui`. **No push or deploy happened** — waiting on explicit user word.
 - **Prod Neon catalog:** still holds the old 7 Shoresh-era `sourced` products. The feature branch's dev DB has the new 8 Copaia products. **These need to be reconciled on prod.**
-- **All quality gates green.** tsc + lint + build + preview smoke all verified.
+- **All quality gates green.** tsc + lint + build + preview smoke all verified, including the shop grid stable-on-load fix + the MobileNav portal fix.
 
 ---
 
 ## 🛟 SAFETY NET
 
-Last known-good commit is `1ae5a73` on `feat/brand-rename` (or `8d50bd4` on prod). `main` is at `a3b767d`. **Do not push `main` and do not deploy without explicit user word.** If you make new edits, land them on `feat/brand-rename`, not `main`.
+Last known-good commit is the **tip of `feat/brand-rename`** (run `git log -1 feat/brand-rename` to see the hash — it should be a "polish" commit past `3d67cf9`). `main` is at `a3b767d`. Prod is still at `8d50bd4`. **Do not push `main` and do not deploy without explicit user word.** If you make new edits, land them on `feat/brand-rename`, not `main`.
 
 ---
 

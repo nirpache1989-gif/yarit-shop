@@ -27,9 +27,8 @@
  */
 'use client'
 
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
-import { useGSAP } from '@gsap/react'
 import { gsap, Flip } from '@/lib/motion/gsap'
 import { useGsapReducedMotion } from '@/lib/motion/useGsapReducedMotion'
 import {
@@ -60,25 +59,22 @@ export function ShopGridFlip({ products }: Props) {
   // playing a Flip tween".
   const filterKey = `${pathname}?${searchParams.toString()}`
 
-  // ─── First-render entrance stagger ───────────────────────────────
-  // Runs once, on mount only. Every card fades up from y: 24 with a
-  // small stagger. Skipped entirely under reduced motion (the early
-  // return on line below handles that branch — this useGSAP never
-  // runs because the whole component returns a plain grid first).
-  useGSAP(
-    () => {
-      if (!gridRef.current) return
-      gsap.from(gridRef.current.children, {
-        y: 24,
-        opacity: 0,
-        duration: 0.7,
-        stagger: 0.08,
-        ease: 'power2.out',
-      })
-      hasRenderedOnceRef.current = true
-    },
-    { scope: gridRef, dependencies: [] },
-  )
+  // ─── First-render: no stagger entrance ──────────────────────────
+  // 2026-04-11: Yarit reported the grid "jumps around and isn't
+  // organized" on page load. Root cause was the previous
+  // `gsap.from({ y: 24, opacity: 0, stagger: 0.08, duration: 0.7 })`
+  // entrance tween — it dropped every card in at a staggered time
+  // over ~1.3 seconds, which read as chaotic reflow instead of a
+  // settled grid. The T1.2 card blooming entrance on the homepage
+  // and the Ken Burns on scroll-into-view still fire for visual
+  // rhythm elsewhere; the shop grid wants to feel STATIC on first
+  // load, so the cards render at their natural position with no
+  // entrance animation at all. Only the filter-change Flip tween
+  // below still plays — and that IS a meaningful layout change
+  // worth animating.
+  useEffect(() => {
+    hasRenderedOnceRef.current = true
+  }, [])
 
   // ─── Filter-change Flip ──────────────────────────────────────────
   // Two layout effects — one captures "before" state in CLEANUP (which

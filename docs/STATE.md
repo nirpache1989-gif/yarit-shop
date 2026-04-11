@@ -75,12 +75,21 @@ f489808 feat(brand): rename Shoresh → Copaia + replace catalog + 3-image galle
 - **Docs current-state updates:** CLAUDE.md, AGENTS.md, README.md, BRAND.md, ARCHITECTURE.md, INDEX.md, FULFILLMENT.md, CONVENTIONS.md, ENVIRONMENT.md, ONBOARDING.md, YARIT-ADMIN-GUIDE.md, ADMIN-SURFACES.md
 - **Docs new (Track F handoff):** DECISIONS.md (ADR-019 + ADR-020), FULFILLMENT.md (full rewrite to 4-state), YARIT-WELCOME-LETTER.md (new), NIR-HANDOFF.md (new, pending), NEXT-SESSION.md (TL;DR refresh), STATE.md (this entry), STATE-ARCHIVE.md (new — 1186 lines of historical entries)
 
+### Final polish batch (after Track G)
+
+- **MobileNav portal fix** (`f7fb0b8`) — clicking the hamburger on mobile was opening a "weird" 288×64 strip in the top-left instead of a full-screen slide-in. Root cause: the Header's `backdrop-blur-sm` (CSS `backdrop-filter`) creates a new containing block for `position: fixed` descendants in modern browsers, clamping the MobileNav dialog to the Header's bounds. Fixed by rendering the dialog via `React.createPortal` to `document.body` so it escapes the Header's subtree entirely. Verified: dialog is now 375×812 at `top: 0, left: 0`, parentElement is `BODY`, panel inside is full-height 288×812, nav area inside the panel is 287×748 with 4 nav links + language switcher + theme toggle + close X.
+
+- **Track G cleanup** (`3d67cf9`) — dropped `@swc-node/register` + `@swc/core` devDeps (both dead weight from a rejected "standalone CLI seed script" experiment). Deleted 25 unused AI brand assets from `public/brand/ai/`: 7 Shoresh-era product watercolors (dropped with STATIC_IMAGE_OVERRIDES in Track A), 4 trust-bar `icon-*.jpg` JPEG variants (the `.png` versions are wired in TrustBar.tsx), 9 never-wired editorial photos (hero-still-life, hero-bg-wash, journal-hero, newsletter-*, yarit-portrait, sourcing-basket, ritual-steps, sprig-stamp, icons-trust-set, about-hands), and the `hero-bg-2.png` swap leftover. Also removed 2 dead CSS rules in `globals.css` that targeted `img[src*="hero-bg-wash"]`. Post-cleanup: `public/brand/ai/` now holds 19 files (5 category tiles + 4 trust-bar icon PNGs + 2 backdrops + 4 empty states + 2 utility + 1 about + 3 night-mode images).
+
+- **ContactBG1.jpg** — user-provided watercolor eucalyptus + herbs backdrop for `/contact`. Moved to `public/brand/ai/`, wrapped the `ContactContent` in a `<section>` with an `absolute inset-0 -z-0` image layer + gradient fade top/bottom. Initial opacity was 0.18; bumped to **0.55** per user "make it stand out more" feedback so the eucalyptus framing reads as personality rather than just subtle texture.
+
+- **Shop grid first-render stagger removed** — user reported the shop page products "jump around and aren't organized" on page load. Root cause: `ShopGridFlip`'s first-render entrance tween was `gsap.from({ y: 24, opacity: 0, stagger: 0.08, duration: 0.7 })` which applied the from-state immediately on mount then animated cards back in over ~1.3s, reading as chaotic reflow instead of a settled grid. Removed the `useGSAP` block entirely — cards now render at their natural position with no entrance tween. The filter-change Flip tween (T1.6) still plays for meaningful category filter transitions; only the decorative mount-time stagger is gone. Verified: all 8 cards at `opacity: 1, transform: none, top: 319/866` from first paint.
+
 ### Follow-up TODOs
 
 - **Prod Neon catalog update** — still holds the old 7 products. Next session: Yarit rebuilds via admin OR one-off migration script.
 - **Yarit's admin password** — Nir sets these out of band. The dev default `admin@copaia.example / admin1234` is local-only.
 - **External inputs still pending** — Meshulam PDF, Resend API key, legal markdown (8 files), custom domain. None landed this session.
-- **hero-bg-2.png** (the pre-rename hero backdrop) is still in `public/brand/ai/` after the herobg3 swap — Track G cleanup can drop it as part of the unused-assets sweep.
 - **YARIT-ADMIN-GUIDE.md §2 + §3** still describe the pre-ADR-019 Forever workflow + `forever | independent` product type options. A prominent "out of date" banner was added at the top of the file pointing Yarit at the admin HelpButton for current instructions, but a full rewrite of those sections is still outstanding.
 - **React dev-mode warnings** on `<script>` tags inside React components — pre-existing from `src/app/(storefront)/[locale]/layout.tsx:138` (themeBootstrap) + `src/app/(storefront)/[locale]/product/[slug]/page.tsx:187` (JSON-LD). Valid patterns, not regressions, but show up in `preview_console_logs` as errors.
 
