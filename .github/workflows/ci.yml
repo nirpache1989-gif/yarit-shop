@@ -41,27 +41,46 @@ jobs:
         run: npm run lint
 
       # Guard against the 2026-04-11 SSG incident recurrence. Any
-      # dynamic storefront route that returns `generateStaticParams`
-      # with only `{ locale }` (no second segment) causes Next 16 to
-      # classify the route as `●` SSG and then 500 at runtime when
-      # next-intl's `setRequestLocale` calls `headers()` inside the
-      # static-generation context. Either return full params or
-      # omit the function entirely — see `docs/CONVENTIONS.md` and
-      # `docs/DECISIONS.md` ADR-018 for the full rule + post-mortem.
-      - name: Guard against partial generateStaticParams
+      # TWO-SEGMENT dynamic storefront route (e.g. [locale]/product/
+      # [slug]) that returns `generateStaticParams` with only
+      # `{ locale }` causes Next 16 to classify the route as `●` SSG
+      # and then 500 at runtime when next-intl's `setRequestLocale`
+      # calls `headers()` inside the static-generation context.
+      # Either return full params (locale × slug/token/id) or omit
+      # the function entirely — see `docs/CONVENTIONS.md` §
+      # generateStaticParams and `docs/DECISIONS.md` ADR-018 for the
+      # full rule + post-mortem.
+      #
+      # The guard specifically targets NESTED dynamic routes (paths
+      # that contain a `[bracket]` segment AFTER the `[locale]`
+      # segment). Single-segment routes like `/[locale]/about` or
+      # `/[locale]/contact` are allowed to call
+      # `routing.locales.map((locale) => ({ locale }))` because they
+      # have no second dynamic segment to enumerate — for them it's
+      # just "prerender one page per locale", which is valid.
+      - name: Guard against partial generateStaticParams on nested dynamic routes
         working-directory: yarit-shop
+        shell: bash
         run: |
-          # Match patterns like:
-          #   return routing.locales.map((locale) => ({ locale }))
-          #   return locales.map(l => ({ locale: l }))
-          # The grep is deliberately loose so it catches rewrites
-          # of the same bug. False positives land in PR review; a
-          # genuine full-params function won't match because it
-          # will include a second key in the returned object.
-          if grep -rEn 'locales?\.map\([^)]*=>\s*\(\s*\{\s*locale[^,}]*\}\s*\)' src/app/'(storefront)'; then
-            echo "::error::Partial generateStaticParams detected (locale-only). See docs/CONVENTIONS.md §generateStaticParams."
+          NESTED=$(find 'src/app/(storefront)/[locale]' -type f -name 'page.tsx' | while read f; do
+            rel="${f#src/app/(storefront)/[locale]/}"
+            # A nested dynamic route has at least one [bracket] in the
+            # path tail after [locale]/.
+            case "$rel" in
+              *'['*) echo "$f" ;;
+            esac
+          done)
+          FAILED=0
+          for f in $NESTED; do
+            if grep -qE 'routing\.locales\.map' "$f"; then
+              echo "::error file=$f::Partial generateStaticParams on a nested dynamic route. See docs/CONVENTIONS.md §generateStaticParams + ADR-018."
+              FAILED=1
+            fi
+          done
+          if [ "$FAILED" = "1" ]; then
             exit 1
           fi
+          echo "Guard OK: no nested dynamic routes have routing.locales.map"
 
       - name: Build
         working-directory: yarit-shop
