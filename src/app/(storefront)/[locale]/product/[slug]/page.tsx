@@ -12,7 +12,7 @@ import { notFound } from 'next/navigation'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { getPayloadClient } from '@/lib/payload'
-import { routing, type Locale } from '@/lib/i18n/routing'
+import { type Locale } from '@/lib/i18n/routing'
 import { Container } from '@/components/ui/Container'
 import { Badge } from '@/components/ui/Badge'
 import { AddToCartButton } from '@/components/cart/AddToCartButton'
@@ -26,9 +26,15 @@ const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? 'https://yarit-shop.vercel.app'
 ).replace(/\/+$/, '')
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }))
-}
+// Intentionally NO `generateStaticParams`. Declaring it with just
+// `{locale}` (no slug) pins the route to `●` SSG in Next 16, which
+// then bails out with DYNAMIC_SERVER_USAGE at runtime because
+// next-intl's `setRequestLocale` reaches `headers()` inside the
+// static-generation context. Without a real prerender list (i.e.
+// every published slug), this function was strictly harmful. The
+// route is now dynamic per request (`ƒ`), which matches the intent:
+// products change via the admin panel and never needed prerendering.
+// See 2026-04-11 post-deploy incident notes in docs/STATE.md.
 
 async function loadProduct(locale: Locale, slug: string) {
   const payload = await getPayloadClient()

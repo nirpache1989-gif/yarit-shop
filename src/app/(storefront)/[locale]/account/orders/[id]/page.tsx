@@ -26,7 +26,7 @@ import { CountUp } from '@/components/motion/CountUp'
 import { getCurrentUser } from '@/lib/auth/getCurrentUser'
 import { getPayloadClient } from '@/lib/payload'
 import { Link, redirect } from '@/lib/i18n/navigation'
-import { routing, type Locale } from '@/lib/i18n/routing'
+import { type Locale } from '@/lib/i18n/routing'
 import {
   getCustomerFulfillmentStatusLabel,
   getPaymentStatusLabel,
@@ -35,9 +35,11 @@ import {
   type StatusLocale,
 } from '@/lib/orders/statusLabels'
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }))
-}
+// Intentionally NO `generateStaticParams`. See the equivalent comment
+// on /product/[slug]/page.tsx — declaring it with just `{locale}`
+// pins the route to SSG and breaks at runtime with DYNAMIC_SERVER_USAGE
+// via next-intl's `setRequestLocale`. Order detail pages are per-
+// customer and auth-gated, so SSG would never have been correct anyway.
 
 type Props = {
   params: Promise<{ locale: string; id: string }>

@@ -14,11 +14,12 @@ import { Container } from '@/components/ui/Container'
 import { ResetPasswordForm } from '@/components/account/ResetPasswordForm'
 import { AuthAmbient } from '@/components/account/AuthAmbient'
 import { Reveal } from '@/components/motion/Reveal'
-import { routing } from '@/lib/i18n/routing'
 
-export function generateStaticParams() {
-  return routing.locales.map((locale) => ({ locale }))
-}
+// Intentionally NO `generateStaticParams`. See the equivalent comment
+// on /product/[slug]/page.tsx — declaring it with just `{locale}`
+// pins the route to SSG and breaks at runtime with DYNAMIC_SERVER_USAGE
+// via next-intl's `setRequestLocale`. Reset-password must be dynamic
+// per request anyway (token validity is checked server-side).
 
 type Props = {
   params: Promise<{ locale: string; token: string }>
