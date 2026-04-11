@@ -1,262 +1,272 @@
-# Next session — starting prompt (T2.9 homepage orchestration + closeout)
+# Next session — starting prompt (final QA + GSAP polish + closeout)
 
-> **Purpose:** This session is the "big motion" follow-up. The previous session (2026-04-11 cleanup + Tier-2 lite + polish pass) landed a code/docs cleanup sweep, a task-oriented Yarit admin guide rewrite, a hotfix for a production GSAP `immediateRender` bug that left category tiles blank, two safe Tier-2 additions (footer reveal, category tile magnetic hover), and a pre-T2.9 polish pass (formatILS adoption, Lexical rich-text renderer, skip link, brand.config font drift fix, i18n cleanup). Your job is to ship **T2.9 — homepage scroll-linked storytelling** (the last big Tier-2 wave) and then close out the project.
+> **Purpose:** This is the **last planned session** for Shoresh. T2.9 — the homepage scroll-linked
+> storytelling wave — shipped cleanly at the end of the previous session (`9f01a50`, deployed via
+> `dpl_EQYNCT12CyNVmPSthrs5SVmg6YwJ`, live at `https://yarit-shop.vercel.app`). The previous session
+> also cleaned up 2 stray test products from the local dev DB, rewrote the admin help button as a
+> mini-guide popover (Yarit's explicit ask), and pushed the whole batch to main + prod. This
+> session's job is to do a **deep QA pass across the whole site**, add **one more layer of GSAP
+> polish** (smaller, targeted bits to make the site feel even better), and **prepare the final
+> handoff**.
 >
-> **Read this file top to bottom, then `CLAUDE.md`, then the top entry in `docs/STATE.md` ("2026-04-11 evening — motion hotfix + Tier-2 lite + ready-prompt for T2.9"). Only then start working.** The previous close-out prompts are archived at `docs/NEXT-SESSION-PROMPT-2026-04-11-close-out.md` (the original production close-out) and `docs/NEXT-SESSION-PROMPT-2026-04-11-cleanup-and-tier2-lite.md` (the previous cleanup session). Both are historical — you don't need them unless you want context.
+> **Read this file top to bottom, then `CLAUDE.md`, then the top entry in `docs/STATE.md`
+> ("2026-04-11 night — T2.9 homepage scroll-linked storytelling + admin help rewrite"). Only then
+> start working.** The previous ready prompts are archived at
+> `docs/NEXT-SESSION-PROMPT-2026-04-11-t2.9-homepage-orchestration.md` (the T2.9 prompt that led to
+> tonight's ship), `docs/NEXT-SESSION-PROMPT-2026-04-11-cleanup-and-tier2-lite.md`, and
+> `docs/NEXT-SESSION-PROMPT-2026-04-11-close-out.md`. Historical — don't read unless you want
+> context.
 
 ---
 
-## 🛟 SAFETY NET — READ THIS FIRST
+## 🛟 SAFETY NET
 
-T2.9 is a big, ambitious motion wave touching 6 homepage sections. If it goes wrong, we want to be able to abandon the attempt and return to the last known-good production state with zero effort.
+The previous session's safety net is still the right approach.
 
-**The last known-good commit is `d495593`** (`fix: QA pass — P1 storefront bugs + visual polish + admin UX`). This is what `origin/main` points at, what Vercel is deploying, and what Yarit sees when she opens `https://yarit-shop.vercel.app`. It is SAFE until you explicitly `git push` or `npx vercel --prod`.
+**Last known-good commit is `9f01a50`** (T2.9 homepage scroll-linked storytelling + admin help
+rewrite, merged fast-forward from `feat/t2.9-homepage-orchestration`). This is what `origin/main`
+points at, what Vercel is deploying, and what Yarit sees when she opens `https://yarit-shop.vercel.app`.
+It is SAFE until you explicitly `git push` or `npx vercel --prod`.
 
-**Before you start T2.9, create a feature branch:**
+**Before you start any ambitious motion work, cut a feature branch:**
 
 ```bash
 cd C:/AI/YaritShop/yarit-shop
 git fetch origin
 git checkout origin/main
-git checkout -b feat/t2.9-homepage-orchestration
+git checkout -b feat/final-qa-and-polish          # or a more specific name per sub-task
 ```
 
-Work on this branch for the entire T2.9 session. Commit freely — you're not on `main`, so nothing you do affects prod until you merge.
+Work on that branch. `main` stays on `9f01a50` until you explicitly push. Prod stays where it is
+until you `npx vercel --prod --yes`. Treat every commit as opt-in. **Never push to main and never
+deploy without the user saying "push" or "deploy"** — the previous session survived a 6-beat
+motion restructure on this pattern and it works.
 
-**If T2.9 goes well (all 6 beats land cleanly, verification passes, the user says "push"):**
-
-```bash
-git checkout main
-git merge --ff-only feat/t2.9-homepage-orchestration   # fast-forward merge, no merge commit
-git push origin main
-npx vercel --prod --yes                                 # manual deploy (webhook is flaky)
-```
-
-**If T2.9 goes wrong at any point:**
-
-- **Soft abort (recommended):** Leave the branch in place, notify the user, `git checkout main`. The branch stays as a record of the attempt. `main` is untouched. Prod is untouched.
-  ```bash
-  git checkout main
-  # main is at d5a2a05 (or wherever origin/main was when you started)
-  # Prod is unchanged.
-  ```
-
-- **Hard abort (clean slate):** Delete the branch entirely.
-  ```bash
-  git checkout main
-  git branch -D feat/t2.9-homepage-orchestration
-  ```
-
-- **Nuclear (if somehow main got dirty):** Force-restore `main` to the safe commit.
-  ```bash
-  git checkout main
-  git reset --hard d495593
-  # Prod is STILL unchanged unless someone pushed after you started.
-  ```
-
-**What you must NEVER do during T2.9 without explicit user approval:**
-
-- `git push origin main` (even from the feature branch — use `git push origin feat/t2.9-homepage-orchestration` to share progress)
-- `npx vercel --prod` (the production alias stays on `d495593` until the user says "push")
-- `git reset --hard` on any remote-tracking branch
-- `git rebase --onto main` anything
-- Force-push anything
-
-**What's safe:**
-
-- Editing files, committing locally to `feat/t2.9-homepage-orchestration`
-- Running `npm run dev`, `npm run build`, `npx next start -p 3009` locally
-- Running `preview_start` / Claude-in-Chrome MCP against localhost
-- Creating new files, new components, new motion helpers
-- Reading everything under `docs/`
-
-This branch-based safety workflow gives you full freedom to experiment with T2.9 without risking the working state. If the session fails entirely and the user decides to scrap it, they can just close the Claude Code session, delete the feature branch, and Yarit's shop continues running on `d5a2a05` without a single byte changed in production.
+For tiny, low-risk changes (typo fixes, 1-line docs updates), you can commit directly to `main`
+and wait for explicit user approval before pushing. For anything that touches rendered output,
+use a branch.
 
 ---
 
----
-
-## Status as of this session's start
+## Where things stand
 
 ### Production
 
-- **LIVE at `https://yarit-shop.vercel.app`** at commit `593fad5` (or later).
-- All 16 smoke-test routes return 200 in prod.
-- GSAP Tier-1 is complete. The 2026-04-11 production bug where `CategoryGrid` + `FeaturedProducts` + `MeetYarit` rendered blank due to a flaky `gsap.from` + `immediateRender: true` + `scrollTrigger` interaction is fixed in `027ebda` and verified — all 5 category cards + 3 featured cards at `opacity: 1` after load.
-- Tier-2 so far:
-  - **T2.1** (checkout success confetti) — already shipped via `CheckoutCelebration` in `src/components/account/CheckoutCelebration.tsx`.
-  - **T2.2** (footer reveal on scroll) — shipped in `9d4ddeb`. `src/components/layout/Footer.tsx` wraps the 4-column grid + the bottom social strip in the `Reveal` primitive (IntersectionObserver-backed, not GSAP — deliberately immune to the SSR/hydration race that bit the homepage sections).
-  - **T2.8** (category tile magnetic hover) — shipped in `593fad5`. `CategoryGridMotion.tsx` now attaches pointermove/pointerleave listeners to each tile after the entrance plays, using the same ±3° tilt + 4px parallax vocabulary as `ProductCardMotion` (G3). Gated on `hover: hover` + reduced-motion.
+- **LIVE at `https://yarit-shop.vercel.app`** at commit `9f01a50` via `dpl_EQYNCT12CyNVmPSthrs5SVmg6YwJ`
+- All 40 routes build cleanly (`ƒ` / `○`, zero `●` SSG)
+- The 2026-04-11 `immediateRender: false` blank-cards bug is fixed on every existing tween and
+  the pattern is enforced on every new tween via a non-negotiable rule (CLAUDE.md rule #12).
+- Bug-fix regression test passes on prod: 5 category cards + 3 featured cards + 3 testimonial
+  cards + 4 meet text blocks all at `opacity: 1` on load.
 
-### Quality gates on main
+### GSAP waves shipped to date
 
-- `npx tsc --noEmit` → 0 errors
-- `npm run lint` → 0 errors, 0 warnings
-- `npm run build` → 40 routes, all `ƒ` Dynamic or `○` Static, zero `●` SSG. Turbopack NFT warning silenced via the `/*turbopackIgnore: true*/` hints on `fs.existsSync` / `fs.readFileSync` in `src/lib/legal.ts`.
+- **Tier-1** (G1–G5, T1.1–T1.7) — all shipped
+- **Tier-2 lite** — T2.1 checkout confetti, T2.2 footer reveal, T2.8 category tile magnetic hover
+- **T2.9 — homepage scroll-linked storytelling** (shipped end of previous session):
+  - #1 Hero exit parallax tightening (`HeroMotion.tsx`)
+  - #2 TrustBar scale reveal + new `'scale'` primitive direction
+    (`Reveal.tsx` + `StaggeredReveal.tsx` + `globals.css` + `TrustBar.tsx`)
+  - #3 MeetYarit body-paragraph word cascade via `useInView`-gated `<SplitWords>`
+    (`MeetYaritMotion.tsx`)
+  - #4 CategoryGrid desktop header pin (`CategoryGrid.tsx` + `CategoryGridMotion.tsx`)
+  - #5 Testimonials horizontal cascade (`Testimonials.tsx` + new `TestimonialsMotion.tsx`)
+  - #6 BranchDivider → next-section coordination (`BranchDivider.tsx` + `page.tsx` +
+    section `data-section` attributes)
 
-### CI guard (2026-04-11 SSG incident prevention)
+### Admin
 
-- `.github/workflows/ci.yml` has a "Guard against partial generateStaticParams on nested dynamic routes" step that:
-  - `find`s files under `src/app/(storefront)/[locale]/` whose path contains a `[bracket]` segment after the `[locale]` segment (the four at-risk files today: `account/orders/[id]/page.tsx`, `legal/[slug]/page.tsx`, `product/[slug]/page.tsx`, `reset-password/[token]/page.tsx`)
-  - greps each for `routing.locales.map` and fails CI on a hit
-- Single-segment routes like `/[locale]/about`, `/[locale]/contact`, `/[locale]/shop` are intentionally NOT flagged — they legitimately return `routing.locales.map((locale) => ({ locale }))` because they have no second dynamic segment.
-- **Do NOT remove this guard.** If you're adding a new two-segment dynamic route, either return full params from `generateStaticParams` (locale × whatever) or omit the function entirely. See `docs/CONVENTIONS.md` §generateStaticParams + `docs/DECISIONS.md` ADR-018 for the full rule.
+- `HelpButton` is now a 7-task mini-guide popover (not a contact card)
+- `YARIT-ADMIN-GUIDE.md` is still the long version of the same content
+- Everything else admin is untouched
 
-### Docs state
+### Docs
 
-- `docs/YARIT-ADMIN-GUIDE.md` — **full task-oriented rewrite** shipped in `90911c6`. ~330 lines, 7 sections + 3 appendices, every field label keyed to the actual Hebrew labels in `src/collections/Products.ts` + `src/globals/SiteSettings.ts`. This is the file Yarit will actually read.
-- `docs/CONVENTIONS.md` + `docs/DECISIONS.md` ADR-018 document the SSG incident prevention rule.
-- `docs/ARCHITECTURE.md`, `docs/ENVIRONMENT.md`, `docs/FULFILLMENT.md`, `docs/INDEX.md`, `docs/NEXT-SESSION.md`, `docs/ONBOARDING.md`, `docs/TASKS.md` — all audited and fixed for drift.
-
----
-
-## Your primary task — T2.9 homepage scroll-linked storytelling
-
-This is the biggest Tier-2 item, deliberately deferred to its own session. The idea is to take the homepage and turn scrolling it into a coherent narrative rather than a sequence of independent sections. Every section you scroll past should feel like a deliberate beat in a story, not an isolated card.
-
-### What "orchestration" means here
-
-Today the homepage is:
-
-```
-Hero → TrustBar → BranchDivider → FeaturedProducts → BranchDivider → MeetYarit → ForeverSpotlight → Testimonials → BranchDivider → CategoryGrid → Footer
-```
-
-Each section currently has its own entrance motion (some T1/T2, some `Reveal`, some CSS keyframes). They feel independent. T2.9 gives them a shared scroll-linked layer on top:
-
-1. **Hero exit parallax.** As the user scrolls out of the Hero, the botanical frame (Layer 1) should `yPercent 0 → -18` (bigger drift than the current G2 value of -12) and the cream vignette (Layer 3) should opacity-fade to `0.25`. The scrub should feel buttery, `ease: 'power1.inOut'`. Already partially in place via `HeroMotion.tsx` G2 scroll triggers — this tightens the values and extends the drift distance.
-2. **TrustBar sequential pulse.** The 4 value-prop icons currently render instantly. Add a scroll-linked reveal where each icon scales `0.8 → 1` + opacity `0 → 1` with a 120ms stagger as the TrustBar enters the viewport. Use the existing `Reveal` primitive pattern (IntersectionObserver) for SAFETY — do NOT use `gsap.from` + scrollTrigger. The 2026-04-11 bug fix proved that IntersectionObserver is the bug-tolerant choice for enter animations.
-3. **MeetYarit Ken Burns + word cascade.** The image column already has `KenBurns` from T1.1. Add a SplitWords-style cascade on the body paragraph where each word fades up with a 60ms stagger when the block enters the viewport. `SplitWords` primitive already exists — use it. Keep the existing T1.1 column converge from `MeetYaritMotion.tsx`.
-4. **CategoryGrid "blooming" extension.** T1.2 already does a scale `0.96 → 1` on entrance. T2.9 extends this by also pinning the section header while the tiles scroll past — same pattern as `FeaturedProductsMotion`'s desktop pin (T1.4). Gate on `(min-width: 768px)` via `gsap.matchMedia()`. On mobile, the header scrolls normally. Keep the T2.8 hover tilt untouched.
-5. **Testimonials horizontal cascade.** The 3 testimonial cards currently reveal in place. Swap to a horizontal cascade where each card slides in from the start edge (RTL-aware) with a 150ms stagger. Use GSAP for the cascade because the RTL-awareness is easier than a CSS variant. **Critical: use the same `immediateRender: false + once: true` pattern** so the SSG/hydration failure mode can't recur. Put the code in a new `src/components/sections/TestimonialsMotion.tsx` client component wrapping the existing server `Testimonials.tsx`.
-6. **Section-to-section connective tissue.** As each `BranchDivider` enters the viewport, its SVG draw-in animation should trigger at the same moment the NEXT section below it starts revealing — not independently. This means binding the BranchDivider's ScrollTrigger to the next section's entry. In practice: give each BranchDivider a `data-divider-for="featured|meetyarit|categories"` attribute, and have the consumer section's motion setup `.add('labels...')` to coordinate.
-
-### Non-negotiables
-
-- **Durations** 600–1400ms for single moves, 2–4s for orchestrated timelines.
-- **Eases** `power2.out` / `power3.out` / `expo.out` / `power1.inOut` only. No elastic / bounce / back.
-- **Tilt ceiling** ±3–8° maximum.
-- **Every GSAP motion uses `useGsapScope` with a `useGsapReducedMotion` check and `clearProps: 'all'` on reduced.**
-- **Import gsap only from `@/lib/motion/gsap`**, never raw.
-- **Customer-only**; NEVER touch the admin panel (`src/app/(payload)/*`, `src/components/admin/payload/*`, `src/collections/*`, `src/payload.config.ts`) unless Yarit specifically asks.
-- **Additive only** — don't remove any existing CSS keyframe, don't replace any existing `<Reveal>` / `<StaggeredReveal>` usage outside the one section you're touching, don't break the motion primitives exports.
-- **Robust `gsap.from` pattern** — `immediateRender: false` + `once: true` on every scroll-triggered entrance. This is the fix from `027ebda` and IS non-negotiable. If you write a `gsap.from(...).scrollTrigger(...)` without those two options, the bug from 2026-04-11 can recur.
-- **Never `generateStaticParams` returning only `{ locale }`** on any two-segment dynamic route. CI will fail if you do.
-- **`setRequestLocale` + `getTranslations` in every server page/layout** that uses translations.
-- **`cookies()`, `headers()`, `draftMode()` are async** — `await` always.
-- **Never import `next/link` in storefront code** — use `Link` from `@/lib/i18n/navigation`.
-- **Server→client props are strings/numbers/booleans/JSX only** — no function props.
-- **No Tailwind arbitrary-value classes in JSX comments or markdown files** — the v4 scanner picks them up.
-
-### Critical files to touch
-
-**Likely to modify:**
-- `src/components/sections/HeroMotion.tsx` — tighten the scroll parallax values for #1
-- `src/components/sections/TrustBar.tsx` — add `Reveal` wraps around each icon for #2 (may need to split into a TrustBarMotion client wrapper if the current file is a server component)
-- `src/components/sections/MeetYaritMotion.tsx` — add `SplitWords` import + wrap the body text for #3 (keeping the existing T1.1 + bug-fix intact)
-- `src/components/sections/CategoryGrid.tsx` + `CategoryGridMotion.tsx` — add desktop pin for #4 (keep T1.2 entrance + T2.8 hover intact)
-- Potentially: new `src/components/sections/TestimonialsMotion.tsx` for #5
-- `src/components/ui/BranchDivider.tsx` — may need a `data-divider-for` prop for #6
-
-**Do NOT touch** unless explicitly required:
-- `src/components/product/ProductCardMotion.tsx` — G3 magnetic hover, already shipped and stable
-- `src/components/shop/ShopGridFlip.tsx` — T1.6, different motion pattern (mount-only, not scroll-triggered)
-- `src/components/product/ProductGalleryMotion.tsx` — T1.7, hover + Flip pattern
-- `src/lib/motion/gsap.ts` — foundation, only touch to register new plugins
-- `src/lib/motion/useGsapReducedMotion.ts` — stable
-
-### Verification workflow
-
-After EVERY substantive edit, run:
-
-```bash
-cd C:/AI/YaritShop/yarit-shop
-npx tsc --noEmit         # must exit 0
-npm run lint             # must exit 0, 0 errors 0 warnings
-npm run build            # must exit 0, 40 routes all ƒ/○, zero SSG
-```
-
-End-to-end smoke test before pushing:
-
-```bash
-npm run build && npx next start -p 3009    # local prod build
-```
-
-Then via Chrome MCP (or curl if Chrome isn't available):
-
-1. Load `http://localhost:3009/` and scroll to the bottom. Verify:
-   - Hero parallax happens (Layer 1 drifts up)
-   - TrustBar icons reveal on scroll
-   - FeaturedProducts cards are at `opacity: 1` (the 2026-04-11 bug regression check)
-   - MeetYarit image + text arrive together
-   - Testimonials cascade horizontally
-   - CategoryGrid tiles are at `opacity: 1` (the 2026-04-11 bug regression check), scale and blur into place, desktop-pinned header holds while scrolling
-   - Footer reveals
-2. Eval `document.querySelectorAll('[data-category-card]')` and check all 5 cards have `opacity: 1` and `transform: matrix(1, 0, 0, 1, 0, 0)` — this is the bug-fix smoke test, **do not skip it**.
-3. Load with `?prefers_reduced_motion=1` or use DevTools "Emulate CSS prefers-reduced-motion: reduce" and verify: everything snaps to natural state instantly, no animations play. This is the accessibility smoke test.
-4. Resize to 375×812 (iPhone SE). All motion should degrade gracefully — no horizontal scrollbars, no pin on mobile, entrance animations still play.
-5. Load in RTL (default `/`) and LTR (`/en`). Both should look correct.
-
-### Plan file
-
-Create your plan at `C:\Users\Ar1ma\.claude\plans\<generated-name>.md` using the Plan workflow. Don't skip the Explore phase even if you feel you know the codebase — the interplay between T1, T2, and T2.9 is subtle and a fresh read will catch assumptions.
+- `docs/STATE.md` has a full T2.9 ship entry as the "Latest" section
+- `docs/YARIT-ADMIN-GUIDE.md` is still the canonical long-form guide
+- `docs/CONVENTIONS.md` + `docs/DECISIONS.md` ADR-018 document the SSG incident prevention rule
+- `CLAUDE.md` rule #12 enforces `immediateRender: false + once: true` on every new `gsap.from`
+  + scrollTrigger
 
 ---
 
-## Secondary tasks for this session (after T2.9)
+## Your primary tasks this session
 
-Pick these up only if T2.9 completes cleanly and there's time left. Otherwise defer to the final closeout session.
+### Task 1 — Deep QA pass (front + admin)
 
-### Drop `@swc-node/register` and `@swc/core`
+The previous session verified the 6 T2.9 beats via Preview MCP + a local prod-build smoke test,
+ran quality gates after each beat, and fetched the live prod site to confirm ship. This session
+should go deeper. Check:
 
-Verified genuinely unused (no direct imports, no scripts, no config refs, ADR-008 acknowledged them as "kept just in case"). Removing them is a trivial `npm uninstall` + regenerate `package-lock.json`. Test with `tsc + lint + build`. Commit as its own isolated commit so the dep diff stays clean.
+**Storefront (LTR English)**
+- [ ] `/en` — homepage: all 6 sections scroll cleanly, dividers draw in sync with their next
+  section, TrustBar icons bloom on enter view, MeetYarit body cascades word-by-word, CategoryGrid
+  heading pins on desktop + unpins at section bottom, Testimonials cards slide in from the left
+  (LTR start edge), hero parallax scrubs smoothly
+- [ ] `/en/shop` — 7 products render, category filter (`?category=aloe`) narrows the list
+- [ ] `/en/shop/product/<slug>` — at least 3 product detail pages (lip balm, multivitamin, gift set)
+- [ ] `/en/cart` — empty state + add-to-cart round trip
+- [ ] `/en/checkout` — form renders, no "test checkout" disclaimer leaking to customers (prod
+  uses a real payment provider — confirm via `isMockPaymentProvider()` behavior)
+- [ ] `/en/about` — long-form page, reveal-on-scroll still works
+- [ ] `/en/contact` — form renders, email/phone pulled from SiteSettings (not brand.config
+  placeholders)
+- [ ] `/en/login` + `/en/forgot-password` + `/en/reset-password/<token>` — auth flow
+- [ ] `/en/account` — after login, orders list + profile + addresses
+- [ ] `/en/legal/<slug>` — if legal markdown is still empty, verify the 404 path is graceful
 
-### Link `YARIT-ADMIN-GUIDE.md` from the admin `?צריכה עזרה` button
+**Storefront (RTL Hebrew, the default locale)**
+- [ ] `/` (= `/he`) — dir=rtl, Hebrew copy everywhere, Testimonials cards slide in from the RIGHT
+  (RTL start edge), Hebrew headline "שורשים של בריאות", all 5 category tiles with Hebrew titles
+- [ ] Run through the same checklist as above but on the Hebrew side
 
-Currently `src/components/admin/payload/HelpButton.tsx` is a `mailto:` to Nir. Three options:
+**Mobile 375×812**
+- [ ] No horizontal scroll on any page
+- [ ] Category heading pin DOES NOT fire on mobile (`position: static` throughout)
+- [ ] Hero min-height and drifting leaves still look right
+- [ ] MobileNav opens from the right edge (in RTL) / left edge (in LTR)
+- [ ] Cart drawer overlay doesn't block the checkout button (the 2026-04-11 P1 fix)
 
-- **Option A (simplest):** Leave as-is. Nir sends Yarit the GitHub link to the guide directly on WhatsApp. No code change.
-- **Option B (medium):** Add a second pill next to the mailto button labeled "📖 מדריך". Opens the rendered guide in a new tab. Needs a hosting target — either a `/help` storefront route that renders the markdown (using the existing `src/lib/legal.ts` markdown renderer as a template), OR a GitHub pages link for the raw file.
-- **Option C (nicest but most invasive):** Register a custom Payload admin view at `/admin/help` that renders the markdown inside the Payload chrome. Uses `payload.config.ts` `admin.components.views` registration. Matches how `/admin/fulfillment` is wired. Touches admin code — only do this if Yarit asks.
+**Tablet 768×1024**
+- [ ] Just barely desktop — verify the CategoryGrid pin fires at the 768px breakpoint
+- [ ] Product grid collapses to 3 columns on tablet, 4 on desktop
 
-**Recommendation:** Option B with the storefront `/help` route. It keeps admin code untouched, gives Yarit a real web page (not raw markdown), and is reachable from anywhere. The route is a ~20-line server component that reads `docs/YARIT-ADMIN-GUIDE.md` and renders it using `renderLegalMarkdown` from `src/lib/legal.ts`.
+**Reduced motion**
+- [ ] DevTools → Rendering → "Emulate CSS prefers-reduced-motion: reduce" → reload
+- [ ] Every animation snaps to its settled state (no movement, no fades)
+- [ ] `[data-category-card]`, `[data-featured-card]`, `[data-meet-text-block]`,
+  `[data-testimonial-card]` all at `opacity: 1` with identity transforms
+- [ ] TrustBar icons visible immediately
 
-### Other Track A / handoff items
+**Admin panel**
+- [ ] Login as `admin@shoresh.example` / `admin1234` (dev DB only — prod has whatever Yarit set)
+- [ ] Dashboard loads with the correct product count (7), order count, customer count
+- [ ] `/admin/collections/products` — 7 rows, no stray lavender rows
+- [ ] `/admin/collections/products/1` — edit form loads, Hebrew + English title tabs work
+- [ ] `/admin/collections/categories` — 5 categories, drag-reorder works
+- [ ] `/admin/collections/orders` — orders list (may be empty on dev — that's fine)
+- [ ] `/admin/globals/site-settings` — loads, all fields labeled in Hebrew
+- [ ] `/admin/fulfillment` — custom fulfillment view loads
+- [ ] **HelpButton popover** — opens in both he and en, 7 task cards, click to expand hint,
+  Escape / outside-click closes, no WhatsApp / email / mailto refs
+- [ ] **Language pill** (`עברית · EN`) — clicking flips the emphasis
 
-These are still blocked on Yarit handing over external values:
+**Network + console hygiene**
+- [ ] Zero console errors on every page visited
+- [ ] Zero network 500s
+- [ ] No missing images (404s on `/brand/ai/*.jpg` etc.)
+- [ ] No hydration warnings (`Text content did not match`)
 
-- **Resend email credentials** (adapter at `src/lib/email/resend.ts` is paste-in-ready — 4 env vars + redeploy)
-- **Meshulam payment credentials** (`src/lib/payments/meshulam.ts` has 2 `TODO(meshulam)` hotspots at lines 123 + 193 that need reconciling against Yarit's actual PDF; then 5 env vars + sandbox E2E + live-flip)
-- **Legal markdown** (drop files into `content/legal/<slug>/<locale>.md`; re-add footer links in `src/components/layout/Footer.tsx` — look for the comment blocks around lines 51–55 and 74–77)
-- **Custom domain** (Vercel → Domains + DNS + update `NEXT_PUBLIC_SITE_URL`)
-- **Final catalog copy** (Yarit edits live via `/admin/collections/products` — no code action)
+**Quality gates**
+- [ ] `npx tsc --noEmit` → 0 errors
+- [ ] `npm run lint` → 0 errors, 0 warnings
+- [ ] `npm run build` → 40 routes, `ƒ` / `○`, zero `●` SSG
 
-### Final closeout (Track D)
+### Task 2 — Extra GSAP polish ("make the site feel even better")
 
-If T2.9 lands cleanly AND Yarit has no pending items, the final deliverable is:
+Small, targeted additions. **Restraint over flash.** Pick 2–4 of these, not all of them. All must
+respect the non-negotiables in the previous section (durations, eases, tilt ceiling,
+`immediateRender: false + once: true` on every `gsap.from` + scrollTrigger, import from
+`@/lib/motion/gsap` only, customer-only, additive only).
 
-1. Update `docs/YARIT-ADMIN-GUIDE.md` if any admin changes happened in T2.9 (unlikely, but audit)
-2. Walk `docs/STATE.md` end-to-end and make sure the timeline reads cleanly
-3. Write Yarit a short "your shop is live" note **in Hebrew** — what URL to bookmark, how to log in, what she can edit, what's blocked on her external inputs
-4. Tell Nir what to send Yarit and when, and what "done" looks like
-5. Archive this `NEXT-SESSION-PROMPT.md` the same way the 2026-04-11 close-out prompt was archived
+Candidate ideas (order = rough priority):
+
+1. **Sticky-header compression on scroll.** When the user scrolls past the Hero, the
+   `src/components/layout/Header.tsx` nav could compress from its current height to something
+   tighter (~52px), with the logo shrinking and the background gaining a subtle blur. GSAP
+   scroll-scrubbed, gated on `(min-width: 768px)` + reduced motion. This is a common editorial
+   pattern and is an additive overlay on the existing sticky nav.
+
+2. **Product card image Ken Burns on scroll-into-view.** `ProductCard.tsx` has a hover-zoom
+   already. Add a one-shot Ken Burns drift when the card first enters the viewport (not on
+   scroll, just at entry) so every card feels "alive" the first time the user sees it. Use the
+   existing `KenBurns` primitive or write a one-off GSAP tween.
+
+3. **Hero headline rotateX → 0 tightening.** The existing T1.1 entrance uses `rotateX: -8°` on
+   each word. This is tasteful but subtle — try tightening to a slightly more dynamic `rotateX:
+   -12°` + shorter duration. Restrained tweak.
+
+4. **Shop grid bloom-in on first page load.** `ShopGridFlip.tsx` currently uses Flip for
+   filter/sort transitions. Add a T1.2-style bloom entrance on first render so the whole grid
+   feels like it's arriving deliberately.
+
+5. **Add to cart button press feedback.** When the user clicks "add to bag", the button could do
+   a small GSAP-driven scale bounce (`0.96 → 1`, 200ms) + a check icon fade-swap. Pair with the
+   existing `CartDrawer` open animation for a coordinated "item added" moment.
+
+6. **Footer rise on exit viewport.** When the user scrolls off a page (e.g. shop → cart), the
+   `Footer.tsx` Reveal primitive already fires on scroll-in. Add a subtle `y: 40 → 0` +
+   `opacity: 0 → 1` on a second ScrollTrigger if it re-enters (safer: just ensure the footer
+   reveal doesn't get "stuck" on SPA navigation).
+
+7. **404 page polish.** `src/app/not-found.tsx` is a little static. Add a GSAP intro (headline
+   + illustration drift) so a user who hits a dead link still feels cared for.
+
+8. **Cart drawer stagger on items.** When multiple items are added in quick succession, the
+   cart drawer items could stagger-reveal. Might already work — verify.
+
+**Critical**: every pick should be verified on prod build via `preview_start("yarit-shop-prod")`
+and a smoke test before committing. Follow the same verification workflow as T2.9: after each
+substantive edit, run `tsc + lint + build`, then `preview_eval` against the running prod server
+to confirm the behavior works.
+
+### Task 3 — Final handoff
+
+The previous T2.9 session was sold as "then close out the project". That was optimistic — there's
+still one session of polish. This session's closeout deliverables:
+
+- [ ] **Write Yarit a short "your shop is live" note in Hebrew.** What URL to bookmark, how to
+  log in (admin email + a password YARIT chose, not the dev default), what she can edit, and what
+  she should wait for (Meshulam credentials, Resend API, legal markdown, custom domain — these
+  are external inputs she needs to provide or wait on). Save to
+  `docs/YARIT-WELCOME-LETTER.md` (new file) with a header explaining it's Hebrew-only and meant
+  to be copy-pasted into WhatsApp / email.
+
+- [ ] **Update `docs/NEXT-SESSION.md` TL;DR** so if anyone opens the project cold, they see "the
+  shop is live, Yarit is using it, remaining work is external input (credentials, legal, domain,
+  final content)."
+
+- [ ] **Walk `docs/STATE.md` end-to-end** and confirm the timeline reads cleanly. Archive the
+  oldest entries if the file has grown past ~800 lines (create
+  `docs/STATE-ARCHIVE.md` for the historical entries).
+
+- [ ] **Tell Nir what to send Yarit and when** in a brief summary (docstring in this prompt file,
+  or a top-of-session message). What's the handoff sequence, who does what.
+
+- [ ] **Archive `NEXT-SESSION-PROMPT.md`**. If the final closeout truly completes, this file
+  becomes "NEXT-SESSION-PROMPT-2026-04-11-final-qa-and-polish.md" and a new one replaces it with
+  only the "post-handoff maintenance" notes (if any). If more work is needed, extend into
+  another polish pass.
+
+### Task 4 — Any Yarit follow-up asks
+
+If Yarit has new asks between sessions, add them here. As of the T2.9 ship:
+- Admin help button → mini-guide popover (✅ shipped in T2.9 session)
+- Lavender-soap stray products → removed from dev DB (✅ shipped; prod was never affected)
 
 ---
 
-## Non-negotiable rules (same every session)
+## Non-negotiables (same every session)
 
-1. **Never push without explicit user word.** `git push` is gated on the user saying "push" or equivalent.
-2. **No admin panel aesthetic changes.** `src/app/(payload)/*`, `src/components/admin/payload/*`, `src/collections/*`, `src/payload.config.ts` are read-only unless Yarit specifically asks for a change.
-3. **Motion is additive only.** Don't remove existing keyframes, don't touch the motion primitives, don't break the editorial-botanical vocabulary.
+1. **Never push to main without explicit user word.** Fast-forward merge + `git push origin
+   main` + `npx vercel --prod --yes` all require the user saying "push" / "deploy".
+2. **No admin panel aesthetic changes** unless Yarit explicitly asks. The HelpButton rewrite was
+   authorized. `src/app/(payload)/*`, `src/components/admin/payload/*`, `src/collections/*`,
+   `src/payload.config.ts` are otherwise read-only.
+3. **Motion is additive only.** Don't remove existing keyframes, don't touch the motion
+   primitives (except to add new additive direction/variant values), don't break the
+   editorial-botanical vocabulary.
 4. **`setRequestLocale` + `getTranslations` in every server page/layout.**
 5. **`cookies()`, `headers()`, `draftMode()` are async.**
 6. **Never import `next/link` in storefront code.**
 7. **Single GSAP entry point** — `@/lib/motion/gsap`.
-8. **Server→client props are serializable only.**
+8. **Server→client props are serializable only.** No function props.
 9. **No Tailwind arbitrary-value classes in JSX comments or markdown files.**
 10. **Hebrew + English bilingual strings always go through `src/messages/{he,en}.json`.**
-11. **Never re-add `generateStaticParams` returning only `{locale}` to a TWO-segment dynamic route** — CI will fail.
-12. **Every new `gsap.from` + scrollTrigger MUST include `immediateRender: false + once: true`** — the 2026-04-11 bug fix pattern is non-negotiable.
+11. **Never re-add `generateStaticParams` returning only `{locale}` to a TWO-segment dynamic route**
+    — CI will fail.
+12. **Every new `gsap.from` + scrollTrigger MUST include `immediateRender: false + once: true +
+    start: 'top bottom-=40'`** — the 2026-04-11 bug-fix pattern is enforced.
 
 ## Working directory + quality gates
 
@@ -267,9 +277,22 @@ npm run lint            # must exit 0, 0 errors 0 warnings
 npm run build           # must exit 0, all 40 routes ƒ/○, zero SSG
 ```
 
-Dev server: `npm run dev` → http://localhost:3000. **Warning:** `npm run dev` does NOT exercise SSG behavior and has also been observed to have looser GSAP timing than prod builds — if you need to reproduce a production-only motion issue, use `npm run build && npx next start -p <free-port>` instead.
+Dev server: `npm run dev` → http://localhost:3000. **Warning:** `npm run dev` does NOT exercise
+SSG behavior and has looser GSAP timing than prod builds. If you need to reproduce a
+production-only motion issue, use `npm run build && npx next start -p <free-port>` instead.
 
-Preview MCP: if you use `preview_start` from `.claude/launch.json`, note that Preview MCP's Chrome does NOT emit native `scroll` events on programmatic `window.scrollTo(y)`. Dispatch `window.dispatchEvent(new Event('scroll'))` manually if you need to verify scroll-triggered behavior.
+Preview MCP: `preview_start("yarit-shop-prod")` uses the config in
+`C:/AI/YaritShop/.claude/launch.json` (the **project root** launch.json, NOT
+`yarit-shop/.claude/launch.json` — Preview MCP reads from the parent). The config runs
+`npm --prefix yarit-shop run start -- -p 3009` which expects a prior `npm run build`.
+Preview MCP's Chrome has two quirks worth remembering:
+
+- Programmatic `window.scrollTo` sometimes doesn't stick without a `requestAnimationFrame` chain.
+  Use `document.documentElement.scrollTop = <y>` inside an rAF, then dispatch
+  `new Event('scroll')` manually, then sample after `setTimeout(..., 1500)`.
+- `preview_click` on buttons that use React onClick handlers sometimes doesn't propagate. Use
+  `btn.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))`
+  via `preview_eval` as a reliable fallback.
 
 ---
 
@@ -277,15 +300,16 @@ Preview MCP: if you use `preview_start` from `.claude/launch.json`, note that Pr
 
 The session is done when:
 
-- [ ] T2.9 — all 6 numbered items above shipped in a coherent motion layer
-- [ ] All 5 category cards + 3 featured cards + MeetYarit columns verified at `opacity: 1` in prod (the 2026-04-11 bug-fix regression test)
-- [ ] Reduced-motion path verified — everything snaps to natural state
-- [ ] Mobile (375×812) + desktop (1440) + tablet (768) all verified visually
-- [ ] `tsc + lint + build` green after every change
+- [ ] Task 1 — every Task 1 checkbox ticked, no regressions found (or any regressions found are
+      fixed + verified)
+- [ ] Task 2 — 2–4 GSAP polish additions shipped, each verified on local prod build
+- [ ] Task 3 — handoff deliverables written (Hebrew welcome letter, NEXT-SESSION.md, STATE.md
+      walk, Nir handoff note)
+- [ ] All quality gates green
 - [ ] `git push origin main` only after explicit user word
-- [ ] Vercel auto-deploys OR manual `npx vercel --prod --yes`
-- [ ] `docs/STATE.md` has a new "Latest" entry describing T2.9 shipped
-- [ ] `docs/NEXT-SESSION.md` TL;DR updated with the new state
-- [ ] This `NEXT-SESSION-PROMPT.md` is either archived + replaced with a fresh one OR marked completed at the top (banner-style)
+- [ ] `npx vercel --prod --yes` only after explicit user word
+- [ ] `docs/STATE.md` has a new "Latest" entry describing the final QA + polish + handoff
+- [ ] This `NEXT-SESSION-PROMPT.md` is archived and either replaced with a post-handoff
+      maintenance stub OR marked "completed" if nothing more is planned
 
-**Good luck. The site is in great shape. Restraint over flash. Slow over fast. Additive over replacement.**
+**The site is in great shape. Restraint over flash. Slow over fast. Additive over replacement.**

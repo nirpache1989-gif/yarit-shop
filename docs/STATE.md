@@ -2,7 +2,208 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom.
 
-## Latest (2026-04-11 late-evening — QA pass + P1 storefront fixes)
+## Latest (2026-04-11 night — T2.9 homepage scroll-linked storytelling + admin help rewrite)
+
+**Commit `9f01a50`** (merged fast-forward to `main` from
+`feat/t2.9-homepage-orchestration`) ships the entire **T2.9 — homepage
+scroll-linked storytelling** wave, plus a follow-up admin help rewrite
+Yarit asked for on the same pass. **Production is now at `9f01a50`**
+via `dpl_EQYNCT12CyNVmPSthrs5SVmg6YwJ` — `https://yarit-shop.vercel.app`
+serves the new motion layer. The 2026-04-11 `immediateRender: false`
+bug-tolerant pattern (CategoryGrid + FeaturedProducts + MeetYarit
+rendered-blank incident) is preserved on every existing tween and
+enforced on every new T2.9 tween.
+
+### What shipped (6 GSAP beats + 1 admin polish)
+
+**T2.9 #1 — Hero exit parallax tightening** (`5a43d76`,
+`HeroMotion.tsx`). Botanical-frame drift deepened from `yPercent -12`
+to `-18`, cream vignette fade from opacity `0.4` to `0.25`, and both
+tweens' ease switched from `none` → `power1.inOut` so the scrubbed
+parallax accelerates into the mid-scroll and settles at the end rather
+than binding 1:1 to the scroll position. Paired with the existing
+`scrub: 0.6` smoothing timer, this delivers the "slow buttery handoff
+from Hero to TrustBar" the T2.9 brief called for. No structural
+change, no new ScrollTriggers — values only. Verified mid-scroll at
+`scrollY=600`: `data-hero-bg` at `translateY(-110.051px)` and
+`data-hero-vignette` at `opacity 0.3003`.
+
+**T2.9 #2 — TrustBar scale reveal + `scale` primitive direction**
+(`d04f6e4`, `globals.css` + `Reveal.tsx` + `StaggeredReveal.tsx` +
+`TrustBar.tsx`). Extended the existing `Reveal` / `StaggeredReveal`
+primitives with a new `'scale'` direction value (widened the type,
+added `@keyframes reveal-scale` + `[data-reveal="scale"]` selector
+rule in globals.css). Pure additive — existing `'up'` / `'start'`
+consumers unchanged. TrustBar's 4 icon items now bloom in at `scale
+0.8 → 1` with `120ms` stagger (up from `110ms`). Kept on the
+IntersectionObserver path — the T2.9 brief explicitly demanded the
+safe primitive for TrustBar because the 2026-04-11 hydration race
+makes `gsap.from + scrollTrigger` entrance above-the-fold risky.
+Reduced-motion path is automatically covered by the existing
+attribute-exists selector in globals.css.
+
+**T2.9 #3 — MeetYarit body-paragraph word cascade** (`df7b3b5`,
+`MeetYaritMotion.tsx`). Added `useInView` from
+`src/lib/motion/useInView.ts` on the body-paragraph wrapper. Until
+the wrapper enters the viewport, a plain `<p>` holds the slot so the
+T1.1 column-converge has something to animate and the SSR HTML stays
+complete. On in-view flip, the `<p>` swaps to `<SplitWords as="p"
+stagger={60}>` whose CSS keyframe cascade plays from mount time —
+the words cascade exactly as the body scrolls into view, in sync
+with the T1.1 horizontal converge. The wrapper `<div>` keeps
+`data-meet-text-block` so the existing T1.1 selector still picks it
+up alongside the eyebrow / heading / link children. Verified at
+`scrollY=3100`: `aria-label` set, 32 word spans, text starts with
+"Shoresh is my little shop...".
+
+**T2.9 #4 — CategoryGrid desktop header pin** (`baccefb`,
+`CategoryGrid.tsx` + `CategoryGridMotion.tsx`). Restructured the
+CategoryGrid split to match the Hero → HeroMotion /
+FeaturedProducts → FeaturedProductsMotion pattern: the server shell
+resolves translations + Payload categories + the AI fallback tile
+image URLs and hands a serializable `tiles[]` shape across the client
+boundary. `CategoryGridMotion` now owns the whole `<section>` +
+`<Container>` + heading + grid layout so the T2.9 desktop header pin
+can scope cleanly. `gsap.matchMedia('(min-width: 768px)')` adds a
+`ScrollTrigger.create({ pin: headingRef.current, pinSpacing: false })`
+that pins the heading at `top 100px` and releases at `bottom 200px` —
+same pattern as `FeaturedProductsMotion.tsx`. Mobile path keeps a
+heading fade-up but no pin (via the `(max-width: 767px)` matchMedia
+branch). **T1.2 card blooming entrance and T2.8 magnetic hover tilt
+are preserved verbatim** — same values, same constants, same cleanup.
+Verified at `scrollY=3688`: `[data-category-heading]` at
+`position: fixed; top: 100px`, 5 cards at `opacity 1`.
+
+**T2.9 #5 — Testimonials horizontal cascade** (`1287fc7`,
+`Testimonials.tsx` + new `TestimonialsMotion.tsx`). Mirrors the
+Hero → HeroMotion split: `Testimonials.tsx` shrinks to a server data
+shell, `TestimonialsMotion.tsx` (new) owns the full JSX + GSAP
+cascade. Each of the 3 cards slides in from the RTL-aware start edge
+(`startX = rtl ? 60 : -60`) over `1.0s` with a `150ms` stagger. The
+section heading keeps its `<Reveal>` wrapper — only the 3 cards move
+to GSAP. `<li>` card JSX (sprig svg, 5 star svgs, blockquote, author
+block) copied verbatim. **Non-negotiable 2026-04-11 bug-fix pattern
+applied**: `immediateRender: false + once: true + start: 'top
+bottom-=40'` so the from-state never sticks on hydration and the snap
+happens off-screen.
+
+**T2.9 #6 — BranchDivider → next-section coordination** (`c0268aa`,
+`BranchDivider.tsx` + `page.tsx` + `FeaturedProductsMotion.tsx` +
+`MeetYaritMotion.tsx`). Each `BranchDivider` on the homepage now
+accepts a `dataFor?: 'featured' | 'meetyarit' | 'categories'` prop.
+When set, the component queries `document.querySelector('[data-section
+="<value>"]')` at `useGsapScope` setup time and uses that element as
+its ScrollTrigger trigger with `start: 'top bottom-=40'` — the same
+start semantics the section entrances use. When both triggers fire on
+the same scroll tick the sprig draws in at the exact moment the
+consumer section starts revealing. `once: true` when bound to a
+section so it doesn't reverse on scroll-up. Fallback path: if
+`dataFor` is omitted or the DOM lookup fails, the divider falls back
+to its legacy self-trigger (`top 85%` on its own bounds +
+`toggleActions: 'play none none reverse'`), preserving behavior for
+any future consumer. `data-section` attributes added on
+`FeaturedProductsMotion.tsx` and `MeetYaritMotion.tsx`;
+`CategoryGridMotion.tsx` got its attribute as part of T2.9 #4's
+restructure. page.tsx threads `dataFor` on the 3 homepage dividers.
+
+**Admin HelpButton rewrite** (`9f01a50`, `HelpButton.tsx`). Per
+Yarit's T2.9 closeout ask, the `?צריכה עזרה` pill in the admin
+top-right no longer offers WhatsApp / email / mailto contact options.
+It renders a compact bilingual **mini-guide** popover titled
+"איך משתמשים בפאנל" / "How to use the admin" with 7 collapsible task
+cards. Each task has an emoji-prefixed title (e.g. "🆕 הוספת מוצר
+חדש"), the real Hebrew sidebar path (e.g. `📦 קטלוג ← מוצרים ← "+
+יצירה חדשה"` keyed to the actual labels in `src/collections/Products.ts`),
+and a 1-2 line how-to with the exact next click. Tasks: add product,
+edit product, mark order shipped, add category, update shop details,
+change hero image, change password. Popover widened to `360px` with
+`max-height: 70vh` + `overflowY: auto` so it scrolls internally.
+Italic tip footer reminds Yarit that every field in the admin has a
+short hint below it. Outside-click / Escape close preserved. HELP_EMAIL
+and HELP_WHATSAPP constants, the copyEmail helper, and the
+`copied` state all deleted — they're no longer used.
+
+### T2.9 non-negotiables honored
+
+- Every new `gsap.from` + `scrollTrigger` uses `immediateRender: false
+  + once: true + start: 'top bottom-=40'` (2026-04-11 bug-fix pattern)
+- Durations 600–1400ms for single moves, 2–4s for orchestrated
+  timelines. Eases `power2.out` / `power3.out` / `power1.inOut` only.
+- Tilt ceiling `±3°` (only T2.8 hover uses tilts, unchanged)
+- Import gsap only from `@/lib/motion/gsap` via `useGsapScope`
+- Customer-only — admin panel only touched by the HelpButton rewrite
+  which Yarit explicitly asked for
+- Additive only — no existing CSS keyframe removed, no existing
+  `<Reveal>` / `<StaggeredReveal>` consumer outside the touched sections
+  changed, motion primitive exports only widened (new `'scale'`
+  direction value)
+- No `next/link` in storefront; all links via `@/lib/i18n/navigation`
+- Server→client props are strings/numbers/booleans only
+- No new `generateStaticParams` on any two-segment dynamic route
+
+### Dev DB cleanup (local-only, does not affect prod)
+
+During the final smoke test, Yarit noticed the local dev shop was
+showing 9 products instead of the canonical 7. Investigation: 2 stray
+test products (`id 8 = lavender-soap`, `id 9 = qa-lavender-soap`)
+were left behind in `shoresh-dev.db` by the 2026-04-11 QA pass — both
+had no title, no description, no images, and no join-table rows.
+Deleted via a one-off ad-hoc Node + `node:sqlite` script, then the
+script and the DB backup were removed. **Prod (Neon) never had them**
+— prod only ever had the 7 seed products, so no prod cleanup was
+needed. Local dev DB is now back at the canonical 7.
+
+### Quality gates
+
+- `npx tsc --noEmit` → 0 errors (after every beat)
+- `npm run lint` → 0 errors, 0 warnings
+- `npm run build` → 40 routes, all `ƒ` Dynamic or `○` Static, zero
+  `●` SSG (after every beat)
+- Local prod-build smoke test: all 6 beats verified via `preview_eval`
+  on `http://localhost:<port>/` + `/en` + `/he` + `/admin`. Zero
+  console errors, zero server errors. Bug-fix regression test passes:
+  5 category cards + 3 featured cards + 4 meet text blocks + 3
+  testimonial cards all at `opacity 1` on fresh page load.
+- Prod smoke (`https://yarit-shop.vercel.app/en?cb=<ts>`):
+  `data-reveal="scale"` present, 5 `data-category-card`, 3
+  `data-featured-card`, 3 `data-testimonial-card`, 3 `data-section`,
+  3 `data-bd-stem`, no `lavender-soap` refs. Title
+  `"Shoresh — Rooted in wellness"`.
+
+### Files touched (15)
+
+**Homepage motion layer:**
+- `src/components/sections/HeroMotion.tsx` — T2.9 #1 parallax values
+- `src/app/globals.css` — T2.9 #2 `@keyframes reveal-scale` + selector
+- `src/components/motion/Reveal.tsx` — T2.9 #2 Direction type
+- `src/components/motion/StaggeredReveal.tsx` — T2.9 #2 Direction type
+- `src/components/sections/TrustBar.tsx` — T2.9 #2 direction="scale" + stagger=120
+- `src/components/sections/MeetYaritMotion.tsx` — T2.9 #3 gated SplitWords + #6 `data-section`
+- `src/components/sections/CategoryGrid.tsx` — T2.9 #4 data shell restructure
+- `src/components/sections/CategoryGridMotion.tsx` — T2.9 #4 full section + pin (+ T1.2/T2.8 preserved)
+- `src/components/sections/Testimonials.tsx` — T2.9 #5 data shell restructure
+- `src/components/sections/TestimonialsMotion.tsx` — T2.9 #5 new client component
+- `src/components/ui/BranchDivider.tsx` — T2.9 #6 dataFor prop + trigger rewire
+- `src/components/sections/FeaturedProductsMotion.tsx` — T2.9 #6 `data-section="featured"`
+- `src/app/(storefront)/[locale]/page.tsx` — T2.9 #6 dataFor wiring
+
+**Admin:**
+- `src/components/admin/payload/HelpButton.tsx` — mini-guide rewrite
+
+### Still deferred (owner-blocked or next-session)
+
+- Drop `@swc-node/register` + `@swc/core` (trivial `npm uninstall` + rebuild)
+- Resend email credentials (4 env vars + redeploy)
+- Meshulam payment credentials (env vars + sandbox E2E + live-flip)
+- Legal markdown drop-in + footer link re-add
+- Custom domain + `NEXT_PUBLIC_SITE_URL`
+- Final catalog copy (Yarit edits live in admin)
+- More GSAP polish (final session's focus — see
+  `NEXT-SESSION-PROMPT.md`)
+
+---
+
+## Earlier (2026-04-11 late-evening — QA pass + P1 storefront fixes)
 
 **Commit `d495593`** ships 15 files of fixes driven by the user's manual QA report (npm test + npm run build + local environment + test orders + reset-password flow + production smoke). Four P1 storefront bugs, five visual bugs, and two admin UX issues fixed in a single coordinated pass. **Production is now at `d495593`** — the new last-known-good commit for the T2.9 session's branch-workflow safety net.
 
