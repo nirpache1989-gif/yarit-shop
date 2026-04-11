@@ -103,56 +103,67 @@ export default buildConfig({
       titleSuffix: '— ניהול קופאה',
       icons: [{ rel: 'icon', url: '/brand/copaia.png' }],
     },
-    // 2026-04-12 admin-fix EMERGENCY: ALL admin.components customizations
-    // are commented out. The prod /admin SSR ships an empty React
-    // Suspense boundary instead of Payload's admin shell — every route
-    // (dashboard, collections, fulfillment) returns ~5KB of rendered
-    // HTML containing only the providers' DOM (drifting-leaves, toaster,
-    // dnd-kit announcer, portal divs) and 22 RSC-payload `__next_f.push`
-    // script tags whose content never gets converted into real DOM
-    // elements during client hydration. Local prod build does NOT
-    // exhibit this — it ships the full template-default__nav-toggler-wrapper
-    // SSR'd inline. Removing custom views alone (commit 53c25cb) did NOT
-    // fix it; the bug persists with Payload's stock dashboard.
-    //
-    // This commit removes graphics + actions + providers + beforeNavLinks
-    // + afterNavLinks ENTIRELY to test whether ANY of our customizations
-    // are tripping React 19 streaming SSR. If a vanilla Payload admin
-    // renders on prod, the bug is in our customization stack and the
-    // bisect happens in next session. If a vanilla Payload admin ALSO
-    // fails, it's a Payload 3.82 + Next 16 + Vercel runtime
-    // incompatibility we'll need to file upstream.
-    //
-    // All admin component files (BrandLogo, BrandIcon, AdminThemeInit,
-    // AdminToaster, AdminDriftingLeaves, OnboardingTour, AdminLangSwitcher,
-    // HelpButton, ViewOnSite, SidebarGreeting, SidebarFooter,
-    // YaritDashboard, FulfillmentView) remain on disk, the importMap.js
-    // entry stays, and the re-enable in next session is reverting this
-    // commit alone.
-    //
-    // components: {
-    //   graphics: {
-    //     Logo: { path: '@/components/admin/payload/BrandLogo#BrandLogo' },
-    //     Icon: { path: '@/components/admin/payload/BrandIcon#BrandIcon' },
-    //   },
-    //   beforeNavLinks: [
-    //     { path: '@/components/admin/payload/SidebarGreeting#SidebarGreeting' },
-    //   ],
-    //   afterNavLinks: [
-    //     { path: '@/components/admin/payload/SidebarFooter#SidebarFooter' },
-    //   ],
-    //   actions: [
-    //     { path: '@/components/admin/payload/AdminLangSwitcher#AdminLangSwitcher' },
-    //     { path: '@/components/admin/payload/HelpButton#HelpButton' },
-    //     { path: '@/components/admin/payload/ViewOnSite#ViewOnSite' },
-    //   ],
-    //   providers: [
-    //     { path: '@/components/admin/payload/AdminThemeInit#AdminThemeInit' },
-    //     { path: '@/components/admin/payload/AdminToaster#AdminToaster' },
-    //     { path: '@/components/admin/payload/AdminDriftingLeaves#AdminDriftingLeaves' },
-    //     { path: '@/components/admin/payload/OnboardingTour#OnboardingTour' },
-    //   ],
-    // },
+    components: {
+      // Brand graphics — replace Payload defaults on login + nav
+      graphics: {
+        Logo: { path: '@/components/admin/payload/BrandLogo#BrandLogo' },
+        Icon: { path: '@/components/admin/payload/BrandIcon#BrandIcon' },
+      },
+      // Custom views: replace the default dashboard with YaritDashboard,
+      // and register /admin/fulfillment as a branded custom view.
+      views: {
+        dashboard: {
+          Component: '@/components/admin/payload/YaritDashboard#YaritDashboard',
+        },
+        fulfillment: {
+          Component: '@/components/admin/payload/FulfillmentView#FulfillmentView',
+          path: '/fulfillment',
+          exact: true,
+          meta: {
+            title: 'הזמנות חדשות',
+            description: 'ניהול הזמנות בהליך אספקה',
+          },
+        },
+      },
+      // Sidebar augmentations
+      beforeNavLinks: [
+        { path: '@/components/admin/payload/SidebarGreeting#SidebarGreeting' },
+      ],
+      afterNavLinks: [
+        { path: '@/components/admin/payload/SidebarFooter#SidebarFooter' },
+      ],
+      // Permanent top-right action cluster. Order here is the order
+      // Payload renders them into `.app-header__actions` (right-to-left
+      // in RTL, so the first entry lands leftmost in the cluster).
+      //   1. AdminLangSwitcher — Hebrew/English toggle. Surfaces the
+      //      built-in /admin/account language preference in one click
+      //      from any page. See its JSDoc for root cause.
+      //   2. HelpButton — `mailto:` support pill.
+      //   3. ViewOnSite — opens storefront in a new tab.
+      actions: [
+        { path: '@/components/admin/payload/AdminLangSwitcher#AdminLangSwitcher' },
+        { path: '@/components/admin/payload/HelpButton#HelpButton' },
+        { path: '@/components/admin/payload/ViewOnSite#ViewOnSite' },
+      ],
+      // Admin providers. Order matters — AdminThemeInit must run
+      // first so `data-theme` is on <html> before downstream
+      // providers (AdminToaster, AdminDriftingLeaves, OnboardingTour)
+      // read the palette tokens.
+      providers: [
+        {
+          path: '@/components/admin/payload/AdminThemeInit#AdminThemeInit',
+        },
+        {
+          path: '@/components/admin/payload/AdminToaster#AdminToaster',
+        },
+        {
+          path: '@/components/admin/payload/AdminDriftingLeaves#AdminDriftingLeaves',
+        },
+        {
+          path: '@/components/admin/payload/OnboardingTour#OnboardingTour',
+        },
+      ],
+    },
   },
   collections: [Users, Media, Tags, Categories, Products, Orders],
   globals: [SiteSettings],

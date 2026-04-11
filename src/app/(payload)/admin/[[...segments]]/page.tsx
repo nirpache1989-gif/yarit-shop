@@ -9,26 +9,12 @@
  *          Next 16 note: `params` and `searchParams` are now Promises.
  *          Payload's `RootPage` already awaits them internally, so we
  *          can pass the thenables directly.
- *
- *          2026-04-12 admin-fix: forcing `dynamic = 'force-dynamic'`
- *          and `runtime = 'nodejs'` to prevent Next 16 / Vercel from
- *          serving the partial / streaming SSR shell that was leaving
- *          an empty React Suspense boundary on prod (the dashboard
- *          markup was arriving in the RSC payload script tags but
- *          never converted into DOM elements). Force-dynamic disables
- *          the static-shell rendering path and forces full SSR on
- *          every request.
  */
 import type { Metadata } from 'next'
 import config from '@payload-config'
 import { generatePageMetadata, RootPage } from '@payloadcms/next/views'
 
 import { importMap } from '../importMap.js'
-
-export const dynamic = 'force-dynamic'
-export const runtime = 'nodejs'
-export const fetchCache = 'force-no-store'
-export const revalidate = 0
 
 type Args = {
   params: Promise<{
