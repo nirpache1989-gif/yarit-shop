@@ -26,6 +26,7 @@
 'use client'
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/navigation'
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher'
@@ -46,6 +47,20 @@ export function MobileNav({ accountSlot }: Props) {
   const triggerRef = useRef<HTMLButtonElement | null>(null)
   const panelRef = useRef<HTMLDivElement | null>(null)
   const pathname = usePathname()
+
+  // 2026-04-11 fix: the dialog below is rendered via `createPortal` to
+  // `document.body` so it escapes the Header's containing block. The
+  // Header has `backdrop-blur-sm` which in modern browsers creates a
+  // CSS containing block for `position: fixed` descendants — meaning
+  // a child with `fixed inset-0` is anchored to the Header's 64px
+  // bounds, not the viewport. The whole dialog (backdrop + panel)
+  // was therefore rendering as a tiny 288×64 strip in the top-left
+  // instead of a full-screen slide-in. Portaling to body bypasses
+  // that entirely. No `mounted` hydration guard is needed because
+  // the portal branch is gated on `open` — which starts `false`,
+  // so SSR and first-client render agree on "render nothing", and
+  // the portal is only attempted after a user click (safely after
+  // React has hydrated the component).
 
   // Close the panel whenever the route changes — if the user taps a
   // link inside it, next-intl's navigation updates `pathname` and we
@@ -130,8 +145,10 @@ export function MobileNav({ accountSlot }: Props) {
       </button>
 
       {/* Backdrop + panel. Hidden entirely when closed (no render
-          cost, no stray focus traps). */}
-      {open && (
+          cost, no stray focus traps). Portaled to `document.body`
+          so it escapes the Header's backdrop-filter containing block
+          and can cover the full viewport. */}
+      {open && createPortal(
         <div
           className="md:hidden fixed inset-0 z-50"
           role="dialog"
@@ -224,7 +241,8 @@ export function MobileNav({ accountSlot }: Props) {
               </div>
             </nav>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   )
