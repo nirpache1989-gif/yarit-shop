@@ -147,10 +147,20 @@ export function MobileNav({ accountSlot }: Props) {
             tabIndex={-1}
           />
 
-          {/* Panel — slides from end edge (RTL: right→left; LTR: left→right) */}
+          {/* Panel — slides from end edge (RTL: right-to-left;
+              LTR: left-to-right). 2026-04-11 QA fix: previously used
+              `ltr:right-0 rtl:left-0` + `border-l rtl:border-r` which
+              on some Android Chrome builds was rendering the panel
+              with an incorrect inline-start position + missing border,
+              so the panel appeared as an empty strip with only the
+              brand name visible. Switched to the CSS logical-property
+              equivalents (`end-0`, `border-s`) which render
+              identically in LTR and compile to `inset-inline-end` /
+              `border-inline-start` — same visual result, more
+              predictable across mobile browsers. */}
           <div
             ref={panelRef}
-            className="absolute inset-y-0 ltr:right-0 rtl:left-0 w-72 max-w-[85vw] bg-[var(--color-surface-warm)] border-l rtl:border-r border-[var(--color-border-brand)] shadow-2xl flex flex-col"
+            className="absolute inset-y-0 end-0 w-72 max-w-[85vw] bg-[var(--color-surface-warm)] border-s border-[var(--color-border-brand)] shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between h-16 px-5 border-b border-[var(--color-border-brand)]">
               <span

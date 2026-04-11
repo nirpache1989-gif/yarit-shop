@@ -8,22 +8,31 @@
  *          premium wellness shops let customers come to the signup
  *          organically.
  *
- *          Uses `brand.config.ts` for contact details — unconfigured
- *          channels are hidden. All copy in `messages/{he,en}.json`
- *          under the `footer` namespace.
+ *          2026-04-11 late QA: fetches SiteSettings via the shared
+ *          `getResolvedSiteSettings` helper and uses those values for
+ *          social links + WhatsApp. Falls back to `brand.config.ts`
+ *          only for fields Yarit hasn't filled in yet. This fixes the
+ *          public footer showing `hello@shoresh.example` (the brand
+ *          config placeholder) after Yarit had already set her real
+ *          email in `/admin/globals/site-settings`.
+ *
+ *          All copy in `messages/{he,en}.json` under the `footer`
+ *          namespace.
  */
-import { useLocale, useTranslations } from 'next-intl'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/lib/i18n/navigation'
 import { Container } from '@/components/ui/Container'
 import { Eyebrow } from '@/components/ui/Eyebrow'
 import { NewsletterSignup } from '@/components/layout/NewsletterSignup'
 import { Reveal } from '@/components/motion/Reveal'
 import { brand } from '@/brand.config'
+import { getResolvedSiteSettings } from '@/lib/siteSettings'
 
-export function Footer() {
-  const t = useTranslations('footer')
-  const tNav = useTranslations('nav')
-  const locale = useLocale() as 'he' | 'en'
+export async function Footer() {
+  const t = await getTranslations('footer')
+  const tNav = await getTranslations('nav')
+  const locale = (await getLocale()) as 'he' | 'en'
+  const settings = await getResolvedSiteSettings()
   const year = new Date().getFullYear()
 
   return (
@@ -113,10 +122,10 @@ export function Footer() {
           className="pt-8 border-t border-[var(--color-border-brand)] flex flex-col md:flex-row items-center justify-between gap-4"
         >
           <ul className="flex items-center gap-5 text-sm text-[var(--color-muted)]">
-            {brand.social.instagram && (
+            {settings.social.instagram && (
               <li>
                 <a
-                  href={brand.social.instagram}
+                  href={settings.social.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--color-primary-dark)]"
@@ -125,10 +134,10 @@ export function Footer() {
                 </a>
               </li>
             )}
-            {brand.social.facebook && (
+            {settings.social.facebook && (
               <li>
                 <a
-                  href={brand.social.facebook}
+                  href={settings.social.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--color-primary-dark)]"
@@ -137,10 +146,10 @@ export function Footer() {
                 </a>
               </li>
             )}
-            {brand.social.tiktok && (
+            {settings.social.tiktok && (
               <li>
                 <a
-                  href={brand.social.tiktok}
+                  href={settings.social.tiktok}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--color-primary-dark)]"
@@ -149,10 +158,10 @@ export function Footer() {
                 </a>
               </li>
             )}
-            {brand.contact.whatsapp && (
+            {settings.contact.whatsapp && (
               <li>
                 <a
-                  href={`https://wa.me/${brand.contact.whatsapp}`}
+                  href={`https://wa.me/${settings.contact.whatsapp}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--color-primary-dark)]"

@@ -93,7 +93,16 @@ export function FeaturedProductsMotion({
       immediateRender: false,
       scrollTrigger: {
         trigger: scopeRef.current,
-        start: 'top 75%',
+        // 2026-04-11 QA fix: fire before the cards are visible.
+        // Previously `top 75%` fired mid-viewport, which meant that
+        // with `immediateRender: false` the cards first snapped to
+        // the `from` state and then animated back, producing a
+        // visible "flash" on refresh. `top bottom-=40` fires the
+        // moment the top of the section reaches 40px above the
+        // viewport bottom — the cards are still off-screen, so the
+        // snap happens invisibly and only the animation-back is
+        // visible as the user scrolls down.
+        start: 'top bottom-=40',
         once: true,
       },
     })
@@ -209,8 +218,14 @@ export function FeaturedProductsMotion({
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {products.map((p) => (
-            <div key={p.id} data-featured-card>
-              <ProductCard product={p} />
+            // 2026-04-11 QA fix: `h-full` on the wrapper + `flex` on
+            // the card propagates the tallest row height to every
+            // card in the same row, so the 3-up grid is visually
+            // even when product titles or descriptions vary in
+            // length. Without this the wrapper divs sized to their
+            // own content and the grid looked ragged.
+            <div key={p.id} data-featured-card className="h-full flex">
+              <ProductCard product={p} className="w-full" />
             </div>
           ))}
         </div>

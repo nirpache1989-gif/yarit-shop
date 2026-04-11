@@ -15,6 +15,7 @@ import { getPayloadClient } from '@/lib/payload'
 import { getShippingRatesForRegion } from '@/lib/shipping'
 import { routing, type Locale } from '@/lib/i18n/routing'
 import { CheckoutForm } from '@/components/checkout/CheckoutForm'
+import { isMockPaymentProvider } from '@/lib/payments'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -41,12 +42,21 @@ export default async function CheckoutPage({ params }: Props) {
     typedLocale,
   )
 
+  // Only surface the "test checkout" disclaimer when the active
+  // payment provider is actually the in-process mock. On prod (with
+  // PAYMENT_PROVIDER=meshulam or similar) this returns false and the
+  // disclaimer is hidden — see src/lib/payments/index.ts §isMockPaymentProvider.
+  const showMockNotice = isMockPaymentProvider()
+
   return (
     <Container className="py-12 md:py-16">
       <h1 className="text-4xl md:text-5xl font-extrabold text-[var(--color-primary-dark)] mb-8">
         {t('title')}
       </h1>
-      <CheckoutForm initialRates={initialRates} />
+      <CheckoutForm
+        initialRates={initialRates}
+        showMockNotice={showMockNotice}
+      />
     </Container>
   )
 }

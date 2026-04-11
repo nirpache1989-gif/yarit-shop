@@ -40,8 +40,6 @@ export function AdminLangSwitcher() {
   const { i18n, switchLanguage } = useTranslation()
   const current = i18n.language
   const next = current === 'he' ? 'en' : 'he'
-  // Label shows the language you'll GET when you click (standard toggle UX).
-  const nextLabel = next === 'he' ? 'עברית' : 'English'
   const title =
     current === 'he'
       ? 'החלפה לאנגלית / Switch to English'
@@ -64,6 +62,14 @@ export function AdminLangSwitcher() {
     }
   }
 
+  // 2026-04-11 QA fix: the previous version showed only the NEXT
+  // language ("English" when Hebrew was active), which was confusing
+  // — it looked like the button was labeled in the wrong language.
+  // Now we show BOTH labels side by side with the current one
+  // highlighted in bold + the non-current one dimmed. Clicking
+  // flips. Equivalent to how many multilingual sites show
+  // "EN · HE" with the active one emphasised.
+  const heActive = current === 'he'
   return (
     <button
       type="button"
@@ -73,7 +79,25 @@ export function AdminLangSwitcher() {
       aria-label={title}
     >
       <span aria-hidden>🌐</span>
-      <span>{nextLabel}</span>
+      <span
+        style={{
+          fontWeight: heActive ? 700 : 400,
+          opacity: heActive ? 1 : 0.55,
+        }}
+      >
+        עברית
+      </span>
+      <span aria-hidden style={{ opacity: 0.4 }}>
+        ·
+      </span>
+      <span
+        style={{
+          fontWeight: heActive ? 400 : 700,
+          opacity: heActive ? 0.55 : 1,
+        }}
+      >
+        EN
+      </span>
     </button>
   )
 }

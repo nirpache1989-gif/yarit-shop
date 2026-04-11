@@ -99,7 +99,10 @@ export function MeetYaritMotion({
       immediateRender: false,
       scrollTrigger: {
         trigger: scopeRef.current,
-        start: 'top 80%',
+        // 2026-04-11 QA fix: fire earlier to hide the `immediateRender:
+        // false` snap off-screen. See CategoryGridMotion and
+        // FeaturedProductsMotion for the matching comments.
+        start: 'top bottom-=40',
         once: true,
       },
     })
@@ -113,7 +116,7 @@ export function MeetYaritMotion({
       immediateRender: false,
       scrollTrigger: {
         trigger: scopeRef.current,
-        start: 'top 80%',
+        start: 'top bottom-=40',
         once: true,
       },
     })

@@ -44,9 +44,14 @@ const COUNTRIES: Array<{ value: string; labelHe: string; labelEn: string }> = [
 
 type Props = {
   initialRates: ShippingRate[]
+  /** Whether to render the "test checkout, no real payment" disclaimer
+   *  at the bottom of the summary. The server parent sets this based
+   *  on `isMockPaymentProvider()`. In production with a real gateway
+   *  this is `false` and the notice is hidden. */
+  showMockNotice: boolean
 }
 
-export function CheckoutForm({ initialRates }: Props) {
+export function CheckoutForm({ initialRates, showMockNotice }: Props) {
   const t = useTranslations('checkout')
   const router = useRouter()
   const locale = useLocale() as 'he' | 'en'
@@ -340,9 +345,11 @@ export function CheckoutForm({ initialRates }: Props) {
         >
           {submitting ? t('processing') : t('placeOrder')}
         </Button>
-        <p className="text-xs text-center text-[var(--color-muted)]">
-          {t('mockNotice')}
-        </p>
+        {showMockNotice && (
+          <p className="text-xs text-center text-[var(--color-muted)]">
+            {t('mockNotice')}
+          </p>
+        )}
       </aside>
     </form>
   )

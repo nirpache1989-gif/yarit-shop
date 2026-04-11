@@ -23,12 +23,12 @@ import type { Metadata } from 'next'
 import { useTranslations } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
-import { brand } from '@/brand.config'
 import { routing } from '@/lib/i18n/routing'
 import { Link } from '@/lib/i18n/navigation'
 import { Container } from '@/components/ui/Container'
 import { Reveal } from '@/components/motion/Reveal'
 import { StaggeredReveal } from '@/components/motion/StaggeredReveal'
+import { getResolvedSiteSettings } from '@/lib/siteSettings'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -64,7 +64,14 @@ type Props = {
 export default async function ContactPage({ params }: Props) {
   const { locale } = await params
   setRequestLocale(locale)
-  return <ContactContent />
+  const settings = await getResolvedSiteSettings()
+  return (
+    <ContactContent
+      whatsapp={settings.contact.whatsapp}
+      email={settings.contact.email}
+      phone={settings.contact.phone}
+    />
+  )
 }
 
 // ─── Inline SVG icons ───────────────────────────────────────────────
@@ -164,10 +171,15 @@ function ContactCard({
   )
 }
 
-function ContactContent() {
+type ContactContentProps = {
+  whatsapp: string
+  email: string
+  phone: string
+}
+
+function ContactContent({ whatsapp, email, phone }: ContactContentProps) {
   const t = useTranslations('contact')
   const tCommon = useTranslations('common')
-  const { whatsapp, email, phone } = brand.contact
 
   return (
     <Container className="py-16 md:py-24 max-w-4xl">

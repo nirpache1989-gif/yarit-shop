@@ -93,7 +93,10 @@ export function CategoryGridMotion({ children, className }: Props) {
       immediateRender: false,
       scrollTrigger: {
         trigger: ref.current,
-        start: 'top 82%',
+        // 2026-04-11 QA fix: fire earlier so the `immediateRender: false`
+        // snap happens while the cards are still off-screen. See the
+        // matching comment in FeaturedProductsMotion.tsx.
+        start: 'top bottom-=40',
         once: true,
       },
     })

@@ -78,26 +78,36 @@ export function ProductCard({ product, className }: Props) {
     >
       <Link
         href={`/product/${product.slug}`}
-        className="block relative aspect-[4/5] bg-[var(--color-surface-warm)]"
+        className="block relative aspect-[4/5] overflow-hidden bg-[var(--color-surface-warm)]"
       >
         {/* .product-image ties into the CSS hover rule in globals.css
             that adds a subtle translate to the existing scale —
-            the image now pans slightly instead of just zooming. */}
+            the image now pans slightly instead of just zooming. The
+            `overflow-hidden` above keeps the scaled image clipped to
+            the viewport so the hover zoom doesn't bleed into the
+            card body. 2026-04-11 QA: reduced `p-6` -> `p-4` so the
+            cream border around product photos is thinner and the
+            hover-zoom transition reads as "settling into place"
+            rather than "revealing a hidden white frame". */}
         <Image
           src={imageUrl}
           alt={imageAlt}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-          className="product-image object-contain p-6"
+          className="product-image object-contain p-4"
         />
 
-        {/* "new arrival" eyebrow — replaces the old filled badge.
-            Only shown when `isNew` is set. Tiny italic, top-start.
-            Pops in with the brand badge-pop keyframe. */}
+        {/* "new arrival" eyebrow — pill badge with a cream backdrop
+            + backdrop-blur so it stays legible over any product
+            photo regardless of its own background color. Raised to
+            `z-20` so it always sits above the image and the hover
+            zoom. 2026-04-11 QA: the previous plain-text version got
+            visually overlapped by product photos with white
+            backgrounds (user report — "שפתון לחות אלוורה וג'וג'ובה"). */}
         {product.isNew && (
-          <div className="absolute top-4 start-4 z-10 animate-badge-pop">
+          <div className="absolute top-3 start-3 z-20 animate-badge-pop pointer-events-none">
             <span
-              className="italic text-[11px] tracking-[0.1em] text-[var(--color-accent-deep)]"
+              className="inline-flex items-center rounded-full bg-[var(--color-surface)]/90 px-3 py-1 text-[11px] italic tracking-[0.1em] text-[var(--color-accent-deep)] shadow-sm backdrop-blur-sm border border-[var(--color-border-brand)]/60"
               style={{ fontFamily: 'var(--font-display)' }}
             >
               {t('newArrival')}

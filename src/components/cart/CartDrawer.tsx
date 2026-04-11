@@ -11,6 +11,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 import { useCartStore, selectCartSubtotal } from '@/lib/cart/store'
@@ -28,10 +29,26 @@ export function CartDrawer() {
   const removeItem = useCartStore((s) => s.removeItem)
   const isOpen = useCartDrawerStore((s) => s.isOpen)
   const close = useCartDrawerStore((s) => s.close)
+  const pathname = usePathname()
 
   const panelRef = useRef<HTMLDivElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  // Close the drawer whenever the URL changes. The drawer lives in the
+  // root layout so it persists across navigation, and the Zustand store
+  // holds `isOpen` independently of the route. Without this, clicking
+  // the "checkout" button inside the drawer navigates to /checkout but
+  // leaves the drawer + its backdrop overlay mounted on top of the
+  // checkout page, blocking the order button. (P1 QA bug — 2026-04-11
+  // late.) A pathname-watching effect is the cleanest fix because it
+  // handles EVERY in-drawer navigation, not just the checkout button.
+  useEffect(() => {
+    close()
+    // We only want to close on URL transitions — the `close` callback
+    // is stable (Zustand getter), so adding it to deps is harmless but
+    // the real trigger is `pathname`.
+  }, [pathname, close])
 
   // ESC + body-scroll lock + focus trap + focus restore. One combined
   // effect so the teardown order is predictable (restore focus AFTER
