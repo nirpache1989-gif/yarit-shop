@@ -85,9 +85,10 @@ If you want products to exist on `/shop`, run:
 curl -X POST http://localhost:3000/api/dev/seed
 ```
 
-This creates 9 example products (7 Forever + 2 independent), a
-handful of categories, and some placeholder media. The seed is
-idempotent — running it a second time won't duplicate anything.
+This creates 7 example products, 5 categories (nutrition, skincare,
+aloe, beauty, gifts), and some placeholder media. The seed is
+idempotent — running it a second time won't duplicate anything. To
+wipe and re-seed from scratch: `curl -X POST "http://localhost:3000/api/dev/seed?wipe=1"`.
 
 ## Step 6 — Your first click-through
 
@@ -97,8 +98,10 @@ With the dev server still running, visit these URLs in order:
    (RTL) by default.
 2. **http://localhost:3000/shop** — product grid. Should show 9
    products.
-3. **http://localhost:3000/product/raw-honey-galilee** — a product
-   detail page. Click "Add to cart".
+3. **http://localhost:3000/product/daily-multivitamin** — a product
+   detail page (or any other slug from `src/lib/seed.ts`: `aloe-lip-balm`,
+   `aloe-toothgel`, `aloe-soothing-spray`, `aloe-vera-gel`, `bee-propolis`,
+   `aloe-body-duo-gift-set`). Click "Add to cart".
 4. **http://localhost:3000/cart** — cart page. Click "Checkout".
 5. **http://localhost:3000/checkout** — fill in test details
    (email: `you@example.test`, any name, any phone, any address).

@@ -2,6 +2,115 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom.
 
+## Latest (2026-04-11 later — code + docs cleanup sweep)
+
+**Track C cleanup pass.** No Yarit inputs had landed (legal folders empty, no Resend/Meshulam env vars on disk), so per the close-out prompt's instructions the session ran the "leave no trace" sweep instead. Production is still live at `4ea4d90` via `dpl_Asz72xL4FqWDPHacoe6khgSf5gXV`; this pass is docs + tooling + one targeted warning fix, no runtime behavior changed.
+
+### Code cleanup (C.1) — nothing to remove
+
+The tree was already tidy. Swept for everything the prompt called out:
+
+- `console.log` / `console.warn` / `console.error` — every hit is legitimate (error handlers with explicit "non-fatal" comments, the `lib/email/mock.ts` provider whose entire job is to log, the `lib/seed.ts` helper, the `payload.config.ts` env-var warning). None removed.
+- `// TEMP` / `// DEBUG` / `// XXX` / `// HACK` / `// REMOVEME` / `// BISECT` / `// REVERT` / `// FIXME` — **zero matches** across `src/**`.
+- `// TODO` — 6 matches, all legitimate `TODO(yarit)` / `TODO(meshulam)` markers waiting on external input (documented hotspots in `src/brand.config.ts` + `src/lib/payments/meshulam.ts`).
+- `debugger` statements — zero.
+- Commented-out import/const/return/if/function/export blocks — zero (the two `^\s*//\s*(const|return)` grep hits were legitimate prose comments).
+- `if (false)` / `if (0)` / `.only()` / `.skip()` — zero.
+- Strict `tsc --noUnusedLocals --noUnusedParameters` pass — 1 finding (`src/lib/format.ts:33` unused `locale` param) which is already documented with a multi-line rationale comment + `eslint-disable-next-line`. Intentional, left alone.
+- `knip` dead-code hunt — tried, but knip can't resolve the project's `@/` path alias without a config file (`Cannot find module '@/lib/email'`). Not worth writing a knip config for a one-off sweep; strict tsc + grep already cover this. Skipped.
+- OS cruft (`.DS_Store`, `Thumbs.db`, `*.swp`, `.idea/`) in tracked files — zero.
+- Secrets sweep (`sk_live|sk_test|pk_live|pk_test|xoxb-|xoxp-|ghp_|gho_|ghu_|ghs_|AKIA...`) — zero.
+- `depcheck` — flagged `pg`, `@types/pg`, `@swc-node/register`, `@swc/core`, `@tailwindcss/postcss`, `tailwindcss`, `@types/react-dom` as "unused". All except the two `@swc*` packages are false positives (tailwind loaded via `postcss.config.mjs`, pg is a transitive dep of `@payloadcms/db-postgres` with its own package.json listing it as a direct dep, `@types/react-dom` required for React TS types). The two `@swc*` packages are **genuinely unused** — no source imports, not referenced by any script, `.swcrc`, or config, and ADR-008 explicitly notes they were kept "just in case". Documented in `docs/TASKS.md` as a safe drop deferred to its own commit so the diff stays isolated.
+- `npm run lint` already 0 errors / 0 warnings. `--fix` would be a no-op. Not run.
+- Line endings on two files (`src/app/(storefront)/[locale]/product/[slug]/page.tsx`, `src/components/product/ProductGalleryMotion.tsx`) show CRLF in the working tree but LF in git's index (`git ls-files --eol`: `i/lf w/crlf`). `core.autocrlf=true` handles the conversion on commit, working tree is clean. Cosmetic Windows artifact, no cleanup needed.
+
+### Docs audit (C.2) — 10 files fixed
+
+Walked every `docs/*.md` against the actual source of truth (code + seed data + CI). Real drift found in 9 files + 1 ADR added.
+
+**Bug fixes in user-facing docs:**
+
+- **`docs/YARIT-ADMIN-GUIDE.md`** — the most critical fix. The Hebrew admin guide that Yarit actually reads was describing a sidebar organization that no longer matches the code:
+  - Listed "תגיות" and "מדיה" as visible sidebar entries under `📦 קטלוג` — both are `hidden: true` in `src/collections/{Tags,Media}.ts` since Round 5 cleanup. If Yarit followed the guide she'd look for them and not find them.
+  - Had a fictitious group `### 👥 תוכן` (Content) containing both Users and SiteSettings — neither group exists in the code. Users are in `👥 לקוחות` (per `src/collections/Users.ts` line 81) and SiteSettings is in `🌿 הגדרות` (per `src/globals/SiteSettings.ts` line 23).
+  - Fixed: four correctly-named groups (📦 קטלוג / 💰 מכירות / 👥 לקוחות / 🌿 הגדרות) with a parenthetical note explaining Tags + Media are hidden and that Yarit uploads images via the product edit form, not a separate gallery.
+- **`docs/ONBOARDING.md`** step 6 linked to `http://localhost:3000/product/raw-honey-galilee` — that slug was removed in the 2026-04-10 rebrand (ADR-015). New link uses `daily-multivitamin` and lists every current slug from `src/lib/seed.ts`. Step 5 claimed the seed creates "9 example products (7 Forever + 2 independent)" — actual count is 7. Updated to 7 with a pointer to the seed file + mentioned the `?wipe=1` option.
+- **`docs/NEXT-SESSION.md`** — line 23 claimed "T1.4/T1.5/T1.6/T1.7 deferred" which directly contradicted line 12 ("All four remaining waves (T1.4 → T1.7) shipped"). The stale bullet came from the previous session's template. Rewrote to say Tier-1 is complete, Tier-2 + G4/G5 are the deferred items. Line 141 `👥 אנשים → משתמשים` was also wrong — fixed to `👥 לקוחות` matching the code.
+
+**New rule + ADR for the 2026-04-11 SSG incident (prevention):**
+
+- **`docs/CONVENTIONS.md`** gained a new "`generateStaticParams` — all or nothing" section under "Async server components (Next 16)". Normative rule: either return full params (locale × slug/token/id) or omit the function entirely. Explains why dev mode hides the bug and points at the ADR + CI guard.
+- **`docs/DECISIONS.md`** gained **ADR-018** ("No partial `generateStaticParams` on dynamic routes"). Full post-mortem of the 2026-04-11 incident, rationale for the two-part rule (no partial params + prod-mode smoke before push), and cross-references to the convention, the CI guard, and the STATE entry.
+- **`docs/TASKS.md`** gained a new "🛡️ Regression prevention" section containing the same rule plus the "run `npm run build && npx next start` before pushing any storefront route change" directive. The stale "Remove `@swc-node/register` and `@swc/core`" bullet was promoted from "maybe" to "verified safe to drop" with a note that it's deferred to its own commit.
+
+**Minor drift fixes:**
+
+- **`docs/ARCHITECTURE.md`** diagram line 44 said "Cloudflare R2 (media)" — actual production is Vercel Blob per ADR-014 / ADR-017. Updated with the ADR references.
+- **`docs/FULFILLMENT.md`** line 3 said "This doc is a stub for Phase A. It will be filled out in detail during Phase E" — Phase E shipped the Fulfillment Dashboard months ago. Rewrote the stub header to reflect that the dashboard is live and point at the actual files (`src/lib/admin/fulfillment.ts`, `FulfillmentView.tsx`).
+- **`docs/INDEX.md`** was missing three docs from its table of contents: `NEXT-SESSION-PROMPT.md` (the long-form starting prompt, now listed under "Start here"), `NEXT-SESSION-PROMPT-2026-04-11-close-out.md` (archived, listed under "Historical / round-specific"), `NEXT-SESSION-GSAP-PROMPT.md` (archived, same section).
+- **`docs/ENVIRONMENT.md`** env var table was missing `PAYMENT_PROVIDER`, `EMAIL_PROVIDER`, `MESHULAM_BASE_URL`, `EMAIL_FROM`, `EMAIL_FROM_NAME`, `BLOB_READ_WRITE_TOKEN`. Added all six with phase + purpose + relevant notes (e.g. `BLOB_READ_WRITE_TOKEN` is auto-injected by Vercel, don't paste manually).
+
+**Not touched** (intentional):
+
+- `docs/STATE.md` itself — this entry is the update.
+- `CLAUDE.md` (project root) — scanned for drift, found none that matters. Entry-point file remains accurate.
+- `docs/BRAND.md` — scanned, accurate.
+- `docs/ADMIN-SURFACES.md` — scanned, accurate. This file is the authoritative reference that YARIT-ADMIN-GUIDE.md should have been in sync with.
+- `docs/NEXT-SESSION-PROMPT.md` — will be archived / regenerated at the very end of the session (see "Handoff" below).
+- `docs/NEXT-SESSION-PROMPT-2026-04-11-close-out.md`, `docs/NEXT-SESSION-GSAP-PROMPT.md`, `docs/round-4-*` — historical, left alone per the prompt's instructions.
+
+### Runtime warning sweep (C.3)
+
+Two targeted fixes, plus CI guard:
+
+- **`.github/workflows/ci.yml`** gained a new step ("Guard against partial `generateStaticParams`") between Lint and Build that greps `src/app/(storefront)` for `locales?.map(... => ({ locale ... }))` patterns and fails the job on a match. Verified locally: grep against current code returns zero matches (clean). The guard only fires on a regression of the 2026-04-11 pattern.
+- **`src/lib/legal.ts`** — the Turbopack build emitted a "Node file trace" warning ("A file was traced that indicates that the whole project was traced unintentionally") pointing at this module's `fs.existsSync` / `fs.readFileSync` calls. Added `/*turbopackIgnore: true*/` comments on both `fs` call sites. After the fix, `npm run build` is silent on NFT — only the expected middleware→proxy deprecation warning remains (ADR-005) plus an unrelated `turbopackServerFastRefresh` experiment flag from the Next config. No runtime behavior change — the ignore hint is compile-time-only.
+
+**Deliberately not touched** in this pass:
+
+- **Vercel auto-deploy webhook stall** (intermittent since 2026-04-10) — documented in `docs/TASKS.md` under "Deferred / maybe", requires dashboard-level investigation that's outside a cleanup sweep.
+- **`middleware` → `proxy` deprecation** — ADR-005 documents the deferral; the rename is cosmetic and the warning is expected.
+- **`pg-connection-string` SSL mode deprecation** — a Neon-side env hint, not a code fix.
+- **`@payloadcms/storage-vercel-blob` wiring** — only needed if Yarit ever uploads catalog images via the admin UI; the `STATIC_IMAGE_OVERRIDES` path in `src/lib/product-image.ts` is currently the active image source (ADR-017). Added as a TASKS.md entry.
+- **`@swc-node/register` + `@swc/core` dep removal** — verified safe but deferred to its own commit so the package.json/package-lock.json diff stays isolated from the docs sweep.
+
+### Quality gates after the sweep
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors, 0 warnings
+- `npm run build` → compiles cleanly in ~5.4s, all 40 routes classified `ƒ` Dynamic or `○` Static (zero `●` SSG), Turbopack NFT warning gone, only the known middleware→proxy deprecation + experiment-flag warnings remain
+- `git status` → 12 files modified, all intentional (10 docs + 1 CI workflow + 1 source file with pure build-hint comments)
+
+### Files changed (12)
+
+- `.github/workflows/ci.yml` — new "Guard against partial generateStaticParams" step
+- `docs/ARCHITECTURE.md` — R2 → Vercel Blob in diagram
+- `docs/CONVENTIONS.md` — new §generateStaticParams rule
+- `docs/DECISIONS.md` — new ADR-018
+- `docs/ENVIRONMENT.md` — 6 env vars added to table
+- `docs/FULFILLMENT.md` — removed "stub for Phase A" header
+- `docs/INDEX.md` — 3 NEXT-SESSION-PROMPT* files added to TOC
+- `docs/NEXT-SESSION.md` — fixed T1.4-T1.7 contradiction, fixed Users group name
+- `docs/ONBOARDING.md` — fixed stale product slug + count
+- `docs/STATE.md` — this entry
+- `docs/TASKS.md` — regression-prevention section + updated swc bullet
+- `docs/YARIT-ADMIN-GUIDE.md` — corrected sidebar group names + Tags/Media visibility note
+- `src/lib/legal.ts` — two `/*turbopackIgnore: true*/` hints
+
+### Handoff status
+
+Track C cleanup is complete. The tree + docs are internally consistent and buildable from a cold clone without surprise. Possible next steps (no one has chosen):
+
+- Drop `@swc-node/register` + `@swc/core` as its own isolated commit.
+- Rewrite `docs/YARIT-ADMIN-GUIDE.md` from scratch — user flagged this for the next session: Yarit clicks "?צריכה עזרה" in the admin and currently gets an email-to-Nir; a richer Hebrew walkthrough that mirrors the actual admin panel would be more useful.
+- Track A (Resend / Meshulam / legal markdown) when anything lands from Yarit.
+- Track B (Tier-2 GSAP: About page / cart drawer / checkout confetti / contact focus / footer reveal).
+- Track D (final handoff package).
+
+The session has not pushed to remote yet — all 12 edits are staged-ready but uncommitted until user says "push".
+
+---
+
 ## Latest (2026-04-11 late — prod close-out deploy + SSG incident fix)
 
 **Tier-1 GSAP waves are LIVE on production (`https://yarit-shop.vercel.app`) and the storefront is verified end-to-end.** Session started with `e3a8a53` sitting unpushed locally; pushed + deployed + smoke-tested, hit a P0 regression on `/product/[slug]`, root-caused to a pre-existing SSG misconfiguration, fixed it, redeployed, re-verified. Meshulam is still parked per Yarit; all other Track A items are still paste-and-go with runbooks in `docs/NEXT-SESSION.md` + `docs/NEXT-SESSION-PROMPT.md`.

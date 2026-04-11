@@ -9,6 +9,7 @@ just cloned it. Everything else is reference material.
 | File | Purpose |
 |---|---|
 | [`NEXT-SESSION.md`](NEXT-SESSION.md) | 5-minute orientation for the next work session. Current phase, known issues, what to do first. **Updated at the end of every meaningful session.** |
+| [`NEXT-SESSION-PROMPT.md`](NEXT-SESSION-PROMPT.md) | The long-form "starting prompt" for the next session — inherited state, open tracks, non-negotiables. Written at the end of each session and read top-to-bottom at the start of the next one. |
 | [`ONBOARDING.md`](ONBOARDING.md) | 5-minute runnable setup for a human who just cloned the repo. Clone → install → dev → bootstrap admin → first click-through. |
 | [`STATE.md`](STATE.md) | Full history. What's been built, what's deployed, what's in progress. Reverse-chronological changelog at the bottom. |
 | [`TASKS.md`](TASKS.md) | Open todos, blocked items, polish backlog. |
@@ -38,8 +39,10 @@ just cloned it. Everything else is reference material.
 
 ## Historical / round-specific
 
-| Folder | Purpose |
+| File / Folder | Purpose |
 |---|---|
+| [`NEXT-SESSION-PROMPT-2026-04-11-close-out.md`](NEXT-SESSION-PROMPT-2026-04-11-close-out.md) | Archived starting prompt from the 2026-04-11 late close-out session (prod deploy + SSG incident fix). Historical reference only — do not edit. |
+| [`NEXT-SESSION-GSAP-PROMPT.md`](NEXT-SESSION-GSAP-PROMPT.md) | Archived GSAP Tier-1 roadmap. All waves (G1–G3, T1.1–T1.7) shipped 2026-04-11. Kept as a vocabulary reference for any future motion work. |
 | [`round-4-admin-verify/`](round-4-admin-verify/) | Round 4 admin verification sweep — screenshots, markup checks, CSS target inventory. Reference for "what did we check last time" before the next visual pass. |
 | [`round-4-design-review/`](round-4-design-review/) | Round 4 design review agents' findings and the triage decisions that came out of them. |
 

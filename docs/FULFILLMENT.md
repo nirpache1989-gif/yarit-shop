@@ -1,6 +1,6 @@
 # The Forever fulfillment workflow
 
-> This doc is a stub for Phase A. It will be filled out in detail during Phase E when we build the Fulfillment Dashboard.
+> Phase E shipped the Fulfillment Dashboard at `/admin/fulfillment` (registered via `admin.components.views.fulfillment` in `src/payload.config.ts`; reusable loader at `src/lib/admin/fulfillment.ts`). This doc describes the workflow and state machine that dashboard implements.
 
 ## Summary
 

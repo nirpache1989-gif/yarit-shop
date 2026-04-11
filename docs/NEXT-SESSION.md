@@ -20,7 +20,7 @@
   - **T1.1 MeetYarit converge** — the 2-column editorial strip (image + text) now slides its two columns toward each other from opposite edges as the section enters the viewport. RTL-aware. New `MeetYaritMotion.tsx` (client) + simplified `MeetYarit.tsx` (server shell that passes strings). Replaces the old `<Reveal direction="start">` + `<StaggeredReveal>` on this section only.
   - **T1.2 CategoryGrid expand-on-enter** — all 5 category cards now animate from `scale: 0.96, y: 24, opacity: 0` to settled state with a 90ms stagger via a single ScrollTrigger tween. New `CategoryGridMotion.tsx` is a thin wrapper replacing the previous `<StaggeredReveal>`. Each card has `data-category-card` so the GSAP selector finds them.
   - **T1.3 BranchDivider SVG draw-in** — the 3 sprig dividers between homepage sections now draw themselves in. The central stem animates `stroke-dashoffset` from its measured total length → 0 (standard SVG "draw" trick), the two side hairlines extend via `scaleX: 0 → 1`, then the 5 leaves + 2 berries fade in with a stagger. Total sequence ~1.6s per divider. `BranchDivider.tsx` was converted from server to client component to own the GSAP timeline.
-- **GSAP waves G4, G5 and Tier-1 T1.4/T1.5/T1.6/T1.7 deferred** — the plan documents them (homepage scroll-linked storytelling + page transitions, FeaturedProducts heading pin, header shrink on scroll, shop filter Flip, product gallery Flip). The user chose "what's 100% safe" for this session and asked for the remaining Tier-1 items to land in the NEXT session via a standalone pasteable prompt — see `docs/NEXT-SESSION-GSAP-PROMPT.md`. Any future GSAP expansion builds on the G1 foundation — the primitives are in place.
+- **GSAP Tier-1 complete; Tier-2 + G4/G5 deferred.** Waves T1.4 (FeaturedProducts heading pin), T1.5 (header shrink), T1.6 (shop filter Flip) and T1.7 (product gallery Flip) all shipped 2026-04-11 — see the bullet above and `docs/STATE.md` 2026-04-11 entry. The Tier-1 foundation is in place; any Tier-2 work (About page narrative, cart drawer timeline, checkout confetti, footer reveal) and the original G4/G5 waves (homepage scroll-linked storytelling + page transitions) build on top additively. See `docs/NEXT-SESSION-GSAP-PROMPT.md` for historical vocabulary reference.
 - **Design + animation sprint (previous sessions) — still in effect.** Every per-page wave from `~/.claude/plans/humming-popping-turtle.md` has landed. Session 1 landed Wave 0 (motion primitives: `useInView`, `Reveal`, `StaggeredReveal`, `KenBurns`, `ConfettiTrigger`, `SplitWords`) + Waves H / S / P / C / K / Y. Session 2 landed Waves L / A / O / B / T / G / 4 / D / F / M. Every wave kept the minimalist-luxurious language — slow spring/ease, no loud colors, per-keyframe `prefers-reduced-motion` guards. GSAP layers on top additively — it does NOT replace any of the existing primitives.
 - **Storefront→admin theme-jump fix** still in effect from the previous session. See `STATE.md` Wave D entry.
 - **Owner:** Yarit, a 65-year-old non-technical Hebrew-speaking merchant selling Forever Living + independent wellness products. She will use the admin panel every day.
@@ -134,10 +134,10 @@
 
 ## Admin panel — current state
 
-**Sidebar** (post-Round 5 cleanup):
-- 👥 אנשים → משתמשים
+**Sidebar** (post-Round 5 cleanup — group names authoritative per `src/collections/*` + `src/globals/SiteSettings.ts`):
 - 📦 קטלוג → קטגוריות, מוצרים  *(Tags hidden, Media hidden)*
 - 💰 מכירות → הזמנות
+- 👥 לקוחות → משתמשים
 - 🌿 הגדרות → הגדרות אתר
 - Plus `SidebarGreeting` at top + `SidebarFooter` at bottom
 

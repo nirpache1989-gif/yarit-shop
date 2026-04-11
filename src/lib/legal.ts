@@ -62,16 +62,36 @@ export function loadLegalMarkdown(
   slug: LegalSlug,
   locale: LegalLocale,
 ): string | null {
+  // The `/*turbopackIgnore: true*/` hints below stop Next's
+  // build-time NFT (node-file-trace) from walking the entire
+  // project looking for files this module might read. Without
+  // them, Turbopack emits a "whole project was traced
+  // unintentionally" warning in `next build` output because
+  // `process.cwd()` gives NFT no static starting point. The
+  // files are dynamic per-locale and only read on request, so
+  // nothing actually needs to be traced at build time.
   const repoRoot = process.cwd()
   const candidates = [
-    path.join(repoRoot, 'content', 'legal', slug, `${locale}.md`),
+    path.join(
+      /*turbopackIgnore: true*/ repoRoot,
+      'content',
+      'legal',
+      slug,
+      `${locale}.md`,
+    ),
     // Fallback: if the requested locale is missing, try the default (he).
-    path.join(repoRoot, 'content', 'legal', slug, 'he.md'),
+    path.join(
+      /*turbopackIgnore: true*/ repoRoot,
+      'content',
+      'legal',
+      slug,
+      'he.md',
+    ),
   ]
   for (const p of candidates) {
     try {
-      if (fs.existsSync(p)) {
-        return fs.readFileSync(p, 'utf-8')
+      if (fs.existsSync(/*turbopackIgnore: true*/ p)) {
+        return fs.readFileSync(/*turbopackIgnore: true*/ p, 'utf-8')
       }
     } catch {
       /* continue to next candidate */

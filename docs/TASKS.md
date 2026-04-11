@@ -108,10 +108,17 @@ These are the remaining "polish" items from the two design-review agents that ra
 
 ## 💤 Deferred / maybe
 
-- [ ] Migrate `src/middleware.ts` → `src/proxy.ts` (Next 16 naming). Works as-is; migration is cosmetic.
+- [ ] Migrate `src/middleware.ts` → `src/proxy.ts` (Next 16 naming). Works as-is; migration is cosmetic. See ADR-005.
 - [ ] Revisit CLI seed script now that a working seed lives in `src/lib/seed.ts`.
-- [ ] Remove `@swc-node/register` and `@swc/core` dev deps — installed exploring the CLI seed path but not used.
+- [ ] Remove `@swc-node/register` and `@swc/core` dev deps — **verified unused** on 2026-04-11 (no direct imports in source, not referenced by any script, ADR-008 records they were kept "just in case"). Safe to drop; deferred to its own commit so the diff stays isolated.
 - [ ] Consider React Compiler (stable in Next 16) in Phase F for performance.
+- [ ] Wire `@payloadcms/storage-vercel-blob` adapter for the Media collection (currently unused — `STATIC_IMAGE_OVERRIDES` in `src/lib/product-image.ts` is the active image source; see ADR-017). Needed only if Yarit wants to upload new catalog images via the admin UI instead of editing the override map.
+- [ ] Investigate Vercel webhook auto-deploy stall (intermittent since 2026-04-10). Manual `npx vercel --prod --yes` is the current workaround.
+
+## 🛡️ Regression prevention (post-incident rules)
+
+- **Never re-add `generateStaticParams` returning only `{locale}`** to any storefront dynamic route. Either return full params (locale × slug/token/id) or omit the function entirely. See `docs/CONVENTIONS.md` § "generateStaticParams — all or nothing", `docs/DECISIONS.md` ADR-018, and the CI grep step in `.github/workflows/ci.yml`. Full post-mortem in `docs/STATE.md` under "Latest (2026-04-11 late)".
+- **Run `npm run build && npx next start -p <port>` before pushing any storefront route change.** `npm run dev` never exercises SSG classification — the 2026-04-11 incident was latent for weeks because every pre-push verification used dev mode.
 
 ---
 

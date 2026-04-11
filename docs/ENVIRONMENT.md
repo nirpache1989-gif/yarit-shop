@@ -34,16 +34,21 @@ First visit to `/admin` prompts you to create the initial admin user — pick an
 
 | Variable | Phase | Purpose |
 |---|---|---|
-| `PAYLOAD_SECRET` | A | JWT signing secret for Payload auth. Must be 32+ bytes. Rotate in production if leaked. |
+| `PAYLOAD_SECRET` | A | JWT signing secret for Payload auth. Must be 32+ bytes. Rotate in production if leaked. Hard-fails at boot in production-like environments if unset. |
 | `DATABASE_URI` | A | Payload database connection. SQLite file URL locally, Postgres URL in prod. |
 | `NEXT_PUBLIC_SITE_URL` | A | Public base URL of the site. Used for absolute URLs in emails, OG tags, etc. |
+| `PAYMENT_PROVIDER` | D | `mock` (default) or `meshulam`. Selects the active provider in `src/lib/payments/index.ts`. |
 | `MESHULAM_API_KEY` | D | Meshulam gateway credential (sandbox vs prod). |
 | `MESHULAM_USER_ID` | D | Meshulam account identifier. |
 | `MESHULAM_PAGE_CODE` | D | Per-page identifier, from the Meshulam dashboard. |
-| `MESHULAM_WEBHOOK_SECRET` | D | Signing secret for webhook verification. |
+| `MESHULAM_WEBHOOK_SECRET` | D | Signing secret for webhook verification. Enforced even in dev. |
+| `MESHULAM_BASE_URL` | D | `https://sandbox.meshulam.co.il/api/light/server/1.0` for sandbox, `https://meshulam.co.il/api/light/server/1.0` for live. |
+| `EMAIL_PROVIDER` | D | `mock` (default, console-logs) or `resend`. Selects the active provider in `src/lib/email/index.ts`. |
 | `RESEND_API_KEY` | D | Resend API key for sending emails. |
-| `RESEND_FROM_EMAIL` | D | Verified sender address in Resend. |
-| `ADMIN_NOTIFICATION_EMAIL` | D | Yarit's inbox for new-order notifications. |
+| `EMAIL_FROM` | D | Verified sender address in Resend. Use `onboarding@resend.dev` for smoke tests before domain verification. |
+| `EMAIL_FROM_NAME` | D | Display name for outgoing mail (e.g. `שורש`). |
+| `ADMIN_NOTIFICATION_EMAIL` | D | Yarit's inbox for new-order notifications. Optional — falls back to `SiteSettings.contact.email`. |
+| `BLOB_READ_WRITE_TOKEN` | F | Vercel Blob storage token. **Auto-injected** when a Blob store is linked in the Vercel dashboard — do not paste manually. When set, `src/payload.config.ts` activates the `vercelBlobStorage` plugin. |
 
 Never check `.env.local` into git. `.env.example` is the committed template.
 

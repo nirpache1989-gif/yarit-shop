@@ -41,7 +41,7 @@ High-level system design for Shoresh. For the full product vision, see the plan 
                        External services (Phase D and later):
                        ┌─ Meshulam (payment) ─┐
                        ├─ Resend (email)      ─┤
-                       └─ Cloudflare R2 (media)┘
+                       └─ Vercel Blob (media) ─┘  (see ADR-014, ADR-017)
 ```
 
 ## Route groups

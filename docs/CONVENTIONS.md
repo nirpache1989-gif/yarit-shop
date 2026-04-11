@@ -86,6 +86,18 @@ export default async function Page({
 
 Same for `cookies()`, `headers()`, `draftMode()`.
 
+## `generateStaticParams` — all or nothing (post-2026-04-11 SSG incident)
+
+For any dynamic route like `[locale]/product/[slug]`, either:
+- **Return FULL params** — every combination of segments. For the storefront that means iterating Payload to enumerate real slugs/tokens/IDs for each locale.
+- **Omit `generateStaticParams` entirely** — the route becomes `ƒ` Dynamic at runtime.
+
+**Never return partial params** like `{ locale }` without the second segment. Next 16 classifies the route as `●` SSG at build time but has no concrete slug to prerender, then at runtime renders inside the static-generation context where `headers()` is disallowed. next-intl's `setRequestLocale` calls `headers()` internally via `AsyncLocalStorage`, which throws `DYNAMIC_SERVER_USAGE` and surfaces as a generic 500.
+
+**Why this is sneaky:** `npm run dev` always renders every route dynamically regardless of `generateStaticParams`, so the bug stays invisible in dev. It only manifests under `npm run build && npx next start` or on a real Vercel deploy. This is why a prod build smoke-test belongs in the pre-push checklist for any route change — see the 2026-04-11 late incident in `docs/STATE.md` for the full post-mortem and `docs/DECISIONS.md` ADR-018 for the decision record.
+
+**Detection:** CI greps for the pattern on every push — see `.github/workflows/ci.yml` → "Guard against partial generateStaticParams".
+
 ## Server vs client components
 
 Default to **server components**. Add `'use client'` only when you need:

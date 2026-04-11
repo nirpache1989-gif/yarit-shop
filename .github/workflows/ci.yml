@@ -40,6 +40,29 @@ jobs:
         working-directory: yarit-shop
         run: npm run lint
 
+      # Guard against the 2026-04-11 SSG incident recurrence. Any
+      # dynamic storefront route that returns `generateStaticParams`
+      # with only `{ locale }` (no second segment) causes Next 16 to
+      # classify the route as `●` SSG and then 500 at runtime when
+      # next-intl's `setRequestLocale` calls `headers()` inside the
+      # static-generation context. Either return full params or
+      # omit the function entirely — see `docs/CONVENTIONS.md` and
+      # `docs/DECISIONS.md` ADR-018 for the full rule + post-mortem.
+      - name: Guard against partial generateStaticParams
+        working-directory: yarit-shop
+        run: |
+          # Match patterns like:
+          #   return routing.locales.map((locale) => ({ locale }))
+          #   return locales.map(l => ({ locale: l }))
+          # The grep is deliberately loose so it catches rewrites
+          # of the same bug. False positives land in PR review; a
+          # genuine full-params function won't match because it
+          # will include a second key in the returned object.
+          if grep -rEn 'locales?\.map\([^)]*=>\s*\(\s*\{\s*locale[^,}]*\}\s*\)' src/app/'(storefront)'; then
+            echo "::error::Partial generateStaticParams detected (locale-only). See docs/CONVENTIONS.md §generateStaticParams."
+            exit 1
+          fi
+
       - name: Build
         working-directory: yarit-shop
         run: npm run build

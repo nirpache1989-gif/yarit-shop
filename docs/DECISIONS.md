@@ -4,6 +4,38 @@ Every significant architectural or product decision is logged here with a date a
 
 ---
 
+## ADR-018 — No partial `generateStaticParams` on dynamic routes
+
+**Date:** 2026-04-11
+**Status:** Accepted
+**Context:** On the 2026-04-11 close-out deploy of `e3a8a53` (GSAP Tier-1 finish + mobile audit fixes), every product detail page started returning 500 in production. Root cause turned out to be a latent bug shipping quietly since the Phase F.1 hardening sprint in early April: three dynamic routes (`[locale]/product/[slug]`, `[locale]/reset-password/[token]`, `[locale]/account/orders/[id]`) each declared a `generateStaticParams()` that returned only `{ locale }` — the second dynamic segment was never enumerated.
+
+Next 16 treated each route as `●` SSG-eligible because *some* params were returned. At build time Next had no concrete slug to prerender and left the shell as "generate on first request, then cache". At runtime, the first request was rendered inside Next's static-generation context, which disallows `headers()`. next-intl's `setRequestLocale` reaches `headers()` via an `AsyncLocalStorage` fallback and throws `DYNAMIC_SERVER_USAGE` → the user sees a generic 500.
+
+**Why it was latent:** `npm run dev` renders every route dynamically regardless of `generateStaticParams`, so the bug never appeared in dev. It only surfaces under `npm run build && next start` (or on Vercel prod). Every pre-push verification in `docs/STATE.md` cites `npm run dev` as the runtime — that's why this survived from Phase F.1 through the 2026-04-10 prod deploy.
+
+**Decision:** Two-part rule:
+
+1. **Either return full params from `generateStaticParams` or omit the function entirely.** For a two-segment route `[locale]/product/[slug]`, "full" means iterating every real `(locale, slug)` combination — i.e. querying Payload for every published product slug and emitting one entry per `locale`. Anything less is forbidden.
+
+2. **Run a prod-mode smoke before pushing any storefront route change.** `npm run build && npx next start -p <free-port>`, then curl the 16 smoke-test routes from `docs/STATE.md`. Dev mode is insufficient because it hides the SSG classification entirely.
+
+The fix in `4ea4d90` deleted `generateStaticParams` from all three affected routes and left a per-file comment explaining why the function is intentionally absent.
+
+**Enforcement:**
+
+- **`docs/CONVENTIONS.md`** § "generateStaticParams — all or nothing" — normative rule with rationale.
+- **`.github/workflows/ci.yml`** — a CI step greps every storefront page for `generateStaticParams` returning only `{ locale }` and fails the build on a match. Prevents re-introduction.
+- **Per-file comments** on the three fixed pages point future contributors at this ADR.
+
+**Consequences:**
+
+- Every storefront dynamic route is now classified `ƒ` Dynamic, not `●` SSG. Cold-start latency on the first request for a given slug is marginally higher than a prerendered page, but well within acceptable latency for a small shop and avoids an entire class of runtime 500s.
+- If we later want true SSG for product pages (for SEO / perf), the migration requires iterating Payload in `generateStaticParams` and returning the full `(locale, slug)` matrix — the partial-params shortcut is off the table forever.
+- The SSG incident post-mortem lives in `docs/STATE.md` under "Latest (2026-04-11 late)".
+
+---
+
 ## ADR-017 — Centralize product image resolution in `lib/product-image.ts`
 
 **Date:** 2026-04-10
