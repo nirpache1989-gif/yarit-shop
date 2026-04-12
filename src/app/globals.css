@@ -206,10 +206,12 @@ html {
 /* The hero logo PNG may retain anti-aliased white fringe pixels from
    the original JPG→PNG color-key conversion. multiply blends white
    into parchment (white × parchment = parchment) so any residual
-   rectangle vanishes. The tree's greens/browns darken ~2% on the
-   cream base — imperceptible. Only applied inside the hero where
-   the background is guaranteed to be light parchment. */
-[data-theme="dark"] .hero-section .logo-halo img {
+   rectangle vanishes. Applied to .logo-halo itself (not the img
+   child) because .logo-halo has isolation:isolate which creates a
+   stacking context boundary — blend mode on the img would only
+   blend within that isolated context (against transparent). Putting
+   it on the container blends the whole group against the hero bg. */
+[data-theme="dark"] .hero-section .logo-halo {
   mix-blend-mode: multiply;
 }
 
