@@ -10,7 +10,7 @@
  */
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
@@ -18,6 +18,7 @@ import { useCartStore, selectCartSubtotal } from '@/lib/cart/store'
 import { useCartDrawerStore } from '@/components/cart/drawerStore'
 import { Button } from '@/components/ui/Button'
 import { formatILS } from '@/lib/format'
+import { gsap } from '@/lib/motion/gsap'
 
 export function CartDrawer() {
   const t = useTranslations('cart')
@@ -34,6 +35,7 @@ export function CartDrawer() {
   const panelRef = useRef<HTMLDivElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+  const listRef = useRef<HTMLUListElement | null>(null)
 
   // Close the drawer whenever the URL changes. The drawer lives in the
   // root layout so it persists across navigation, and the Zustand store
@@ -95,6 +97,33 @@ export function CartDrawer() {
     }
   }, [isOpen, close])
 
+  // Cart item stagger — 40ms stagger + 12px y-offset on drawer open.
+  // Runs on mount (= drawer open) since the component returns null when
+  // closed and fully unmounts.
+  const staggerItems = useCallback(() => {
+    const list = listRef.current
+    if (!list) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) return
+    const itemEls = list.querySelectorAll('[data-cart-item]')
+    if (itemEls.length === 0) return
+    gsap.from(itemEls, {
+      y: 12,
+      opacity: 0,
+      stagger: 0.04,
+      duration: 0.4,
+      ease: 'power2.out',
+      immediateRender: false,
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!isOpen || items.length === 0) return
+    // Small rAF delay so the DOM has painted the list items first.
+    const id = requestAnimationFrame(staggerItems)
+    return () => cancelAnimationFrame(id)
+  }, [isOpen, staggerItems, items.length])
+
   if (!isOpen) return null
 
   return (
@@ -135,9 +164,9 @@ export function CartDrawer() {
           </div>
         ) : (
           <>
-            <ul className="flex-1 overflow-y-auto divide-y divide-[var(--color-border-brand)]">
+            <ul ref={listRef} className="flex-1 overflow-y-auto divide-y divide-[var(--color-border-brand)]">
               {items.map((item) => (
-                <li key={item.productId} className="flex gap-3 p-4">
+                <li key={item.productId} data-cart-item className="flex gap-3 p-4">
                   <div className="relative w-16 h-16 flex-shrink-0 rounded-lg bg-[var(--color-surface)] overflow-hidden">
                     {item.image ? (
                       <Image

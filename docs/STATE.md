@@ -2,7 +2,40 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom. Historical entries have been moved to [`docs/STATE-ARCHIVE.md`](./STATE-ARCHIVE.md) — this file only holds the two most recent ships.
 
-## Latest (2026-04-12 late night — Admin blank-page FIXED after 9 probes, root cause: missing importMap entry)
+## Latest (2026-04-12 — QA + design polish + GSAP motion session)
+
+**Session completed.** Rogue user deleted from prod, P1 admin bug fixed, 4 design refinements shipped, cart drawer GSAP stagger added. All quality gates green (tsc + lint + build).
+
+### Changes in this session
+
+1. **P0: Rogue user deletion** — `albert@wzhkmedia.com` (customer, ID 3) deleted from prod via Payload REST API. Had to delete their orphan order (ID 5) first due to FK constraint in Neon Postgres. The `delete` access rule fix (commit `aa4b631`) was already deployed via Vercel auto-deploy.
+
+2. **P1: Product list row click** — `ProductThumbnailCell.tsx` now wraps both the `<img>` and the placeholder `<span>` in `<Link href="/admin/collections/products/${id}">` so clicking a product thumbnail in the admin list navigates to the edit page. Added `id` to the `rowData` type.
+
+3. **Favicon + Apple icon** — Generated `src/app/icon.png` (512x512) and `src/app/apple-icon.png` (180x180) from `public/brand/copaia.png` using sharp. Next.js auto-discovers these convention files.
+
+4. **OG social share card** — New `src/app/opengraph-image.tsx` using `next/og` `ImageResponse` (1200x630). Parchment background, centered Copaia logo, dual-language tagline. Auto-applies as `og:image` on all pages.
+
+5. **Footer `isPlaceholder()` export** — Added `isPlaceholder()` to `src/lib/siteSettings.ts` wrapping the existing `PLACEHOLDER_STRINGS` Set. Footer already had adequate guards — this is a reusable utility.
+
+6. **Admin CSS warmth** — Centralized ochre accent colors into `--color-ochre-warm` (#A67A4A) and `--color-ochre-text` (#7C4E2F) tokens with dark mode overrides. Replaced all hardcoded instances. Toast background now uses `var(--theme-input-bg)` for dark mode compat.
+
+7. **Cart drawer GSAP stagger** — Items entering the cart drawer now animate with `y: 12, opacity: 0, stagger: 0.04` via GSAP. Uses `gsap.from()` with `immediateRender: false`. Respects `prefers-reduced-motion`. Runs on drawer open via `requestAnimationFrame` delay.
+
+### Quality gates
+- `npx tsc --noEmit` — 0 errors
+- `npm run lint` — 0 errors, 0 warnings
+- `npm run build` — all routes + new `icon.png`, `apple-icon.png`, `opengraph-image` static routes
+
+### QA walkthrough (prod, Claude-in-Chrome MCP)
+- Homepage, shop (8 products), product detail, about, contact — all 200 OK
+- Admin dashboard, users, products — all functional
+- 0 console errors, 0 500s, 0 404 images
+- Hebrew header renders correctly
+
+---
+
+## Previous (2026-04-12 late night — Admin blank-page FIXED after 9 probes, root cause: missing importMap entry)
 
 **Preview branch `fix/admin-probe` renders the full Yarit admin dashboard end-to-end on Vercel.** Verified via the Claude-in-Chrome MCP: login at `/admin/login` with `admin@shoresh.example` / `CopaiaTemp2026!` navigates to `/admin`, dashboard renders with 5 stats cards, 8 tile grid, sidebar nav, Hebrew RTL, and Warm Night dark mode. **The fix is a single one-line addition to `src/app/(payload)/admin/importMap.js`.** Prod merge + deploy pending user approval.
 

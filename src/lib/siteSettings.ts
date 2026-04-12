@@ -71,6 +71,12 @@ const PLACEHOLDER_STRINGS = new Set<string>([
   'hello@shoresh.example',
 ])
 
+/** Check if a value is empty or a known placeholder (e.g. `hello@copaia.example`). */
+export function isPlaceholder(value: unknown): boolean {
+  const s = typeof value === 'string' ? value.trim() : ''
+  return PLACEHOLDER_STRINGS.has(s)
+}
+
 function preferSetting(settingValue: unknown, brandFallback: string): string {
   const s = typeof settingValue === 'string' ? settingValue.trim() : ''
   if (s && !PLACEHOLDER_STRINGS.has(s)) return s

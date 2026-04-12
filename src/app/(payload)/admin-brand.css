@@ -70,6 +70,11 @@
     --color-warning-500: #8B5A2B;
     --color-warning-600: #6E4620;
 
+    /* Ochre accent variants — centralized so focus rings, stat text,
+       and delete pill styling reference a single token.  */
+    --color-ochre-warm: var(--color-ochre-warm);    /* focus rings, input highlights */
+    --color-ochre-text: #7C4E2F;    /* text on ochre-tinted backgrounds */
+
     /* Fonts arrive via next/font CSS variables on <html> */
     --font-body: var(--font-heebo), Heebo, -apple-system, system-ui, sans-serif;
     --font-serif: var(--font-frank-ruhl), 'Frank Ruhl Libre', Georgia, serif;
@@ -118,6 +123,8 @@
     --color-success-400: #8AAF6F;     /* muted sage-olive — primary */
     --color-success-550: #E6B976;     /* warm ochre — serif headings */
     --color-warning-500: #E6B976;
+    --color-ochre-warm: #D4A96A;      /* lighter ochre for dark bg contrast */
+    --color-ochre-text: #E6B976;      /* readable on dark backgrounds */
   }
 
   /* === 2. Body & typography === */
@@ -401,7 +408,7 @@
 
   /* === 8. Toasts === */
   [data-sonner-toaster] {
-    --normal-bg: #FFFFFF;
+    --normal-bg: var(--theme-input-bg);
     --normal-border: var(--theme-border-color);
     --normal-text: var(--theme-text);
   }
@@ -612,7 +619,7 @@
 }
 
 .yarit-stat--urgent .yarit-stat__value {
-  color: #7C4E2F;
+  color: var(--color-ochre-text);
 }
 
 /* ============================================================
@@ -1005,7 +1012,7 @@
   font-family: var(--font-serif);
   font-size: 1.65rem; /* ~20px */
   font-weight: 700;
-  color: #7C4E2F;
+  color: var(--color-ochre-text);
   margin: 0 0 0.25rem;
 }
 
@@ -1684,8 +1691,8 @@ html[data-theme="dark"] .yarit-dashboard > * {
    static border-color with an animated box-shadow ring so the
    layout doesn't shift. */
 @keyframes yarit-urgent-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, #A67A4A 20%, transparent); }
-  50%      { box-shadow: 0 0 0 4px color-mix(in srgb, #A67A4A 40%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-ochre-warm) 20%, transparent); }
+  50%      { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-ochre-warm) 40%, transparent); }
 }
 .yarit-stat--urgent {
   animation: yarit-urgent-pulse 3s ease-in-out infinite;
@@ -1703,8 +1710,8 @@ html[data-theme="dark"] .yarit-dashboard > * {
    slow pulse ring as the urgent stat tile so Yarit's eye lands
    on it first. Styled via a modifier on the bucket header. */
 @keyframes yarit-bucket-pulse {
-  0%, 100% { box-shadow: inset 0 0 0 1px color-mix(in srgb, #A67A4A 25%, transparent); }
-  50%      { box-shadow: inset 0 0 0 2px color-mix(in srgb, #A67A4A 55%, transparent); }
+  0%, 100% { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-ochre-warm) 25%, transparent); }
+  50%      { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-ochre-warm) 55%, transparent); }
 }
 .yarit-fulfillment__bucket--urgent {
   animation: yarit-bucket-pulse 3.2s ease-in-out infinite;
@@ -1738,7 +1745,7 @@ html[data-theme="dark"] .yarit-dashboard > * {
 
 /* ─── Wave M: gold hairline focus ring for admin form fields ───
    Parity with the storefront checkout/auth form focus style.
-   Uses #A67A4A (ochre deep). Scoped to .template-default (the
+   Uses var(--color-ochre-warm) (ochre deep). Scoped to .template-default (the
    main admin chrome) so it never touches .template-minimal (the
    login / create-first-user / forgot-password views which have
    their own Payload-branded focus ring that we don't want to
@@ -1748,8 +1755,8 @@ html[data-theme="dark"] .yarit-dashboard > * {
 .template-default .field-type select:focus-visible,
 .template-default .field-type .rs__control--is-focused {
   outline: none !important;
-  border-color: #A67A4A !important;
-  box-shadow: 0 0 0 2px color-mix(in srgb, #A67A4A 25%, transparent) !important;
+  border-color: var(--color-ochre-warm) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-ochre-warm) 25%, transparent) !important;
   transition: border-color 200ms ease, box-shadow 200ms ease;
 }
 
@@ -1836,8 +1843,8 @@ html[data-theme="dark"] .yarit-dashboard > * {
 }
 .list-selection .list-selection__button:focus-visible {
   outline: none !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, #A67A4A 25%, transparent) !important;
-  border-color: #A67A4A !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ochre-warm) 25%, transparent) !important;
+  border-color: var(--color-ochre-warm) !important;
 }
 
 /* Delete button — warm terracotta tint for destructive intent.
@@ -1846,7 +1853,7 @@ html[data-theme="dark"] .yarit-dashboard > * {
 .list-selection .delete-documents__toggle.list-selection__button {
   background: #fbe7d9 !important;
   border-color: #c9906a !important;
-  color: #7c4e2f !important;
+  color: var(--color-ochre-text) !important;
 }
 .list-selection .delete-documents__toggle.list-selection__button:hover {
   background: #f5d4bb !important;
@@ -1855,7 +1862,7 @@ html[data-theme="dark"] .yarit-dashboard > * {
 }
 .list-selection .delete-documents__toggle.list-selection__button:focus-visible {
   box-shadow: 0 0 0 3px color-mix(in srgb, #c9906a 35%, transparent) !important;
-  border-color: #7c4e2f !important;
+  border-color: var(--color-ochre-text) !important;
 }
 
 /* Put a little breathing room between the count / select-all link

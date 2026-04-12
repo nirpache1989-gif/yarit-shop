@@ -29,6 +29,7 @@
  *          Styled via `.yarit-thumb-cell` rules in admin-brand.css.
  */
 import type { DefaultServerCellComponentProps } from 'payload'
+import Link from 'next/link'
 
 // Shape of the `images` field value as it lands in `rowData`. The
 // inner `image` can be either an object (depth populated), a numeric
@@ -47,6 +48,7 @@ type ImagesArray = Array<{
 
 type Props = DefaultServerCellComponentProps & {
   rowData?: {
+    id?: number | string
     images?: ImagesArray
     title?: string
     slug?: string
@@ -86,14 +88,18 @@ export async function ProductThumbnailCell(props: Props) {
     }
   }
 
+  const editUrl = `/admin/collections/products/${rowData?.id ?? ''}`
+
   if (!url) {
     return (
-      <span
-        className="yarit-thumb-cell yarit-thumb-cell--empty"
-        aria-label="ללא תמונה"
-      >
-        —
-      </span>
+      <Link href={editUrl}>
+        <span
+          className="yarit-thumb-cell yarit-thumb-cell--empty"
+          aria-label="ללא תמונה"
+        >
+          —
+        </span>
+      </Link>
     )
   }
 
@@ -102,14 +108,16 @@ export async function ProductThumbnailCell(props: Props) {
   // through the same CSS scope as the storefront. A 48px thumbnail
   // is too small to benefit from optimization anyway.
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={url}
-      alt={alt}
-      className="yarit-thumb-cell"
-      width={48}
-      height={48}
-      loading="lazy"
-    />
+    <Link href={editUrl}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt={alt}
+        className="yarit-thumb-cell"
+        width={48}
+        height={48}
+        loading="lazy"
+      />
+    </Link>
   )
 }
