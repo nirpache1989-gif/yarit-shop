@@ -56,19 +56,31 @@ const serverFunction: ServerFunctionClient = async function (args) {
   })
 }
 
-const Layout = ({ children }: Args) => (
-  <RootLayout
-    config={config}
-    importMap={importMap}
-    serverFunction={serverFunction}
-    htmlProps={{
-      lang: 'he',
-      dir: 'rtl',
-      className: `${heebo.variable} ${bellefair.variable}`,
-    }}
-  >
-    {children}
-  </RootLayout>
-)
+const Layout = ({ children }: Args) => {
+  // PROBE 9: log children prop on server side to diagnose Vercel prod
+  // blank-admin bug. Check Vercel function logs for [PROBE9] entries.
+  // Remove after diagnosis.
+  console.log('[PROBE9] layout received children:', {
+    type: typeof children,
+    isNull: children === null,
+    isUndefined: children === undefined,
+    isObject: typeof children === 'object' && children !== null,
+    stringified: typeof children === 'object' && children !== null ? Object.prototype.toString.call(children) : String(children),
+  })
+  return (
+    <RootLayout
+      config={config}
+      importMap={importMap}
+      serverFunction={serverFunction}
+      htmlProps={{
+        lang: 'he',
+        dir: 'rtl',
+        className: `${heebo.variable} ${bellefair.variable}`,
+      }}
+    >
+      {children}
+    </RootLayout>
+  )
+}
 
 export default Layout
