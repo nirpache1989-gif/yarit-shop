@@ -98,6 +98,26 @@ export const Users: CollectionConfig = {
       return false
     },
   },
+  hooks: {
+    // Guard against deleting a user who has orders. Without this,
+    // Neon Postgres throws a cryptic FK constraint error. This hook
+    // surfaces a clear Hebrew message in the admin UI instead.
+    beforeDelete: [
+      async ({ req, id }) => {
+        const orders = await req.payload.find({
+          collection: 'orders',
+          where: { customer: { equals: id } },
+          limit: 1,
+          depth: 0,
+        })
+        if (orders.totalDocs > 0) {
+          throw new Error(
+            'לא ניתן למחוק לקוח/ה שיש לו/ה הזמנות. מחקי קודם את ההזמנות שלו/ה.',
+          )
+        }
+      },
+    ],
+  },
   fields: [
     {
       name: 'name',
