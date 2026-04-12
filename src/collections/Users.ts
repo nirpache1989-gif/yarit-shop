@@ -89,6 +89,14 @@ export const Users: CollectionConfig = {
       if (user) return { id: { equals: user.id } }
       return false
     },
+    // Admins can delete any user; customers cannot delete.
+    delete: ({ req: { user } }) => user?.role === 'admin',
+    // Admins can update any user; customers can only update themselves.
+    update: ({ req: { user } }) => {
+      if (user?.role === 'admin') return true
+      if (user) return { id: { equals: user.id } }
+      return false
+    },
   },
   fields: [
     {
