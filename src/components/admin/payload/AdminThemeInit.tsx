@@ -39,29 +39,14 @@ type Props = {
   children?: ReactNode
 }
 
+/**
+ * Dark mode disabled (2026-04-12) — always force light mode.
+ * Original theme detection logic preserved in git history.
+ */
 export function AdminThemeInit({ children }: Props) {
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('shoresh-theme')
-      const prefersDark = window.matchMedia(
-        '(prefers-color-scheme: dark)',
-      ).matches
-      const theme = stored || (prefersDark ? 'dark' : 'light')
-      // Wave D — only apply if the current attribute is stale. The
-      // server-side getRequestTheme normally sets this correctly via
-      // the `payload-theme` cookie (which the storefront bootstrap
-      // mirrors from `shoresh-theme`), so this provider is now just
-      // a safety net for the rare case where the cookie + storage
-      // get out of sync (e.g. user cleared cookies between visits).
-      if (document.documentElement.getAttribute('data-theme') !== theme) {
-        document.documentElement.setAttribute('data-theme', theme)
-      }
-      // Keep the cookie in sync so the NEXT server render of /admin
-      // also gets the right value.
-      document.cookie = `payload-theme=${theme};path=/;max-age=31536000;samesite=lax`
-    } catch {
-      /* localStorage blocked (private mode) — fall through to light */
-    }
+    document.documentElement.setAttribute('data-theme', 'light')
+    document.cookie = 'payload-theme=light;path=/;max-age=31536000;samesite=lax'
   }, [])
   return <>{children}</>
 }

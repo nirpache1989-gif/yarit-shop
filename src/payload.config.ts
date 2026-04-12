@@ -95,7 +95,9 @@ export default buildConfig({
     // shared shoresh-theme localStorage key can drive the admin
     // between Night Apothecary light + dark. We re-skin both modes
     // via admin-brand.css elevation + success ladders.
-    theme: 'all',
+    // Dark mode disabled (2026-04-12) — force light only.
+    // Change back to 'all' to re-enable dark mode.
+    theme: 'light',
     // <html dir="rtl"> would otherwise warn under Next 16's stricter
     // hydration check.
     suppressHydrationWarning: true,

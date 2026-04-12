@@ -203,16 +203,24 @@ html {
   background: transparent !important;
 }
 
-/* The hero logo PNG may retain anti-aliased white fringe pixels from
-   the original JPG→PNG color-key conversion. multiply blends white
-   into parchment (white × parchment = parchment) so any residual
-   rectangle vanishes. We also drop isolation:isolate to auto here —
-   the ::before halo is transparent in hero dark mode anyway, so the
-   isolation stacking context (which existed to contain blur) is not
-   needed. Without it, children inherit the multiply blend cleanly. */
+/* Previous attempt used mix-blend-mode:multiply here to hide white
+   fringe pixels, but the multiply blend creates a visible rectangular
+   compositing boundary around the entire .logo-halo padding box.
+   Replaced by clip-path:ellipse on the img below, which clips at the
+   image level without affecting the parent's compositing. */
 [data-theme="dark"] .hero-section .logo-halo {
   isolation: auto !important;
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
+}
+
+/* clip-path breaks the rectangular compositing boundary of the <img>
+   element. The tree logo fits comfortably inside an inscribed ellipse.
+   This eliminates the visible rectangle without affecting the logo's
+   visual content. Only applied in dark hero mode. filter:none overrides
+   the drop-shadow which can bleed past the clip boundary. */
+[data-theme="dark"] .hero-section .logo-halo img {
+  clip-path: ellipse(50% 50% at 50% 50%);
+  filter: none;
 }
 
 /* Header logo gets a subtle warm glow in dark mode — the header

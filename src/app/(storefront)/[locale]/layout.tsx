@@ -58,7 +58,9 @@ import '@/app/globals.css'
  * (/admin), Payload's server-side `getRequestTheme` reads the same
  * value and renders matching <html data-theme> on the first paint.
  */
-const themeBootstrap = `(function(){try{var s=localStorage.getItem('shoresh-theme');var t=(s==='dark'||s==='light')?s:'light';document.documentElement.setAttribute('data-theme',t);document.cookie='payload-theme='+t+';path=/;max-age=31536000;samesite=lax';}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`
+/* Dark mode disabled (2026-04-12) — always force light. The original
+   bootstrap that read localStorage is preserved in git history. */
+const themeBootstrap = `(function(){document.documentElement.setAttribute('data-theme','light');document.cookie='payload-theme=light;path=/;max-age=31536000;samesite=lax';})();`
 
 const heebo = Heebo({
   subsets: ['hebrew', 'latin'],

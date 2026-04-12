@@ -37,7 +37,6 @@ import { OnboardingTour as OnboardingTour_809401e28dca2c45e7dfaa04392194d9 } fro
 import { YaritDashboard as YaritDashboard_d30bcf41c0adb2f23abd49aa15cf904a } from '@/components/admin/payload/YaritDashboard'
 import { FulfillmentView as FulfillmentView_a33bd2e435da5de00fd244ae9850f0f8 } from '@/components/admin/payload/FulfillmentView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
-import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_a1b2c3d4e5f6 } from '@payloadcms/storage-vercel-blob/client'
 
 export const importMap = {
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -78,6 +77,5 @@ export const importMap = {
   "@/components/admin/payload/OnboardingTour#OnboardingTour": OnboardingTour_809401e28dca2c45e7dfaa04392194d9,
   "@/components/admin/payload/YaritDashboard#YaritDashboard": YaritDashboard_d30bcf41c0adb2f23abd49aa15cf904a,
   "@/components/admin/payload/FulfillmentView#FulfillmentView": FulfillmentView_a33bd2e435da5de00fd244ae9850f0f8,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
-  "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_a1b2c3d4e5f6
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
