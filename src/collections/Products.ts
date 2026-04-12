@@ -38,7 +38,7 @@ export const Products: CollectionConfig = {
     // thumbnail via `ProductThumbnailCell` so Yarit can visually
     // scan the catalog from the list view without clicking into
     // each product.
-    defaultColumns: ['images', 'title', 'type', 'price', 'category', 'status'],
+    defaultColumns: ['title', 'images', 'type', 'price', 'category', 'status'],
     group: { en: '📦 Catalog', he: '📦 קטלוג' },
     description: {
       en: 'All products in the shop.',
