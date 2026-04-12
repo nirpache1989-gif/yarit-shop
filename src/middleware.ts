@@ -336,7 +336,6 @@ export const config = {
   matcher: [
     '/admin',
     '/admin/:path*',
-    // PROBE 2026-04-12: /probe excluded so next-intl doesn't add a locale
-    '/((?!admin|api|probe|_next|_vercel|.*\\..*).*)',
+    '/((?!admin|api|_next|_vercel|.*\\..*).*)',
   ],
 }

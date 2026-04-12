@@ -14,12 +14,6 @@
  *          targets Payload's class names + theme tokens.
  *
  *          See: docs/ARCHITECTURE.md §Admin, plan §1.2.
- *
- *          PROBE 8 (2026-04-12): `children` is wrapped in a
- *          `'use client'` ChildrenBridge before being passed to
- *          Payload's RootLayout, to test whether forcing a client
- *          boundary around the page content fixes Vercel prod's
- *          blank-admin bug. See src/components/admin/ChildrenBridge.tsx.
  */
 import type { ServerFunctionClient } from 'payload'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
@@ -27,7 +21,6 @@ import config from '@payload-config'
 import { Heebo, Bellefair } from 'next/font/google'
 
 import { importMap } from './admin/importMap.js'
-import { ChildrenBridge } from '@/components/admin/ChildrenBridge'
 
 import '@payloadcms/next/css'
 import './admin-brand.css'
@@ -74,7 +67,7 @@ const Layout = ({ children }: Args) => (
       className: `${heebo.variable} ${bellefair.variable}`,
     }}
   >
-    <ChildrenBridge>{children}</ChildrenBridge>
+    {children}
   </RootLayout>
 )
 
