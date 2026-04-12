@@ -2,16 +2,17 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-12, end of the **QA + design polish + GSAP motion** session (extended). Everything pushed and deployed to prod.
+> **Last updated:** 2026-04-12, end of the **Final polish + GSAP Tier-S + close-out** session. Pending merge to main + deploy.
 >
-> **Session status:** All changes deployed. Next session = final polishing + GSAP effects + project close-out. Feature branch `feat/brand-rename` still parked. External blockers: Meshulam credentials, Resend API key, legal markdown, custom domain, Yarit changing temp password.
+> **Session status:** GSAP Tier-S complete (S1 footer, S3 about, S4 contact). FK guard on Users added. 7 stale branches deleted (including `feat/brand-rename`). All on `feat/gsap-final`, pending merge to main.
 >
-> **Next session focus:** GSAP visual effects polishing + any Lottie tree animation (user to supply asset) + final project close-out. The site is functionally complete.
+> **Next session focus:** Merge + deploy, then only external dependencies remain. Lottie tree animation deferred (needs asset from Yarit). The site is functionally complete and ready for launch.
 
 ---
 
 ## TL;DR — where we are right now
 
+- 🟢 **2026-04-12 — Final polish + GSAP Tier-S + close-out.** Three Tier-S GSAP effects: footer garland fade-in + column stagger (FooterMotion.tsx), about page body GSAP reveals (AboutMotion.tsx), contact card GSAP stagger + icon glow (ContactMotion.tsx). FK guard on Users beforeDelete hook. 7 stale branches deleted. Pending merge to main + deploy.
 - 🟢 **2026-04-12 — QA + design polish + GSAP motion — DEPLOYED.** Full session: rogue user deleted, P1 row-click fixed (title-first column order), favicon + OG image, admin CSS tokens, cart drawer GSAP stagger, BranchDivider scroll-scrubbed leaf sway, DriftingLeaves scroll-responsive, BranchDivider berries removed (dots inside leaves looked wrong), missing 6th leaf added. GrowingTree animation deferred (needs Lottie asset from user). All deployed to prod.
 - 🟢 **2026-04-12 late night (previous) — ADMIN BLANK-PAGE P0 FIXED AND SHIPPED TO PROD.** Root cause: missing importMap entry for `VercelBlobClientUploadHandler`. Fix deployed. Admin fully functional.
 - 🎨 **Brand renamed `Shoresh → Copaia` (קופאה)** end-to-end. 55 code hits across i18n, emails, admin chrome, Payload config, globals.css CSS selector, siteSettings, seed, env.example, scripts. Tagline (`שורשים של בריאות` / `Rooted in wellness`) + description kept unchanged — the new tree-and-roots logo visually matches the tagline even better than the old wordplay. localStorage keys (`shoresh-theme`, `shoresh-cart`) kept as-is to not disturb returning customers' local state. See ADR-020 in `docs/DECISIONS.md`.

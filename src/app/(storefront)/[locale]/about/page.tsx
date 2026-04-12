@@ -23,10 +23,10 @@ import { useTranslations } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
 
 import { routing } from '@/lib/i18n/routing'
-import { Link } from '@/lib/i18n/navigation'
 import { Container } from '@/components/ui/Container'
 import { Reveal } from '@/components/motion/Reveal'
 import { KenBurns } from '@/components/motion/KenBurns'
+import { AboutMotion } from '@/components/pages/AboutMotion'
 // Note: `about-hands.jpg` image callout removed 2026-04-10 per user
 // feedback (visually duplicated the hero image). File still lives in
 // /public/brand/ai/ for potential reuse in future waves.
@@ -111,59 +111,13 @@ function AboutContent() {
         </Container>
       </section>
 
-      {/* Body essay */}
-      <Container className="py-12 md:py-20 max-w-3xl space-y-12">
-        <Reveal>
-          <p
-            className="text-lg md:text-xl text-[var(--color-primary-dark)] leading-[1.85] first-letter:text-5xl first-letter:font-extrabold first-letter:text-[var(--color-primary)] first-letter:me-2 first-letter:float-start first-letter:leading-none first-letter:mt-1"
-            style={{ fontFamily: 'var(--font-display)' }}
-          >
-            {t('body')}
-          </p>
-        </Reveal>
-
-        {/* Pull quote — oversized italic serif, reuses the heading
-            as an editorial restatement of the brand promise. */}
-        <Reveal delay={120}>
-          <blockquote className="relative text-center py-6 md:py-10">
-            <span
-              aria-hidden
-              className="absolute inset-x-0 top-0 mx-auto h-px w-24 bg-[var(--color-primary)]/50"
-            />
-            <p
-              className="text-2xl md:text-4xl italic text-[var(--color-primary-dark)] leading-[1.4]"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              &ldquo;{t('heading')}&rdquo;
-            </p>
-            <span
-              aria-hidden
-              className="absolute inset-x-0 bottom-0 mx-auto h-px w-24 bg-[var(--color-primary)]/50"
-            />
-          </blockquote>
-        </Reveal>
-
-        {/* More coming soon — tiny sparkle, gentle fade in */}
-        <Reveal delay={140}>
-          <p className="text-center text-sm text-[var(--color-accent-deep)] italic">
-            {t('moreComingSoon')}
-          </p>
-        </Reveal>
-
-        {/* Back link — accessible name stays the same as Wave B4 */}
-        <Reveal delay={200}>
-          <div className="flex justify-center pt-4">
-            <Link
-              href="/"
-              className="btn-lift inline-flex items-center gap-2 rounded-full border border-[var(--color-border-brand)] bg-[var(--color-surface)] px-6 py-3 text-sm font-semibold text-[var(--color-primary-dark)] hover:border-[var(--color-primary)] transition-colors"
-              aria-label={tCommon('backToHome')}
-            >
-              <span aria-hidden>←</span>
-              <span>{tCommon('backToHome')}</span>
-            </Link>
-          </div>
-        </Reveal>
-      </Container>
+      {/* Body essay — GSAP ScrollTrigger reveals via AboutMotion */}
+      <AboutMotion
+        body={t('body')}
+        heading={t('heading')}
+        moreComingSoon={t('moreComingSoon')}
+        backToHome={tCommon('backToHome')}
+      />
     </>
   )
 }

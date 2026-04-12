@@ -2,7 +2,30 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom. Historical entries have been moved to [`docs/STATE-ARCHIVE.md`](./STATE-ARCHIVE.md) — this file only holds the two most recent ships.
 
-## Latest (2026-04-12 — QA + design polish + GSAP motion session)
+## Latest (2026-04-12 — Final polish + GSAP Tier-S + close-out)
+
+**Session completed.** Three Tier-S GSAP effects shipped (footer, about, contact), FK guard on Users, 7 stale branches deleted. Site is "ready" — only external dependencies remain for Yarit.
+
+### Changes in this session
+
+1. **S1: Footer garland GSAP fade-in + column stagger** — Split `Footer.tsx` into server shell + `FooterMotion.tsx` client wrapper. Garland fades from opacity 0, 4 grid columns stagger upward (100ms gap), bottom strip arrives 400ms after.
+
+2. **S3: About page body GSAP reveals** — Extracted below-the-fold body into `AboutMotion.tsx`. Body paragraph, pull quote, "more coming soon", back link cascade in with GSAP ScrollTrigger. Hero stays with existing `<Reveal>` + `<KenBurns>`.
+
+3. **S4: Contact card GSAP stagger + icon glow** — Extracted full contact page into `ContactMotion.tsx`. Header cascade, cards stagger from y:28 + scale:0.97, icon circles get a single soft glow yoyo pulse, closing quote + back link with delay.
+
+4. **FK guard on Users** — Added `beforeDelete` hook on Users collection that checks for existing orders and throws a clear Hebrew error instead of a cryptic Postgres FK constraint violation.
+
+5. **Branch cleanup** — Deleted 7 stale local branches: `feat/brand-rename`, `feat/admin-fix-and-qa`, `feat/growing-aloe`, `feat/gsap-polish`, `feat/remove-forever-terminology`, `feat/t2.9-homepage-orchestration`, `fix/admin-probe`.
+
+### Quality gates
+- `npx tsc --noEmit` — 0 errors
+- `npm run lint` — 0 errors, 0 warnings
+- `npm run build` — all routes compile
+
+---
+
+## Previous (2026-04-12 — QA + design polish + GSAP motion session)
 
 **Session completed.** Rogue user deleted from prod, P1 admin bug fixed, 4 design refinements shipped, cart drawer GSAP stagger added. All quality gates green (tsc + lint + build).
 
