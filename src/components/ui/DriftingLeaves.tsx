@@ -22,11 +22,82 @@
  *          theme infrastructure there — the admin is content-dense
  *          and drifting leaves behind forms would be distracting).
  *
+ *          GSAP scroll-responsive layer (2026-04-12): leaves react to
+ *          scroll velocity — fall faster when scrolling down, slow/rise
+ *          when scrolling up. The GSAP y transform stacks on top of the
+ *          CSS keyframe transforms (matrix3d vs matrix composition).
+ *          Removing the useGsapScope block restores the original behavior.
+ *
  *          See: plan §Track Y.
  */
+'use client'
+
+import { useRef } from 'react'
+import { useGsapScope } from '@/components/motion/GsapScope'
+
 export function DriftingLeaves() {
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  useGsapScope(
+    containerRef,
+    ({ gsap, ScrollTrigger, reduced }) => {
+      if (reduced) return
+
+      const leaves = containerRef.current?.querySelectorAll('.leaf')
+      if (!leaves?.length) return
+
+      ScrollTrigger.create({
+        trigger: document.documentElement,
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: (self) => {
+          // Normalize velocity: typical scroll is ~300-2000 px/s
+          const velocity = self.getVelocity() / 1000
+          const clamped = gsap.utils.clamp(-3, 3, velocity)
+
+          // Skip tiny movements to avoid constant micro-tweens
+          if (Math.abs(clamped) < 0.15) return
+
+          gsap.to(leaves, {
+            y: `+=${clamped * 6}`,
+            rotation: `+=${clamped * 1.5}`,
+            duration: 0.8,
+            ease: 'power2.out',
+            overwrite: 'auto',
+            stagger: 0.05,
+          })
+        },
+      })
+
+      // Gentle return to baseline when scroll settles — a slow tween
+      // that continuously nudges leaves back toward y:0 so the GSAP
+      // offset doesn't accumulate infinitely over long scrolling sessions.
+      const resetTween = gsap.to(leaves, {
+        y: 0,
+        rotation: 0,
+        duration: 4,
+        ease: 'power1.inOut',
+        paused: true,
+        overwrite: false,
+        stagger: 0.08,
+      })
+
+      // Play the reset whenever ScrollTrigger reports the page is idle.
+      ScrollTrigger.addEventListener('scrollEnd', () => {
+        resetTween.restart()
+      })
+
+      return () => {
+        ScrollTrigger.removeEventListener('scrollEnd', () => {
+          resetTween.restart()
+        })
+      }
+    },
+    [],
+  )
+
   return (
-    <div className="drifting-leaves" aria-hidden="true">
+    <div ref={containerRef} className="drifting-leaves" aria-hidden="true">
       {[1, 2, 3, 4, 5].map((i) => (
         <svg
           key={i}
