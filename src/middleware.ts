@@ -88,10 +88,6 @@
  *          cookie as `bad-signature` — safer than trusting a token
  *          we can't verify.
  */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-// ^ Probe 2026-04-12: helpers + NextResponse are kept as dead code
-//   so restoring the /admin/* repair block is a pure revert.
-
 import createMiddleware from 'next-intl/middleware'
 import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './lib/i18n/routing'
@@ -257,28 +253,89 @@ function stripPayloadTokenFromRequestHeaders(
 }
 
 export default async function middleware(request: NextRequest) {
-  // PROBE 2026-04-12: /admin/* middleware layer temporarily removed
-  // to bisect the admin blank-page bug. If the preview renders the
-  // admin without any middleware on /admin/*, the bug was caused by
-  // Vercel's edge middleware layer interacting with Next 16 Turbopack
-  // prod build's streaming RSC pipeline. Restore this block once the
-  // bisect is complete (see PAYLOAD_ADMIN_BUG at file header).
-  //
-  // The classifyToken / derivePayloadHmacKey helpers below are kept
-  // as dead code while this probe is active — restoring the block
-  // above is a pure revert.
+  const { pathname } = request.nextUrl
 
-  // ── Everything → next-intl locale handling ─────────────────────
+  // ── /admin/* repair layer (see PAYLOAD_ADMIN_BUG above) ─────────
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    const token = request.cookies.get('payload-token')
+    const state: TokenState | 'missing' = token?.value
+      ? await classifyToken(token.value)
+      : 'missing'
+
+    // ──  /admin/login ──────────────────────────────────────────
+    if (pathname === '/admin/login') {
+      if (state === 'valid') {
+        // Case A: genuinely authenticated. Skip Payload's buggy
+        // "already logged in" redirect-from-Suspense path.
+        return NextResponse.redirect(
+          new URL('/admin', request.url),
+          307,
+        )
+      }
+      if (state === 'missing') {
+        // Fresh visitor — let Payload render the login form.
+        return NextResponse.next()
+      }
+      // Case B: any flavour of bad cookie. Strip it BOTH from the
+      // response (Set-Cookie clear so the browser forgets it) AND
+      // from the forwarded request headers (so Payload's /admin/login
+      // handler doesn't trip over the stale value before our clear
+      // reaches the client).
+      const cleanHeaders = stripPayloadTokenFromRequestHeaders(
+        request.headers,
+      )
+      const response = NextResponse.next({
+        request: { headers: cleanHeaders },
+      })
+      response.cookies.delete('payload-token')
+      return response
+    }
+
+    // ──  /admin/* (everything except /admin/login) ────────────
+    if (state === 'valid') {
+      // Pass through to Payload — this is the only branch that
+      // should reach the dashboard / collections / fulfillment
+      // views.
+      return NextResponse.next()
+    }
+    // state ∈ {expired, malformed, bad-signature, missing} → user is
+    // not authenticated. Payload's server-side guard would try to
+    // `redirect('/admin/login')` from inside its Suspense boundary,
+    // which hits the blank-page bug. Pre-empt by redirecting
+    // ourselves; preserve the original path in `?redirect=` so
+    // Payload's login handler bounces the user back after a
+    // successful login.
+    const loginUrl = new URL('/admin/login', request.url)
+    loginUrl.searchParams.set(
+      'redirect',
+      pathname + request.nextUrl.search,
+    )
+    const response = NextResponse.redirect(loginUrl, 307)
+    if (state !== 'missing') {
+      response.cookies.delete('payload-token')
+    }
+    return response
+  }
+
+  // ── Everything else → next-intl locale handling ─────────────────
   return intlMiddleware(request)
 }
 
 export const config = {
-  // PROBE 2026-04-12: /admin exclusion restored (this is the
-  // 8d50bd4 form). The /admin/:path* matcher that was added in
-  // cec7d68 to pre-empt Payload's redirect-from-Suspense bug is
-  // gone while we test whether middleware is the cause of slot 18's
-  // $L19 = null bug.
+  // Match:
+  //   - All `/admin/*` routes so we can repair Payload 3.82.1's
+  //     redirect-from-inside-Suspense bug on Next 16 (see
+  //     PAYLOAD_ADMIN_BUG above).
+  //   - Everything that's NOT `/admin`, `/api`, `/_next`, `/_vercel`,
+  //     or a static file — this is the storefront-locale match.
+  //
+  // Round 5 note: removed /fulfillment from the exclusion list —
+  // the old (admin-tools)/fulfillment route was deleted; the Yarit
+  // fulfillment view now lives at /admin/fulfillment (covered by the
+  // /admin exclusion).
   matcher: [
+    '/admin',
+    '/admin/:path*',
     '/((?!admin|api|_next|_vercel|.*\\..*).*)',
   ],
 }
