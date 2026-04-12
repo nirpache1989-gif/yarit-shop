@@ -10,10 +10,10 @@
 
 ### Available GSAP improvements (researched and categorized)
 
-**Tier S (zero risk, purely additive):**
-- S1: Footer garland fade-in reveal on scroll
-- S3: About page section-by-section scroll reveals
-- S4: Contact form field focus glow animation
+**Tier S (zero risk, purely additive) — ALL DONE:**
+- ~~S1: Footer garland fade-in reveal on scroll~~ ✅ FooterMotion.tsx
+- ~~S3: About page section-by-section scroll reveals~~ ✅ AboutMotion.tsx
+- ~~S4: Contact form field focus glow animation~~ ✅ ContactMotion.tsx
 
 **Tier A (low risk, extend existing patterns):**
 - A3: Header logo micro-interaction (hover tilt ±2°)
@@ -61,9 +61,9 @@
 - [ ] Final product catalog copy (Yarit refining descriptions via admin)
 
 ### Code tasks if time permits
-- [ ] `feat/brand-rename` branch decision — merge or abandon? (5 commits: Copaia rename, new catalog, admin UX, motion polish — NOT deployed)
+- [x] `feat/brand-rename` branch decision — ABANDONED (diverged 34/33 from main, useful work already cherry-picked)
 - [ ] Verify Vercel auto-deploy webhook is reliable
-- [ ] Consider adding `onDelete: 'SET_NULL'` to Orders.customer relation (FK constraint prevented user deletion this session — required deleting the order first)
+- [x] FK guard on Users.beforeDelete — clear Hebrew error instead of cryptic Postgres FK violation
 
 ---
 
