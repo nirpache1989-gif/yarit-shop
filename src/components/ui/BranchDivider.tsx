@@ -226,6 +226,7 @@ export function BranchDivider({ className, dataFor }: Props) {
         <path data-bd-leaf d="M60 18 q 2 -9, 10 -7 q -2 9, -10 7 z" fill="currentColor" fillOpacity="0.25" />
         <path data-bd-leaf d="M76 22 q -2 8, -10 6 q 2 -8, 10 -6 z" fill="currentColor" fillOpacity="0.25" />
         <path data-bd-leaf d="M92 18 q 2 -8, 10 -6 q -2 8, -10 6 z" fill="currentColor" fillOpacity="0.25" />
+        <path data-bd-leaf d="M104 23 q -2 8, -10 6 q 2 -8, 10 -6 z" fill="currentColor" fillOpacity="0.25" />
         {/* small dot berries */}
         <circle data-bd-berry cx="22" cy="22" r="1.4" fill="currentColor" fillOpacity="0.4" />
         <circle data-bd-berry cx="60" cy="16" r="1.6" fill="currentColor" fillOpacity="0.35" />
