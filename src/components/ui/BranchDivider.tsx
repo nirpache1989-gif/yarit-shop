@@ -54,7 +54,6 @@ export function BranchDivider({ className, dataFor }: Props) {
           [
             '[data-bd-stem]',
             '[data-bd-leaf]',
-            '[data-bd-berry]',
             '[data-bd-line]',
           ],
           { clearProps: 'all' },
@@ -81,7 +80,6 @@ export function BranchDivider({ className, dataFor }: Props) {
       // Initial states for the rest of the elements — hidden, ready to
       // be revealed after the stem finishes drawing.
       gsap.set('[data-bd-leaf]', { opacity: 0, scale: 0.9, transformOrigin: 'center center' })
-      gsap.set('[data-bd-berry]', { opacity: 0, scale: 0 })
       gsap.set('[data-bd-line]', { scaleX: 0, transformOrigin: 'center center' })
 
       // T2.9 #6 — connective tissue. When `dataFor` is supplied, find
@@ -141,16 +139,6 @@ export function BranchDivider({ className, dataFor }: Props) {
           },
           '>-0.3',
         )
-        .to(
-          '[data-bd-berry]',
-          {
-            opacity: 1,
-            scale: 1,
-            duration: 0.4,
-            stagger: 0.1,
-          },
-          '<0.1',
-        )
 
       // --- Scroll-scrubbed ambient motion (additive, post-entrance) ---
       // A gentle sway on leaves + stem pulse as the user scrolls past.
@@ -180,16 +168,6 @@ export function BranchDivider({ className, dataFor }: Props) {
         },
       })
 
-      gsap.to('[data-bd-berry]', {
-        scale: 1.3,
-        stagger: 0.04,
-        scrollTrigger: {
-          trigger: scrubTrigger,
-          start: 'top 75%',
-          end: 'bottom 25%',
-          scrub: 1,
-        },
-      })
     },
     [dataFor],
   )
@@ -227,10 +205,6 @@ export function BranchDivider({ className, dataFor }: Props) {
         <path data-bd-leaf d="M76 22 q -2 8, -10 6 q 2 -8, 10 -6 z" fill="currentColor" fillOpacity="0.25" />
         <path data-bd-leaf d="M92 18 q 2 -8, 10 -6 q -2 8, -10 6 z" fill="currentColor" fillOpacity="0.25" />
         <path data-bd-leaf d="M104 23 q -2 8, -10 6 q 2 -8, 10 -6 z" fill="currentColor" fillOpacity="0.25" />
-        {/* small dot berries */}
-        <circle data-bd-berry cx="22" cy="22" r="1.4" fill="currentColor" fillOpacity="0.4" />
-        <circle data-bd-berry cx="60" cy="16" r="1.6" fill="currentColor" fillOpacity="0.35" />
-        <circle data-bd-berry cx="98" cy="22" r="1.4" fill="currentColor" fillOpacity="0.4" />
       </svg>
       <span
         data-bd-line
