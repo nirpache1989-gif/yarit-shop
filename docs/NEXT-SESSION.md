@@ -2,17 +2,17 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-12, end of the **Final polish + GSAP Tier-S + close-out** session. Pending merge to main + deploy.
+> **Last updated:** 2026-04-12, end of the **GSAP Tier-S + dark mode debugging** session. GSAP effects + FK guard shipped to prod. Dark mode logo rectangle NOT fixed — extensive debugging session documented in `NEXT-SESSION-PROMPT.md`.
 >
-> **Session status:** GSAP Tier-S complete (S1 footer, S3 about, S4 contact). FK guard on Users added. 7 stale branches deleted (including `feat/brand-rename`). All on `feat/gsap-final`, pending merge to main.
+> **Session status:** GSAP Tier-S effects (FooterMotion, AboutMotion, ContactMotion) + FK guard deployed to production. Dark mode has a persistent rectangle around the hero logo that could not be fixed (tried: PNG processing, blend modes, isolation overrides, new logo, new background — none worked). Production is stable in light mode.
 >
-> **Next session focus:** Merge + deploy, then only external dependencies remain. Lottie tree animation deferred (needs asset from Yarit). The site is functionally complete and ready for launch.
+> **Next session focus:** (1) Reproduce GSAP Tier-S effects (they were pushed but may need verification), (2) Fix the dark mode logo rectangle OR remove dark mode entirely, (3) Final QA + close-out. See `NEXT-SESSION-PROMPT.md` for detailed findings.
 
 ---
 
 ## TL;DR — where we are right now
 
-- 🟢 **2026-04-12 — Final polish + GSAP Tier-S + close-out.** Three Tier-S GSAP effects: footer garland fade-in + column stagger (FooterMotion.tsx), about page body GSAP reveals (AboutMotion.tsx), contact card GSAP stagger + icon glow (ContactMotion.tsx). FK guard on Users beforeDelete hook. 7 stale branches deleted. Pending merge to main + deploy.
+- 🟡 **2026-04-12 — GSAP Tier-S + dark mode debugging.** GSAP effects + FK guard shipped to prod. Dark mode logo rectangle extensively debugged but NOT fixed — the `<img>` compositing boundary creates a visible rectangle regardless of PNG content, CSS blend modes, or background image. Changing the logo, processing the PNG, swapping backgrounds, and adding blend modes all failed. The issue is structural (browser compositing), not image-level. Next session must fix it or remove dark mode. See `NEXT-SESSION-PROMPT.md` for full findings.
 - 🟢 **2026-04-12 — QA + design polish + GSAP motion — DEPLOYED.** Full session: rogue user deleted, P1 row-click fixed (title-first column order), favicon + OG image, admin CSS tokens, cart drawer GSAP stagger, BranchDivider scroll-scrubbed leaf sway, DriftingLeaves scroll-responsive, BranchDivider berries removed (dots inside leaves looked wrong), missing 6th leaf added. GrowingTree animation deferred (needs Lottie asset from user). All deployed to prod.
 - 🟢 **2026-04-12 late night (previous) — ADMIN BLANK-PAGE P0 FIXED AND SHIPPED TO PROD.** Root cause: missing importMap entry for `VercelBlobClientUploadHandler`. Fix deployed. Admin fully functional.
 - 🎨 **Brand renamed `Shoresh → Copaia` (קופאה)** end-to-end. 55 code hits across i18n, emails, admin chrome, Payload config, globals.css CSS selector, siteSettings, seed, env.example, scripts. Tagline (`שורשים של בריאות` / `Rooted in wellness`) + description kept unchanged — the new tree-and-roots logo visually matches the tagline even better than the old wordplay. localStorage keys (`shoresh-theme`, `shoresh-cart`) kept as-is to not disturb returning customers' local state. See ADR-020 in `docs/DECISIONS.md`.

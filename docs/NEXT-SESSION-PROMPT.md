@@ -1,85 +1,117 @@
-# Next session — Final polishing + GSAP effects + project close-out
+# Next session — GSAP effects + Fix dark mode logo + project close-out
 
-> **Purpose:** The site is functionally complete and deployed. This session is for visual polishing, remaining GSAP effects, and closing out the project. Only external dependencies remain (Meshulam, Resend, legal, domain).
+> **Purpose:** The site is functionally complete and deployed. This session has two priorities: (1) GSAP Tier S visual effects, (2) fix the dark mode logo rectangle issue. Only external dependencies remain after that (Meshulam, Resend, legal, domain).
 >
 > **Read first:** `CLAUDE.md`, then `docs/STATE.md`, then come back here.
 
 ---
 
-## Track 1 — GSAP visual effects (~60% of session)
+## Priority 1 — GSAP Tier S visual effects
 
-### Available GSAP improvements (researched and categorized)
+### What to build (zero risk, purely additive)
+- **S1:** Footer garland fade-in reveal on scroll → create `FooterMotion.tsx`
+- **S3:** About page section-by-section scroll reveals → create `AboutMotion.tsx`
+- **S4:** Contact card stagger + icon glow animation → create `ContactMotion.tsx`
 
-**Tier S (zero risk, purely additive) — ALL DONE:**
-- ~~S1: Footer garland fade-in reveal on scroll~~ ✅ FooterMotion.tsx
-- ~~S3: About page section-by-section scroll reveals~~ ✅ AboutMotion.tsx
-- ~~S4: Contact form field focus glow animation~~ ✅ ContactMotion.tsx
+### Pattern to follow (server→client split)
+Same as `MeetYarit.tsx` / `MeetYaritMotion.tsx`:
+- Server shell fetches translations + settings, passes all strings as props
+- Client wrapper (`'use client'`) renders JSX + uses `useGsapScope`
+- Replace `<Reveal>` / `<StaggeredReveal>` wrappers with GSAP ScrollTrigger
 
-**Tier A (low risk, extend existing patterns):**
-- A3: Header logo micro-interaction (hover tilt ±2°)
-- A4: Scroll progress bar (thin branded bar at page top)
-
-**Tier B (need testing):**
-- B1: Product detail image parallax (yPercent scrub)
-- B2: Shop grid row-by-row entrance stagger
-- B3: Cart page item entrance + deletion animations
-- B4: Text highlight sweep on About/Contact pages
-
-**Deferred:**
-- Growing tree Lottie animation in MeetYarit section — needs a Lottie JSON asset from the user. Install `lottie-web`, create ScrollTrigger-controlled playback. The SVG hand-drawn approach was too crude.
-
-### What's already shipped (don't re-do)
-- BranchDivider: SVG draw-in + scroll-scrubbed leaf sway (berries removed)
-- DriftingLeaves: scroll-responsive velocity reaction
-- Cart drawer: 40ms stagger item entrance
-- Hero: full GSAP timeline + scroll parallax
-- Product cards: Ken Burns + 3D tilt
-- FeaturedProducts: stagger + desktop heading pin
-- CategoryGrid: bloom entrance + tilt + pin
-- MeetYarit: column converge + word cascade
-- Testimonials: horizontal cascade
-- Product gallery: hover zoom + Flip morph
-- Checkout: confetti + checkmark draw
-
-### Non-negotiables (same every session)
+### Non-negotiables
 - `immediateRender: false + once: true + start: 'top bottom-=40'` on every `gsap.from + scrollTrigger`
 - Single GSAP entry point: `import { gsap } from '@/lib/motion/gsap'`
 - Every GSAP component must use `useGsapScope`
 - Reduced motion must always be handled
 - Additive only — never remove existing keyframes
 
+### What's already shipped (don't re-do)
+- BranchDivider, DriftingLeaves, Cart drawer, Hero, Product cards, FeaturedProducts, CategoryGrid, MeetYarit, Testimonials, Product gallery, Checkout
+
 ---
 
-## Track 2 — Project close-out checklist (~30%)
+## Priority 2 — Fix dark mode logo rectangle
 
-### External dependencies (waiting on Yarit/stakeholder)
+### The problem
+In dark mode, there's a visible white/lighter rectangle around the hero logo. The root causes are:
+
+1. **The hero logo PNG (`public/brand/copaia.png`)** was originally a JPG with a white background. It was processed with sharp to remove white pixels (67% cleared), but residual near-white pixels and the `<img>` compositing boundary still create a visible rectangle.
+
+2. **The hero background (`herobg3.jpg`)** has a naturally lighter open center where the botanical frame thins out. In dark mode the surrounding page is dark, making this lighter center contrast more visibly.
+
+3. **`.logo-halo` container** has `isolation: isolate` + `padding: 1.75rem 2.75rem` creating a separate compositing layer that renders differently from the background.
+
+### What was tried and failed
+- PNG white removal (threshold 240, then 210, then 170) — not aggressive enough, or too aggressive (destroys logo)
+- `mix-blend-mode: multiply` on the img — blocked by `isolation: isolate` on parent
+- `mix-blend-mode: multiply` on `.logo-halo` — worked but still showed faint rectangle
+- `isolation: auto !important` override — CSS specificity issues with Tailwind v4 layers
+- `filter: none !important` on the img — drop-shadow wasn't the cause
+- `mask-image: radial-gradient(...)` — feathered edges but rectangle still visible
+- New hero background `herobg4.jpg` — different center composition but same issue
+- `unoptimized` prop on Image — bypasses Next.js WebP conversion but rectangle persists
+
+### What to try next
+The fundamental issue is that the hero logo PNG has a rectangular compositing boundary that doesn't blend seamlessly with the textured hero background in dark mode. Possible approaches:
+
+1. **Get a logo with TRUE transparent background** from a proper design tool (Illustrator/Figma export, not JPG→PNG conversion). The user has `media/LogoNEWx.jpg` — a new logo generated with transparency in mind, but it was a JPG so the checkerboard got baked in.
+
+2. **Remove the `.logo-halo` container entirely** in dark mode — strip padding, isolation, and ::before pseudo-element so the img renders directly against the hero bg with no intermediate compositing layer.
+
+3. **Use CSS `background-image` instead of `<img>`** for the hero logo — eliminates the rectangular compositing layer entirely. Would need to refactor the GSAP animation that targets the img.
+
+4. **Consider removing dark mode** if the logo issue can't be fixed — the user was open to this. The Warm Night dark palette has extensive CSS in globals.css (~16 rule blocks) and admin-brand.css (~5 blocks), plus ThemeToggle.tsx, AdminThemeInit.tsx, and the theme bootstrap script in layout.tsx.
+
+### KEY FINDING: Changing the logo or background image does NOT fix the rectangle
+The rectangle persisted across ALL combinations:
+- Original copaia.png (white bg) → rectangle
+- Nuclear-processed copaia.png (67% transparent) → rectangle
+- Brand new generated logo (LogoNEWx.jpg → copaia-v2.png) → rectangle
+- Original herobg3.jpg → rectangle
+- New herobg4.jpg (gradual fade) → rectangle
+This means the issue is NOT the image content — it's the browser's compositing of the `<img>` element as a rectangular layer against the hero background. The fix must be CSS/structural, not image-level.
+
+### IMPORTANT: The production site looks fine in light mode
+Do NOT change the light mode appearance. The current production state works perfectly in light mode. Any dark mode fix must NOT introduce a rectangle in light mode.
+
+### Current dark-mode CSS on production
+The production (`origin/main`) currently has several dark-mode logo fix commits that added CSS rules to `globals.css`:
+- `mix-blend-mode: multiply` on `.logo-halo` container
+- `isolation: auto !important` override
+- Hero bg `mix-blend-mode: multiply`
+- Logo img `filter: none !important` + `mask-image`
+These are in the CSS but gated by `[data-theme="dark"]` so they don't affect light mode.
+
+---
+
+## Priority 3 — Close-out (already partially done)
+
+### Already done this session (on production)
+- [x] FK guard on `Users.beforeDelete` — clear Hebrew error on customer deletion
+- [x] 7 stale branches deleted (feat/brand-rename, etc.)
+- [x] Docs updated (STATE.md, NEXT-SESSION.md)
+
+### Still to do
+- [ ] Verify Vercel auto-deploy webhook is reliable
+- [ ] Full prod QA walkthrough (all storefront + admin routes)
+- [ ] Update docs with final changelog
+
+### External dependencies (waiting on Yarit)
 - [ ] Meshulam payment gateway credentials
 - [ ] Resend API key for transactional emails
 - [ ] Legal markdown (privacy/returns/shipping/terms x2 locales = 8 files)
 - [ ] Custom domain setup
 - [ ] Yarit changing temp admin password (`CopaiaTemp2026!`)
-- [ ] Final product catalog copy (Yarit refining descriptions via admin)
-
-### Code tasks if time permits
-- [x] `feat/brand-rename` branch decision — ABANDONED (diverged 34/33 from main, useful work already cherry-picked)
-- [ ] Verify Vercel auto-deploy webhook is reliable
-- [x] FK guard on Users.beforeDelete — clear Hebrew error instead of cryptic Postgres FK violation
+- [ ] Final product catalog copy
 
 ---
 
-## Track 3 — Final QA + docs (~10%)
-
-- [ ] Full prod QA walkthrough (all storefront + admin routes)
-- [ ] Update `docs/STATE.md` with final changelog
-- [ ] Update `docs/NEXT-SESSION.md` for handoff
-
----
-
-## Safety net approach (proven this session)
+## Safety net approach
 
 ```
 main (stable, deployed)
-  └── feat/gsap-final
+  └── feat/gsap-final (or feat/dark-mode-fix)
         ├── commit 1: effect A
         ├── commit 2: effect B
         └── ... each effect separate, revertable
