@@ -206,12 +206,12 @@ html {
 /* The hero logo PNG may retain anti-aliased white fringe pixels from
    the original JPG→PNG color-key conversion. multiply blends white
    into parchment (white × parchment = parchment) so any residual
-   rectangle vanishes. Applied to .logo-halo itself (not the img
-   child) because .logo-halo has isolation:isolate which creates a
-   stacking context boundary — blend mode on the img would only
-   blend within that isolated context (against transparent). Putting
-   it on the container blends the whole group against the hero bg. */
+   rectangle vanishes. We also drop isolation:isolate to auto here —
+   the ::before halo is transparent in hero dark mode anyway, so the
+   isolation stacking context (which existed to contain blur) is not
+   needed. Without it, children inherit the multiply blend cleanly. */
 [data-theme="dark"] .hero-section .logo-halo {
+  isolation: auto !important;
   mix-blend-mode: multiply;
 }
 

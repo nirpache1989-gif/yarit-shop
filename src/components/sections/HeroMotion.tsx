@@ -267,6 +267,7 @@ export function HeroMotion({
               width={500}
               height={750}
               priority
+              unoptimized
               className="h-72 md:h-[28rem] w-auto object-contain relative z-10 drop-shadow-[0_6px_18px_rgba(24,51,41,0.18)]"
             />
           </span>
