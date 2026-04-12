@@ -151,6 +151,45 @@ export function BranchDivider({ className, dataFor }: Props) {
           },
           '<0.1',
         )
+
+      // --- Scroll-scrubbed ambient motion (additive, post-entrance) ---
+      // A gentle sway on leaves + stem pulse as the user scrolls past.
+      // This is a SEPARATE ScrollTrigger from the entrance timeline —
+      // removing this block restores the exact pre-change behavior.
+      const scrubTrigger = scopeRef.current
+      if (!scrubTrigger) return
+
+      gsap.to('[data-bd-leaf]', {
+        rotation: 4,
+        stagger: { each: 0.05, from: 'edges' },
+        scrollTrigger: {
+          trigger: scrubTrigger,
+          start: 'top 80%',
+          end: 'bottom 20%',
+          scrub: 1.2,
+        },
+      })
+
+      gsap.to('[data-bd-stem]', {
+        attr: { 'stroke-width': 1.8 },
+        scrollTrigger: {
+          trigger: scrubTrigger,
+          start: 'top 70%',
+          end: 'bottom 30%',
+          scrub: 1.5,
+        },
+      })
+
+      gsap.to('[data-bd-berry]', {
+        scale: 1.3,
+        stagger: 0.04,
+        scrollTrigger: {
+          trigger: scrubTrigger,
+          start: 'top 75%',
+          end: 'bottom 25%',
+          scrub: 1,
+        },
+      })
     },
     [dataFor],
   )
