@@ -2,15 +2,17 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-12, end of the **QA + design polish + GSAP motion** session. Rogue user `albert@wzhkmedia.com` deleted from prod DB. P1 admin product-list row-click fixed. Favicon + OG image + admin CSS tokens + cart drawer GSAP stagger all shipped. All quality gates green. Changes are LOCAL only — need push + deploy.
+> **Last updated:** 2026-04-12, end of the **QA + design polish + GSAP motion** session (extended). Everything pushed and deployed to prod.
 >
-> **Session status:** All code changes are on `main` locally but NOT yet pushed/deployed. Feature branch `feat/brand-rename` is still parked. Still waiting on: Yarit changing the temp password, Meshulam credentials, Resend API key, legal markdown, custom domain.
+> **Session status:** All changes deployed. Next session = final polishing + GSAP effects + project close-out. Feature branch `feat/brand-rename` still parked. External blockers: Meshulam credentials, Resend API key, legal markdown, custom domain, Yarit changing temp password.
+>
+> **Next session focus:** GSAP visual effects polishing + any Lottie tree animation (user to supply asset) + final project close-out. The site is functionally complete.
 
 ---
 
 ## TL;DR — where we are right now
 
-- 🟢 **2026-04-12 — QA + design polish + GSAP motion session complete.** Rogue user deleted from prod. P1 product-list row-click fixed (Link wrapper on thumbnail cell). Favicon (512px) + Apple icon (180px) generated from brand logo. OG social card (1200x630) with Copaia branding. Admin CSS ochre tokens centralized. Cart drawer items now stagger-animate with GSAP on open. `isPlaceholder()` utility exported from siteSettings. All quality gates green. **Changes are local only — need `git push` + Vercel deploy.**
+- 🟢 **2026-04-12 — QA + design polish + GSAP motion — DEPLOYED.** Full session: rogue user deleted, P1 row-click fixed (title-first column order), favicon + OG image, admin CSS tokens, cart drawer GSAP stagger, BranchDivider scroll-scrubbed leaf sway, DriftingLeaves scroll-responsive, BranchDivider berries removed (dots inside leaves looked wrong), missing 6th leaf added. GrowingTree animation deferred (needs Lottie asset from user). All deployed to prod.
 - 🟢 **2026-04-12 late night (previous) — ADMIN BLANK-PAGE P0 FIXED AND SHIPPED TO PROD.** Root cause: missing importMap entry for `VercelBlobClientUploadHandler`. Fix deployed. Admin fully functional.
 - 🎨 **Brand renamed `Shoresh → Copaia` (קופאה)** end-to-end. 55 code hits across i18n, emails, admin chrome, Payload config, globals.css CSS selector, siteSettings, seed, env.example, scripts. Tagline (`שורשים של בריאות` / `Rooted in wellness`) + description kept unchanged — the new tree-and-roots logo visually matches the tagline even better than the old wordplay. localStorage keys (`shoresh-theme`, `shoresh-cart`) kept as-is to not disturb returning customers' local state. See ADR-020 in `docs/DECISIONS.md`.
 - 📦 **Catalog replaced with 8 new products.** Dropped aloe-lip-balm, aloe-vera-gel, aloe-body-duo-gift-set. Kept aloe-toothgel, bee-propolis, daily-multivitamin. Renamed aloe-soothing-spray → aloe-first-spray. Added aloe-drink (Forever Aloe Peaches), aloe-heat-lotion, aloe-deodorant, bee-pollen. New product descriptions are drafts based on the public Forever Living line — Yarit can refine via the admin. Each product has 2 or 3 real Payload Media photos (aloe-drink + aloe-toothgel have 3 each — the other 6 have 2). `STATIC_IMAGE_OVERRIDES` removed entirely, `product/[slug]/page.tsx` JSON-LD now emits the full image array.
