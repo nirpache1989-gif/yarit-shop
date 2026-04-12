@@ -2,7 +2,24 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom. Historical entries have been moved to [`docs/STATE-ARCHIVE.md`](./STATE-ARCHIVE.md) — this file only holds the two most recent ships.
 
-## Latest (2026-04-12 — Final polish + GSAP Tier-S + close-out)
+## Latest (2026-04-12 — Dark mode disabled, light-only enforced)
+
+**Session completed.** Dark mode toggle removed, site forced to light-only across storefront and admin. The hero logo rectangle bug (browser compositing of `<img>` as rectangular atomic layer) was confirmed unfixable after clip-path + blend-mode attempts. All dark-mode CSS preserved in git for future re-enable.
+
+### Changes in this session
+
+1. **Dark mode disabled** — `ThemeToggle.tsx` returns `null` (toggle hidden from header). Theme bootstrap in `layout.tsx` always sets `data-theme="light"`. `AdminThemeInit.tsx` always forces light. `payload.config.ts` `theme: 'all'` changed to `'light'`. All dark-mode CSS preserved in `globals.css` and `admin-brand.css` — reversible by restoring these 4 files from git history.
+
+2. **Clip-path + blend-mode CSS** (kept for future) — Added `clip-path: ellipse(50% 50%)` + `filter: none` on hero logo img in dark mode. Changed `.logo-halo` `mix-blend-mode: multiply` to `normal`. These rules are scoped to `[data-theme="dark"]` and have no effect while dark mode is disabled.
+
+### Quality gates
+- `npx tsc --noEmit` — 0 errors
+- `npm run lint` — 0 errors, 0 warnings
+- `npm run build` — all routes compile
+
+---
+
+## Previous (2026-04-12 — Final polish + GSAP Tier-S + close-out)
 
 **Session completed.** Three Tier-S GSAP effects shipped (footer, about, contact), FK guard on Users, 7 stale branches deleted. Site is "ready" — only external dependencies remain for Yarit.
 

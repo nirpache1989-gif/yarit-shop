@@ -2,17 +2,18 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-12, end of the **GSAP Tier-S + dark mode debugging** session. GSAP effects + FK guard shipped to prod. Dark mode logo rectangle NOT fixed — extensive debugging session documented in `NEXT-SESSION-PROMPT.md`.
+> **Last updated:** 2026-04-12, end of the **dark mode disable** session. Dark mode toggle removed, site forced to light-only. All dark-mode CSS preserved for future re-enable.
 >
-> **Session status:** GSAP Tier-S effects (FooterMotion, AboutMotion, ContactMotion) + FK guard deployed to production. Dark mode has a persistent rectangle around the hero logo that could not be fixed (tried: PNG processing, blend modes, isolation overrides, new logo, new background — none worked). Production is stable in light mode.
+> **Session status:** Dark mode disabled across storefront + admin. The hero logo rectangle (browser `<img>` compositing boundary) was confirmed unfixable after clip-path + blend-mode + PNG processing + multiple prior sessions. ThemeToggle returns null, bootstrap forces light, Payload config set to `theme: 'light'`. Production deployed and verified.
 >
-> **Next session focus:** (1) Reproduce GSAP Tier-S effects (they were pushed but may need verification), (2) Fix the dark mode logo rectangle OR remove dark mode entirely, (3) Final QA + close-out. See `NEXT-SESSION-PROMPT.md` for detailed findings.
+> **Next session focus:** Only external dependencies remain: (1) Meshulam payment credentials, (2) Resend API key, (3) Legal markdown, (4) Custom domain, (5) Final catalog copy from Yarit. No code work blocking launch.
 
 ---
 
 ## TL;DR — where we are right now
 
-- 🟡 **2026-04-12 — GSAP Tier-S + dark mode debugging.** GSAP effects + FK guard shipped to prod. Dark mode logo rectangle extensively debugged but NOT fixed — the `<img>` compositing boundary creates a visible rectangle regardless of PNG content, CSS blend modes, or background image. Changing the logo, processing the PNG, swapping backgrounds, and adding blend modes all failed. The issue is structural (browser compositing), not image-level. Next session must fix it or remove dark mode. See `NEXT-SESSION-PROMPT.md` for full findings.
+- 🟢 **2026-04-12 — Dark mode disabled.** ThemeToggle returns null, bootstrap forces light, Payload `theme: 'light'`, AdminThemeInit forces light. All dark-mode CSS preserved in globals.css + admin-brand.css. Reversible by restoring 4 files from git (`a24b3de~1`). The hero logo rectangle was a browser compositing issue (`<img>` rendered as rectangular atomic layer) — confirmed unfixable after clip-path, blend-mode, PNG processing, mask-image, and new logo/background attempts across 3 sessions.
+- 🟢 **2026-04-12 — GSAP Tier-S shipped.** FooterMotion, AboutMotion, ContactMotion + FK guard deployed to production.
 - 🟢 **2026-04-12 — QA + design polish + GSAP motion — DEPLOYED.** Full session: rogue user deleted, P1 row-click fixed (title-first column order), favicon + OG image, admin CSS tokens, cart drawer GSAP stagger, BranchDivider scroll-scrubbed leaf sway, DriftingLeaves scroll-responsive, BranchDivider berries removed (dots inside leaves looked wrong), missing 6th leaf added. GrowingTree animation deferred (needs Lottie asset from user). All deployed to prod.
 - 🟢 **2026-04-12 late night (previous) — ADMIN BLANK-PAGE P0 FIXED AND SHIPPED TO PROD.** Root cause: missing importMap entry for `VercelBlobClientUploadHandler`. Fix deployed. Admin fully functional.
 - 🎨 **Brand renamed `Shoresh → Copaia` (קופאה)** end-to-end. 55 code hits across i18n, emails, admin chrome, Payload config, globals.css CSS selector, siteSettings, seed, env.example, scripts. Tagline (`שורשים של בריאות` / `Rooted in wellness`) + description kept unchanged — the new tree-and-roots logo visually matches the tagline even better than the old wordplay. localStorage keys (`shoresh-theme`, `shoresh-cart`) kept as-is to not disturb returning customers' local state. See ADR-020 in `docs/DECISIONS.md`.
