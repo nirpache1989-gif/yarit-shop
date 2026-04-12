@@ -203,6 +203,16 @@ html {
   background: transparent !important;
 }
 
+/* The hero logo PNG may retain anti-aliased white fringe pixels from
+   the original JPG→PNG color-key conversion. multiply blends white
+   into parchment (white × parchment = parchment) so any residual
+   rectangle vanishes. The tree's greens/browns darken ~2% on the
+   cream base — imperceptible. Only applied inside the hero where
+   the background is guaranteed to be light parchment. */
+[data-theme="dark"] .hero-section .logo-halo img {
+  mix-blend-mode: multiply;
+}
+
 /* Header logo gets a subtle warm glow in dark mode — the header
    version is small and doesn't need a full bright patch. */
 [data-theme="dark"] header img[alt="Copaia"] {
