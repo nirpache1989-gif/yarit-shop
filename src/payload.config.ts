@@ -145,24 +145,17 @@ export default buildConfig({
         { path: '@/components/admin/payload/HelpButton#HelpButton' },
         { path: '@/components/admin/payload/ViewOnSite#ViewOnSite' },
       ],
+      // PROBE 2026-04-12: providers TEMPORARILY removed to bisect the
+      // admin blank-page bug. If the preview renders the admin without
+      // these 4 providers, the bug is in Payload's NestProviders
+      // recursion or in one of our provider components' server-render
+      // path. Restore this list once the bisect is complete.
+      //
       // Admin providers. Order matters — AdminThemeInit must run
       // first so `data-theme` is on <html> before downstream
       // providers (AdminToaster, AdminDriftingLeaves, OnboardingTour)
       // read the palette tokens.
-      providers: [
-        {
-          path: '@/components/admin/payload/AdminThemeInit#AdminThemeInit',
-        },
-        {
-          path: '@/components/admin/payload/AdminToaster#AdminToaster',
-        },
-        {
-          path: '@/components/admin/payload/AdminDriftingLeaves#AdminDriftingLeaves',
-        },
-        {
-          path: '@/components/admin/payload/OnboardingTour#OnboardingTour',
-        },
-      ],
+      providers: [],
     },
   },
   collections: [Users, Media, Tags, Categories, Products, Orders],
