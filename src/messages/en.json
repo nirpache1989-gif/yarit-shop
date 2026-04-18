@@ -24,6 +24,13 @@
     "search": "Search",
     "language": "Language"
   },
+  "marquee": {
+    "bannerLine": "Free shipping over ₪200 · 30-day returns · Hand-wrapped orders · Ships within 2 days"
+  },
+  "layout": {
+    "soundPillLabelIdle": "ambient sound",
+    "soundPillLabelPlaying": "ambience on"
+  },
   "home": {
     "heroEyebrow": "Est. 2026 · Tel Aviv",
     "heroHeadline": "Rooted in wellness",
@@ -162,10 +169,12 @@
     "shop": "Shop",
     "customerService": "Customer service",
     "information": "Information",
+    "support": "Support",
     "social": "Follow us",
     "newsletterHeading": "Join the list",
     "newsletterBody": "Occasional notes from Yarit — a new product, a recommendation. No noise, no spam.",
-    "newsletterComingSoon": "Newsletter signup coming soon 🌿"
+    "newsletterComingSoon": "Newsletter signup coming soon 🌿",
+    "madeSlowly": "Made slowly"
   },
   "auth": {
     "login": "Log in",

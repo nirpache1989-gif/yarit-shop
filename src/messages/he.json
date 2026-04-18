@@ -20,6 +20,13 @@
     "search": "חיפוש",
     "language": "שפה"
   },
+  "marquee": {
+    "bannerLine": "משלוח חינם מעל ₪200 · החזרות תוך 30 יום · עטיפה ידנית · משלוח תוך יומיים"
+  },
+  "layout": {
+    "soundPillLabelIdle": "צליל סביבתי",
+    "soundPillLabelPlaying": "הסביבה דולקת"
+  },
   "theme": {
     "switchToDark": "עבור למצב כהה",
     "switchToLight": "עבור למצב בהיר"
@@ -162,10 +169,12 @@
     "shop": "חנות",
     "customerService": "שירות לקוחות",
     "information": "מידע",
+    "support": "תמיכה",
     "social": "עקבו אחרינו",
     "newsletterHeading": "הצטרפי לרשימה",
     "newsletterBody": "קבלי מדי פעם מייל עם מוצר חדש או המלצה של ירית — בלי ספאם, בלי רעש.",
-    "newsletterComingSoon": "הרשמה לניוזלטר תיפתח בקרוב 🌿"
+    "newsletterComingSoon": "הרשמה לניוזלטר תיפתח בקרוב 🌿",
+    "madeSlowly": "נעשה לאט"
   },
   "auth": {
     "login": "כניסה",
