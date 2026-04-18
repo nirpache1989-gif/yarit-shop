@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Journal · Yarit°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+<main>
+  <section class="g-wrap g-page-title">
+    <span class="g-breadcrumb"><a href="index.html">Yarit°</a> <span>/</span> <span>Journal</span></span>
+    <h1>Notes <em>from</em> <span class="g-under">the garden</span></h1>
+    <p>Seasonal letters on ingredients, formulas, and what bloomed this week.</p>
+  </section>
+
+  <section class="g-wrap" style="padding-bottom: 100px;">
+    <div class="g-grid-3" id="posts"></div>
+  </section>
+</main>
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, plate, t, isHe, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('journal');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+
+  const posts = isHe() ? [
+    { tag: 'מהמטבח', title: 'מנה ראשונה של אלוורה באביב', read: '4 דק׳', plate: 'leaf' },
+    { tag: 'מרקחות', title: 'למה פרופוליס לוקח 14 יום', read: '6 דק׳', plate: 'ember' },
+    { tag: 'מטיילים', title: 'סיור במכוורת שלנו בגליל', read: '8 דק׳', plate: 'cream' },
+    { tag: 'מתנות', title: 'מה לתת לחברה ביום הולדתה ה-40', read: '3 דק׳', plate: '' },
+    { tag: 'מהמטבח', title: 'תה חורף שלנו, צעד אחר צעד', read: '5 דק׳', plate: 'leaf' },
+    { tag: 'חיים', title: 'ירית על מה זה ״לאט על ידי יד״', read: '10 דק׳', plate: 'ember' },
+  ] : [
+    { tag: 'From the kitchen', title: 'First aloe harvest of spring', read: '4 min', plate: 'leaf' },
+    { tag: 'Formulas', title: 'Why propolis takes 14 days to rest', read: '6 min', plate: 'ember' },
+    { tag: 'Field notes', title: 'A visit to our Galilee beekeeper', read: '8 min', plate: 'cream' },
+    { tag: 'Gifting', title: 'What to give a friend turning 40', read: '3 min', plate: '' },
+    { tag: 'From the kitchen', title: 'Our winter tea blend, step by step', read: '5 min', plate: 'leaf' },
+    { tag: 'Life', title: 'Yarit on what "slow by hand" means', read: '10 min', plate: 'ember' },
+  ];
+  document.getElementById('posts').innerHTML = posts.map((p, i) => `
+    <article class="g-card g-reveal g-reveal-delay-${(i%3)+1}" style="border-radius: 16px; padding: 16px;">
+      <div class="g-card-img" style="aspect-ratio: 3/2;">${plate('', { kind: p.plate, tag: p.tag.toUpperCase() })}</div>
+      <div class="g-card-body">
+        <h4 class="g-card-name" style="font-size: 26px;">${p.title}</h4>
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--g-rule);">
+          <span class="g-mono" style="color: var(--g-mute);">${p.read}</span>
+          <span class="g-accent" style="color: var(--g-ember); font-size: 20px;">read →</span>
+        </div>
+      </div>
+    </article>`).join('');
+
+  wireChrome();
+})();
+</script>
+</body>
+</html>

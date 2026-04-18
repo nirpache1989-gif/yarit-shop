@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basket · Yarit°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+
+<main>
+  <section class="g-wrap g-page-title">
+    <span class="g-breadcrumb"><a href="index.html">Yarit°</a> <span>/</span> <span>Basket</span></span>
+    <h1>
+      <span data-t="cartTitle1"></span>
+      <em data-t="cartTitleItalic"></em>
+    </h1>
+    <p data-t="cartLead"></p>
+  </section>
+
+  <section class="g-wrap" style="padding-bottom: 120px;">
+    <div class="g-cart-grid">
+      <div>
+        <p class="g-note" style="margin-bottom: 24px;" data-t="cartEmptyNote"></p>
+        <ul class="g-cart-list" id="cart-list"></ul>
+
+        <!-- gift note -->
+        <div style="margin-top: 40px; padding: 28px; background: var(--g-paper); border-radius: 18px; box-shadow: 0 2px 0 var(--g-rule); display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center;">
+          <div style="font-family: var(--g-accent); color: var(--g-ember); font-size: 32px;">❦</div>
+          <div>
+            <strong style="font-family: var(--g-display); font-size: 22px;" data-t="cartGift"></strong>
+            <div style="font-size: 13px; color: var(--g-mute); margin-top: 2px;" data-t="cartGiftSub"></div>
+            <textarea rows="2" placeholder="…" style="width: 100%; margin-top: 12px; background: transparent; border: none; border-bottom: 1px dashed var(--g-rule); font-family: var(--g-accent); font-size: 20px; outline: none; resize: none; color: var(--g-ember);"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <aside class="g-summary">
+        <h3 data-t="cartSummary"></h3>
+        <div class="g-summary-row"><span data-t="cartSub"></span><span id="sum-sub">₪425</span></div>
+        <div class="g-summary-row"><span data-t="cartShip"></span><span class="muted">₪30</span></div>
+        <div class="g-summary-row"><span data-t="cartTax"></span><span class="muted">₪82</span></div>
+        <div class="g-promo">
+          <input placeholder="SPRING26" data-t-ph="cartPromo"/>
+          <button data-t="cartApply"></button>
+        </div>
+        <div class="g-summary-row total"><span data-t="cartTotal"></span><span>₪515</span></div>
+        <a href="checkout.html" class="g-btn g-btn-ember g-btn-block" style="margin-top: 24px;" data-t="cartCheckout"></a>
+
+        <div style="margin-top: 24px; display: flex; gap: 10px; font-size: 12px; color: var(--g-mute);">
+          <span>◆ free shipping unlocked</span>
+          <span>·</span>
+          <span>30-day returns</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, plate, t, isHe, productName, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+  document.querySelectorAll('[data-t-ph]').forEach(el => el.placeholder = t(el.dataset.tPh));
+
+  const items = [
+    { ...window.CATALOG.products[0], qty: 2, variant: '500 ml' },
+    { ...window.CATALOG.products[4], qty: 1, variant: '1 tube' },
+    { ...window.CATALOG.products[5], qty: 1, variant: '60 tablets' },
+  ];
+  document.getElementById('cart-list').innerHTML = items.map(it => `
+    <li class="g-cart-row">
+      <div class="g-cart-thumb">${plate('', { kind: it.plate || 'leaf', tag: '', specimen: it.specimen })}</div>
+      <div>
+        <h3 class="g-cart-name">${productName(it)}</h3>
+        <div class="g-cart-variant">${it.variant} · ${isHe() ? 'מנה' : 'Batch'} № ${it.specimen}</div>
+        <div class="g-cart-ctl">
+          <div class="g-cart-qty"><button>−</button><span>${it.qty}</span><button>+</button></div>
+          <span class="g-cart-remove">${isHe() ? 'הסר' : 'remove'}</span>
+          <span class="g-cart-remove">${isHe() ? 'שמור למועדפים' : 'save for later'}</span>
+        </div>
+      </div>
+      <div class="g-cart-linetotal">₪${it.price * it.qty}</div>
+    </li>
+  `).join('');
+
+  wireChrome();
+})();
+</script>
+</body>
+</html>

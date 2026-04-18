@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Account · Yarit°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+
+<main>
+  <section class="g-wrap g-page-title" style="padding: 80px 48px 32px;">
+    <span class="g-breadcrumb"><a href="index.html">Yarit°</a> <span>/</span> <span data-t="accountTitle"></span></span>
+    <h1 style="font-size: clamp(48px, 6vw, 88px);">
+      <span data-t="accountHi"></span>
+      <em data-t="accountName"></em>
+    </h1>
+    <p class="g-note">we saved your last cart — it\u2019s still fresh.</p>
+  </section>
+
+  <section class="g-wrap" style="padding-bottom: 120px;">
+    <div class="g-account-grid">
+      <aside class="g-account-nav">
+        <div class="g-account-nav-item is-on">❦ <span data-t="accountOrders"></span></div>
+        <div class="g-account-nav-item">❀ <span data-t="accountFav"></span></div>
+        <div class="g-account-nav-item">✿ <span data-t="accountAddr"></span></div>
+        <div class="g-account-nav-item">✾ <span data-t="accountSubs"></span></div>
+        <div class="g-account-nav-item">❧ <span data-t="accountSettings"></span></div>
+      </aside>
+
+      <div>
+        <!-- points card -->
+        <div class="g-account-card" style="background: var(--g-leaf-deep); color: var(--g-paper); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 32px;">
+          <div>
+            <span class="g-kicker" style="color: var(--g-ember);" data-t="accountPointsLabel"></span>
+            <div style="font-family: var(--g-display); font-size: 72px; line-height: 1; margin: 10px 0 6px;">1,240</div>
+            <div style="font-size: 14px; color: var(--g-rule);" data-t="accountPointsNote"></div>
+          </div>
+          <div style="width: 120px; height: 120px; border-radius: 50%; background: rgba(255,248,230,0.1); display: grid; place-items: center; font-family: var(--g-accent); font-size: 42px; color: var(--g-ember);">✦</div>
+        </div>
+
+        <div class="g-account-card">
+          <h3 class="g-h3" style="margin-bottom: 20px;" data-t="accountRecent"></h3>
+          <div id="orders"></div>
+        </div>
+
+        <!-- wishlist preview -->
+        <div class="g-account-card">
+          <div class="g-row-between" style="margin-bottom: 20px;">
+            <h3 class="g-h3" data-t="accountFav"></h3>
+            <a href="shop.html" class="g-mono" style="color: var(--g-ember);">see all →</a>
+          </div>
+          <div class="g-grid-3" id="fav-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, plate, productCard, t, isHe, productName, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('account');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+
+  const orders = [
+    { id: '2026-0412', date: isHe() ? '12 באפריל' : 'Apr 12', status: 'delivered', total: 515, n: 3, p: window.CATALOG.products[0] },
+    { id: '2026-0328', date: isHe() ? '28 במרץ' : 'Mar 28', status: 'shipping', total: 245, n: 2, p: window.CATALOG.products[4] },
+    { id: '2026-0218', date: isHe() ? '18 בפברואר' : 'Feb 18', status: 'processing', total: 140, n: 1, p: window.CATALOG.products[7] },
+    { id: '2026-0114', date: isHe() ? '14 בינואר' : 'Jan 14', status: 'delivered', total: 320, n: 2, p: window.CATALOG.products[5] },
+  ];
+  const statusLabel = (s) => ({
+    delivered: isHe() ? 'נמסר' : 'delivered',
+    shipping: isHe() ? 'בדרך' : 'shipping',
+    processing: isHe() ? 'נעטף' : 'wrapping',
+  }[s]);
+  document.getElementById('orders').innerHTML = orders.map(o => `
+    <div class="g-order-row">
+      <div style="width: 80px; aspect-ratio: 1; border-radius: 12px; overflow: hidden;">${plate('', { kind: o.p.plate || 'leaf' })}</div>
+      <div>
+        <div style="font-family: var(--g-display); font-size: 20px;">№ ${o.id}</div>
+        <div style="font-size: 13px; color: var(--g-mute);">${o.date} · ${o.n} ${isHe() ? 'פריטים' : 'items'}</div>
+      </div>
+      <span class="g-order-status ${o.status}">${statusLabel(o.status)}</span>
+      <span style="font-family: var(--g-display); font-size: 22px;">₪${o.total}</span>
+      <a class="g-mono" style="color: var(--g-ember);">details →</a>
+    </div>`).join('');
+
+  document.getElementById('fav-grid').innerHTML = window.CATALOG.products.slice(1, 4).map(productCard).join('');
+
+  wireChrome();
+})();
+</script>
+</body>
+</html>

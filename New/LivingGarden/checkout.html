@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout · Yarit°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+
+<main>
+  <section class="g-wrap g-page-title">
+    <span class="g-breadcrumb"><a href="cart.html">Basket</a> <span>/</span> <span>Checkout</span></span>
+    <h1>
+      <span data-t="checkTitle1"></span>
+      <em data-t="checkTitleItalic"></em>
+    </h1>
+  </section>
+
+  <section class="g-wrap" style="padding-bottom: 120px;">
+    <div class="g-checkout-grid">
+      <div>
+        <div class="g-steps">
+          <div class="g-step is-on"><span class="g-step-num">1</span><span data-t="checkStep1"></span></div>
+          <div class="g-step"><span class="g-step-num" style="background:var(--g-rule); color:var(--g-ink);">2</span><span data-t="checkStep2"></span></div>
+          <div class="g-step"><span class="g-step-num" style="background:var(--g-rule); color:var(--g-ink);">3</span><span data-t="checkStep3"></span></div>
+        </div>
+
+        <div class="g-section-paper" style="padding: 36px; margin-bottom: 24px;">
+          <h3 class="g-h3" style="margin-bottom: 20px;" data-t="checkContact"></h3>
+          <div class="g-form">
+            <div class="g-field-row">
+              <div class="g-field"><label data-t="checkFirst"></label><input value="Rachel"/></div>
+              <div class="g-field"><label data-t="checkLast"></label><input value="Meir"/></div>
+            </div>
+            <div class="g-field-row">
+              <div class="g-field"><label data-t="checkEmail"></label><input value="rachel@example.com"/></div>
+              <div class="g-field"><label data-t="checkPhone"></label><input value="054-123-4567"/></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="g-section-paper" style="padding: 36px; margin-bottom: 24px;">
+          <h3 class="g-h3" style="margin-bottom: 20px;" data-t="checkDeliver"></h3>
+          <div class="g-form">
+            <div class="g-field"><label data-t="checkAddr"></label><input value="Rothschild Blvd 12"/></div>
+            <div class="g-field-row">
+              <div class="g-field"><label data-t="checkCity"></label><input value="Tel Aviv"/></div>
+              <div class="g-field"><label data-t="checkPost"></label><input value="6688111"/></div>
+            </div>
+            <div class="g-field"><label data-t="checkNote"></label><textarea rows="2" style="font-family: var(--g-accent); font-size: 20px; color: var(--g-ember);">Happy birthday, Mom — from all of us</textarea></div>
+          </div>
+        </div>
+
+        <div class="g-section-paper" style="padding: 36px;">
+          <h3 class="g-h3" style="margin-bottom: 20px;" data-t="checkPayment"></h3>
+          <div class="g-pay-opts">
+            <div class="g-pay is-on">❦<strong>Card</strong><span>Visa · MC</span></div>
+            <div class="g-pay">◐<strong>Bit</strong><span>Phone</span></div>
+            <div class="g-pay">◈<strong>PayPal</strong><span>One-tap</span></div>
+          </div>
+          <div class="g-form" style="margin-top: 20px;">
+            <div class="g-field"><label>Card number</label><input value="4242 4242 4242 4242"/></div>
+            <div class="g-field-row">
+              <div class="g-field"><label>Expiry</label><input value="12 / 27"/></div>
+              <div class="g-field"><label>CVC</label><input value="123"/></div>
+            </div>
+          </div>
+        </div>
+
+        <button class="g-btn g-btn-ember g-btn-block" style="margin-top: 32px;" data-t="checkPlace"></button>
+      </div>
+
+      <aside class="g-summary" style="top: 90px;">
+        <h3>Order</h3>
+        <div id="co-list"></div>
+        <div class="g-summary-row" style="margin-top: 20px;"><span data-t="cartSub"></span><span>₪425</span></div>
+        <div class="g-summary-row"><span data-t="cartShip"></span><span class="muted">₪30</span></div>
+        <div class="g-summary-row"><span data-t="cartTax"></span><span class="muted">₪82</span></div>
+        <div class="g-summary-row total"><span data-t="cartTotal"></span><span>₪515</span></div>
+
+        <div style="margin-top: 20px; padding: 16px; background: rgba(107,142,78,0.15); border-radius: 14px; font-size: 13px; color: var(--g-leaf-deep); display: flex; gap: 10px; align-items: flex-start;">
+          <span style="font-size: 18px;">❦</span>
+          <span>Your order will be wrapped by hand in tissue paper and tied with linen twine.</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, plate, t, isHe, productName, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+
+  const items = [
+    { ...window.CATALOG.products[0], qty: 2 },
+    { ...window.CATALOG.products[4], qty: 1 },
+    { ...window.CATALOG.products[5], qty: 1 },
+  ];
+  document.getElementById('co-list').innerHTML = items.map(it => `
+    <div style="display: grid; grid-template-columns: 48px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--g-rule);">
+      <div style="width: 48px; height: 48px; border-radius: 10px; overflow: hidden;">${plate('', { kind: it.plate || 'leaf' })}</div>
+      <div style="font-size: 14px;"><strong style="font-family: var(--g-display); font-weight: 400;">${productName(it)}</strong><div style="color: var(--g-mute); font-size: 12px;">× ${it.qty}</div></div>
+      <div style="font-family: var(--g-display); font-size: 18px;">₪${it.price * it.qty}</div>
+    </div>`).join('');
+
+  document.querySelectorAll('.g-pay').forEach(p => p.addEventListener('click', () => {
+    document.querySelectorAll('.g-pay').forEach(x => x.classList.remove('is-on'));
+    p.classList.add('is-on');
+  }));
+
+  wireChrome();
+})();
+</script>
+</body>
+</html>

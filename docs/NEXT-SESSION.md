@@ -2,17 +2,19 @@
 
 > **Audience:** Whoever opens this repo next, human or AI. This is the 5-minute orientation. After this, read `CLAUDE.md`, then `docs/STATE.md` for full history.
 >
-> **Last updated:** 2026-04-12, end of the **dark mode disable** session. Dark mode toggle removed, site forced to light-only. All dark-mode CSS preserved for future re-enable.
+> **Last updated:** 2026-04-18, end of the **dark mode disable + admin P0 fix + Living Garden handoff** session.
 >
-> **Session status:** Dark mode disabled across storefront + admin. The hero logo rectangle (browser `<img>` compositing boundary) was confirmed unfixable after clip-path + blend-mode + PNG processing + multiple prior sessions. ThemeToggle returns null, bootstrap forces light, Payload config set to `theme: 'light'`. Production deployed and verified.
+> **Session status:** Dark mode toggle removed, admin importMap P0 regression fixed, Living Garden design handoff docs created. Production at `a24b3de` → `d7a68bf` is live and functional. Full redesign planned for next sessions.
 >
-> **Next session focus:** Only external dependencies remain: (1) Meshulam payment credentials, (2) Resend API key, (3) Legal markdown, (4) Custom domain, (5) Final catalog copy from Yarit. No code work blocking launch.
+> **Next session focus:** **LIVING GARDEN DESIGN OVERHAUL — session 1.** Yarit has commissioned a full storefront redesign with a new design language ("Living Garden" — editorial wellness apothecary). High-fidelity HTML prototypes + brief at `/New/handoff/`. Read `docs/NEXT-SESSION-PROMPT.md` for the full scope, then `docs/DESIGN-LIVING-GARDEN.md` for the complete design reference. THREE open questions need user confirmation before coding starts: (1) brand rename Copaia → Yarit°?, (2) main-branch vs. parallel-route implementation?, (3) GSAP vs. vanilla for cursor effects?
 
 ---
 
 ## TL;DR — where we are right now
 
-- 🟢 **2026-04-12 — Dark mode disabled.** ThemeToggle returns null, bootstrap forces light, Payload `theme: 'light'`, AdminThemeInit forces light. All dark-mode CSS preserved in globals.css + admin-brand.css. Reversible by restoring 4 files from git (`a24b3de~1`). The hero logo rectangle was a browser compositing issue (`<img>` rendered as rectangular atomic layer) — confirmed unfixable after clip-path, blend-mode, PNG processing, mask-image, and new logo/background attempts across 3 sessions.
+- 🌿 **2026-04-18 — LIVING GARDEN DESIGN HANDOFF RECEIVED.** Full storefront redesign planned. High-fidelity HTML prototypes + design brief at `/New/handoff/design/LivingGarden/`. New brand direction: `Yarit° — small apothecary`. New palette (parchment + leaf + ember), new fonts (Fraunces + Source Serif 4 + Caveat + JetBrains Mono), 9 pages including a new `/journal` blog, signature "alive" interactions (cursor leaf trail, scroll vine, card parallax, ambient sound pill, marquee banner). Full reference at `docs/DESIGN-LIVING-GARDEN.md`. Next session reads `docs/NEXT-SESSION-PROMPT.md` to start implementation.
+- 🟢 **2026-04-18 — Admin P0 importMap regression fixed + deployed.** Previous commit (`a24b3de`) wiped `VercelBlobClientUploadHandler` from `importMap.js` because `npm run build` during the dark-mode-disable session regenerated the file without the entry (local env missing `BLOB_READ_WRITE_TOKEN`). Manually restored — commit `d7a68bf` — deployed and verified via Chrome MCP (admin dashboard renders, sidebar nav live, light mode confirmed).
+- 🟢 **2026-04-18 — Dark mode disabled.** ThemeToggle returns null, bootstrap forces light, Payload `theme: 'light'`, AdminThemeInit forces light. All dark-mode CSS preserved in globals.css + admin-brand.css. Reversible by restoring 4 files from git (`a24b3de~1`). The hero logo rectangle was a browser compositing issue (`<img>` rendered as rectangular atomic layer) — confirmed unfixable after clip-path, blend-mode, PNG processing, mask-image, and new logo/background attempts across 3 sessions.
 - 🟢 **2026-04-12 — GSAP Tier-S shipped.** FooterMotion, AboutMotion, ContactMotion + FK guard deployed to production.
 - 🟢 **2026-04-12 — QA + design polish + GSAP motion — DEPLOYED.** Full session: rogue user deleted, P1 row-click fixed (title-first column order), favicon + OG image, admin CSS tokens, cart drawer GSAP stagger, BranchDivider scroll-scrubbed leaf sway, DriftingLeaves scroll-responsive, BranchDivider berries removed (dots inside leaves looked wrong), missing 6th leaf added. GrowingTree animation deferred (needs Lottie asset from user). All deployed to prod.
 - 🟢 **2026-04-12 late night (previous) — ADMIN BLANK-PAGE P0 FIXED AND SHIPPED TO PROD.** Root cause: missing importMap entry for `VercelBlobClientUploadHandler`. Fix deployed. Admin fully functional.

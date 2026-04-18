@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Yarit° — small apothecary, grown slowly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+
+<main>
+  <!-- HERO -->
+  <section class="g-hero g-wrap">
+    <div class="g-hero-grid">
+      <div>
+        <span class="g-kicker" data-t="heroKicker"></span>
+        <h1 class="g-h1" style="margin-top: 22px;">
+          <span data-t="heroTitle1"></span>
+          <em><span class="g-under" data-t="heroTitle2"></span></em>
+          <span data-t="heroTitle3"></span>
+        </h1>
+        <p class="g-hero-lead" data-t="heroLead"></p>
+        <div class="g-hero-cta">
+          <a href="shop.html" class="g-btn g-btn-leaf" data-t="heroCta1"></a>
+          <a href="about.html" class="g-btn g-btn-ghost" data-t="heroCta2"></a>
+          <span class="g-note" style="margin-left: 12px;">hand-wrapped →</span>
+        </div>
+        <div class="g-hero-meta">
+          <div><strong>17</strong><span data-t="statYears"></span></div>
+          <div><strong>34</strong><span data-t="statProducts"></span></div>
+          <div><strong>Yarit</strong><span data-t="statHands"></span></div>
+        </div>
+      </div>
+
+      <div class="g-hero-visual" id="hero-vis">
+        <!-- Plate fill -->
+      </div>
+    </div>
+  </section>
+
+  <!-- BANNER MARQUEE -->
+  <div id="banner-slot"></div>
+
+  <!-- FEATURED -->
+  <section class="g-section g-wrap">
+    <div class="g-row-between g-reveal" style="align-items: flex-end; margin-bottom: 48px;">
+      <div>
+        <span class="g-kicker" data-t="featKicker"></span>
+        <h2 class="g-h2" style="margin-top: 20px;">
+          <span data-t="featTitle1"></span>
+          <em data-t="featTitleItalic"></em>
+          <span class="g-under" data-t="featTitle2"></span>
+        </h2>
+        <p style="color: var(--g-mute); margin: 12px 0 0; max-width: 480px;" data-t="featLead"></p>
+      </div>
+      <a href="shop.html" class="g-btn g-btn-ghost">See all 34 →</a>
+    </div>
+    <div class="g-grid-4" id="featured-grid"></div>
+  </section>
+
+  <!-- CATEGORY GARDEN -->
+  <section class="g-section g-wrap">
+    <div class="g-reveal">
+      <span class="g-kicker" data-t="catKicker"></span>
+      <h2 class="g-h2" style="margin-top: 20px;" data-t="catTitle"></h2>
+    </div>
+    <div class="g-cats" id="cat-grid"></div>
+  </section>
+
+  <!-- STORY -->
+  <section class="g-section g-wrap">
+    <div class="g-story-grid">
+      <div class="g-story-visual g-reveal"></div>
+      <div class="g-story-body g-reveal g-reveal-delay-1">
+        <span class="g-kicker" data-t="storyKicker"></span>
+        <h2 class="g-h2" style="margin: 22px 0 28px;">
+          <span data-t="storyTitle1"></span>
+          <em data-t="storyTitleItalic"></em>
+          <span data-t="storyTitle2"></span>
+        </h2>
+        <p data-t="storyP1"></p>
+        <p data-t="storyP2"></p>
+        <a class="g-btn g-btn-ghost" href="about.html" style="margin-top: 16px;" data-t="storyReadMore"></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- INGREDIENTS -->
+  <section class="g-section g-wrap">
+    <div class="g-reveal" style="text-align: center;">
+      <span class="g-kicker" data-t="ingKicker"></span>
+      <h2 class="g-h2" style="margin-top: 20px;" data-t="ingTitle"></h2>
+    </div>
+    <div class="g-ing-rail" id="ing-rail"></div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="g-section g-wrap">
+    <div class="g-reveal" style="margin-bottom: 40px;">
+      <span class="g-kicker" data-t="quoteKicker"></span>
+    </div>
+    <div class="g-grid-3" id="quotes-grid"></div>
+  </section>
+</main>
+
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, plate, productCard, t, isHe, catName, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('index');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+
+  // Translate all [data-t]
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+
+  // Hero visual
+  document.getElementById('hero-vis').innerHTML = plate('', { kind: 'leaf', tag: 'SIGNATURE · 2026' }) +
+    `<span class="g-float-badge" style="top: 30px; right: -30px;"><span class="dot"></span>100% natural</span>` +
+    `<span class="g-float-badge ember" style="bottom: 80px; left: -40px;"><span class="dot"></span>small-batch</span>` +
+    `<span class="g-hero-note" style="bottom: 20px; right: 30px;">from the<br/>kitchen, with love —</span>`;
+
+  // Featured grid
+  const featured = window.CATALOG.products.slice(0, 8);
+  document.getElementById('featured-grid').innerHTML = featured.map(productCard).join('');
+
+  // Categories
+  const icons = { nutrition: '✿', skincare: '❀', aloe: '❦', beauty: '✾', gifts: '❧' };
+  document.getElementById('cat-grid').innerHTML = window.CATALOG.categories.map(c => `
+    <a href="shop.html?cat=${c.slug}" class="g-cat g-reveal">
+      <div>
+        <div class="g-cat-count">№ ${c.count.toString().padStart(2, '0')} items</div>
+        <div class="g-cat-name" style="margin-top: 6px;">${catName(c)}</div>
+      </div>
+      <span class="g-cat-icon">${c.icon}</span>
+    </a>`).join('');
+
+  // Ingredients
+  const ings = [
+    { name: t('ingAloeName'), desc: t('ingAloeDesc'), mark: 'a' },
+    { name: t('ingHoneyName'), desc: t('ingHoneyDesc'), mark: 'h' },
+    { name: t('ingPropolisName'), desc: t('ingPropolisDesc'), mark: 'p' },
+    { name: t('ingOliveName'), desc: t('ingOliveDesc'), mark: 'o' },
+  ];
+  document.getElementById('ing-rail').innerHTML = ings.map((i, idx) => `
+    <div class="g-ing g-reveal g-reveal-delay-${(idx % 3) + 1}">
+      <span class="g-ing-mark">${i.mark}</span>
+      <h3 class="g-ing-name">${i.name}</h3>
+      <p class="g-ing-desc">${i.desc}</p>
+    </div>`).join('');
+
+  // Testimonials
+  const quotes = isHe() ? [
+    { text: 'הקרם האלוורה הציל את היבלות של הבת שלי. החזרתי כבר ארבע פעמים.', who: 'נועה ב.', where: 'חיפה · לקוחה מ-2019' },
+    { text: 'נראה כאילו ירית עטפה את החבילה במטבח שלה. כי היא עטפה.', who: 'ליאור ק.', where: 'תל אביב · לקוח מ-2022' },
+    { text: 'הדבש מהגליל הוא הדבר הכי טעים שיש לי במטבח. נקודה.', who: 'דנה ש.', where: 'ירושלים · לקוחה מ-2020' },
+  ] : [
+    { text: 'The aloe heat lotion saved my mother\u2019s shoulders. I\u2019ve re-ordered four times this year.', who: 'Noa B.', where: 'Haifa · since 2019' },
+    { text: 'The package looks like Yarit wrapped it in her kitchen. Because she did.', who: 'Liran K.', where: 'Tel Aviv · since 2022' },
+    { text: 'The Galilee honey is the best thing in my pantry. Full stop.', who: 'Dana S.', where: 'Jerusalem · since 2020' },
+  ];
+  document.getElementById('quotes-grid').innerHTML = quotes.map((q, i) => `
+    <div class="g-quote g-reveal g-reveal-delay-${i + 1}">
+      <p>${q.text}</p>
+      <div class="g-quote-author">
+        <div class="g-quote-avatar"></div>
+        <div><strong>${q.who}</strong><span>${q.where}</span></div>
+      </div>
+    </div>`).join('');
+
+  wireChrome();
+})();
+</script>
+</body>
+</html>

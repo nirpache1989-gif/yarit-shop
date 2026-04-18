@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop · Yarit°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+
+<main>
+  <section class="g-wrap g-page-title">
+    <span class="g-breadcrumb"><a href="index.html">Yarit°</a> <span>/</span> <span data-t="shopBread"></span></span>
+    <h1>
+      <span data-t="shopTitle1"></span>
+      <em data-t="shopTitleItalic"></em>
+      <span class="g-under" data-t="shopTitle2"></span>
+    </h1>
+    <p data-t="shopLead"></p>
+  </section>
+
+  <section class="g-wrap" style="padding-bottom: 120px;">
+    <div class="g-shop-grid">
+      <!-- FILTERS -->
+      <aside>
+        <div class="g-filter-group">
+          <h4 class="g-filter-title" data-t="filterCat"></h4>
+          <ul class="g-filter-list" id="cat-filters"></ul>
+        </div>
+        <div class="g-filter-group">
+          <h4 class="g-filter-title" data-t="filterPrice"></h4>
+          <div class="g-range"></div>
+          <div style="display:flex; justify-content: space-between; font-family: var(--g-mono); font-size: 11px; color: var(--g-mute); margin-top: 8px;">
+            <span>₪45</span><span>₪210</span>
+          </div>
+        </div>
+        <div class="g-filter-group">
+          <h4 class="g-filter-title" data-t="filterConcern"></h4>
+          <ul class="g-filter-list">
+            <li>Soothing <span>8</span></li>
+            <li class="is-on">Hydration <span>12</span></li>
+            <li>Digestion <span>5</span></li>
+            <li>Immunity <span>6</span></li>
+            <li>Sleep <span>3</span></li>
+          </ul>
+        </div>
+        <div class="g-filter-group">
+          <h4 class="g-filter-title" data-t="filterStock"></h4>
+          <ul class="g-filter-list">
+            <li>In stock <span>32</span></li>
+            <li>Back soon <span>2</span></li>
+          </ul>
+        </div>
+      </aside>
+
+      <!-- GRID -->
+      <div>
+        <div class="g-shop-header">
+          <span class="g-shop-count" data-t="shopCount"></span>
+          <div class="g-row" style="gap: 12px;">
+            <span class="g-mono" style="color: var(--g-mute);" data-t="shopSort"></span>
+            <select style="background: var(--g-paper); border: 1.5px solid var(--g-rule); border-radius: 999px; padding: 8px 14px; font-family: inherit;">
+              <option>Newest</option><option>Price — low</option><option>Price — high</option><option>Bestselling</option>
+            </select>
+          </div>
+        </div>
+        <div class="g-grid-3" id="shop-grid"></div>
+
+        <!-- pagination -->
+        <div style="display: flex; justify-content: center; gap: 8px; margin-top: 64px;">
+          <button class="g-lang-pill">←</button>
+          <button class="g-lang-pill" style="background: var(--g-ink); color: var(--g-paper);">1</button>
+          <button class="g-lang-pill">2</button>
+          <button class="g-lang-pill">3</button>
+          <button class="g-lang-pill">→</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, productCard, t, catName, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('shop');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+
+  const qs = new URLSearchParams(location.search);
+  const filterCat = qs.get('cat');
+  const cats = window.CATALOG.categories;
+  document.getElementById('cat-filters').innerHTML = `
+    <li class="${!filterCat ? 'is-on' : ''}"><a href="shop.html" style="flex:1">All <span>34</span></a></li>
+    ${cats.map(c => `<li class="${filterCat === c.slug ? 'is-on' : ''}"><a href="shop.html?cat=${c.slug}" style="flex:1; display:flex; justify-content:space-between; width:100%">${catName(c)} <span>${c.count}</span></a></li>`).join('')}`;
+
+  // Full shop grid — show all products + duplicates to look fuller
+  const all = window.CATALOG.products.concat(
+    window.CATALOG.products.slice(0, 4).map(p => ({...p, slug: p.slug + '-alt', specimen: (parseInt(p.specimen)+10).toString().padStart(3,'0')}))
+  );
+  const filtered = filterCat ? all.filter(p => p.cat === filterCat) : all;
+  document.getElementById('shop-grid').innerHTML = filtered.map(productCard).join('');
+
+  wireChrome();
+})();
+</script>
+</body>
+</html>

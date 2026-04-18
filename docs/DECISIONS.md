@@ -4,6 +4,50 @@ Every significant architectural or product decision is logged here with a date a
 
 ---
 
+## ADR-021 — Living Garden storefront redesign direction
+
+**Date:** 2026-04-18
+**Status:** Accepted — implementation pending user confirmation on 3 open questions (see `docs/NEXT-SESSION-PROMPT.md`)
+
+**Context:** Yarit commissioned a full storefront redesign from an external designer. Deliverable: a high-fidelity HTML prototype + design brief at `/New/handoff/`. The direction — called **"Living Garden"** — is a warm, handmade, editorial apothecary aesthetic. The site literally grows as you scroll: leaves drift from the cursor, a vine draws itself along the right edge, cards tilt on hover, an ambient sound pill sits bottom-left, a marquee banner runs between sections.
+
+The existing Copaia look (Night Apothecary palette + Bellefair/Heebo + GSAP Tier-1/Tier-S motion) is being replaced wholesale on the storefront. The Payload admin, database schema, i18n routing, auth, and all backend infrastructure stay.
+
+**Decision:**
+
+- **Adopt the Living Garden design direction** as the new visual identity for the storefront. Proceed with a phased implementation (Foundation → Chrome → Pages → Polish) documented in `docs/NEXT-SESSION-PROMPT.md`.
+
+- **Full design reference lives at `docs/DESIGN-LIVING-GARDEN.md`** — single source of truth for tokens, typography, layout, components, motion, i18n, data model. All implementation sessions consult it first.
+
+- **Preserve everything backend-side.** `src/collections/*`, `src/payload.config.ts`, `src/app/(payload)/*`, `src/components/admin/*`, `src/middleware.ts`, `src/lib/payments/*`, `src/lib/email/*`, `src/app/api/*` are out of scope. Only storefront presentation changes.
+
+- **Schema additions (Phase 3.5):** add `plate` (`select`), `specimen` (`text`), `badge` (`select`) fields to `Products`. Add new `Posts` collection for the Journal page (slug, title, excerpt, body, tag, readTime, plate, coverImage, publishedAt — all localized where appropriate).
+
+- **Motion: hybrid strategy.** Keep GSAP + ScrollTrigger for reveal-on-scroll (consistency with existing Tier-1 + Tier-S work). Implement cursor trail + spotlight + card parallax + scroll vine in vanilla React + CSS custom properties (lower overhead, simpler code, closer match to the prototype's `alive.js`).
+
+- **Dark mode stays disabled.** The prior session's work (toggle returns null, bootstrap forces light, Payload `theme: 'light'`) holds. The new palette is light-only by design.
+
+- **Brand name** — **open question awaiting user confirmation.** Prototype shows `Yarit°` (with degree mark + "— small apothecary" subtitle). This would be the third rename (Shoresh → Copaia → Yarit°). The domain, emails, invoices, social refs, admin meta all flip. User must decide whether to keep "Copaia" underneath a Living Garden visual, or rename.
+
+- **Implementation path** — **open question awaiting user confirmation.** Either main-branch replacement on `feat/living-garden` (cleaner, bigger-bang reveal) or parallel `/garden/*` routes (safer, iterative user review). Recommendation in the prompt.
+
+**Consequences:**
+
+- Every storefront page gets rebuilt. Expect 3-5 implementation sessions across Phases 2-3.
+- Brand config + globals.css + layout all get reworked in Phase 1.
+- The current GSAP Tier-1 waves (MeetYarit converge, CategoryGrid expand, BranchDivider SVG draw-in, FeaturedProducts pin, etc.) get replaced with Living Garden equivalents. Reveal-on-scroll primitive carries forward.
+- Existing dark-mode CSS stays in place but unused. Re-enabling dark mode in the new design would require separate work (new palette inversion on top of Living Garden, not the Warm Night palette).
+- Photography is still TBD. Plate placeholders (gradient + botanical SVG overlay) ship first, real photos swap in during Phase 4.
+- Email templates + PDF invoices + admin chrome continue using the Copaia (or Yarit°) brand string read from `brand.config.ts`. They do NOT inherit the Living Garden storefront look.
+
+**Alternatives rejected:**
+
+- **Incremental visual polish on current Copaia look** — rejected. The design brief is a full direction change, not a refinement. Partial adoption would produce an inconsistent middle state.
+- **Abandon GSAP entirely and rebuild in plain CSS/vanilla** — rejected. The GSAP Tier-1 + Tier-S investment is real and the library is already tree-shaken. Hybrid is pragmatic.
+- **Keep current i18n message keys and just translate the new Living Garden copy in place** — rejected. The messaging structure differs enough (new namespaces per page, shared brand namespace, ingredient vocabulary, handwritten accent strings) that a fresh message file per page reads more clearly than an edit-in-place.
+
+---
+
 ## ADR-020 — Rename Shoresh → Copaia + wholesale catalog replacement
 
 **Date:** 2026-04-11

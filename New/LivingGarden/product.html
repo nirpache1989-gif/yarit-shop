@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product · Yarit°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+
+<main>
+  <section class="g-wrap" style="padding: 40px 48px 20px;">
+    <span class="g-breadcrumb"><a href="index.html">Yarit°</a> <span>/</span> <a href="shop.html">Shop</a> <span>/</span> <span id="crumb-cat"></span></span>
+  </section>
+
+  <section class="g-wrap g-pdp-grid" style="padding-bottom: 64px;">
+    <div class="g-pdp-media">
+      <div class="g-pdp-thumbs" id="pdp-thumbs"></div>
+      <div class="g-pdp-main" id="pdp-main"></div>
+    </div>
+    <div>
+      <span class="g-kicker" data-t="pdpKicker"></span>
+      <h1 class="g-pdp-title" id="pdp-title"></h1>
+      <p class="g-pdp-lead" id="pdp-lead"></p>
+      <div class="g-pdp-priceline">
+        <span class="g-pdp-price" id="pdp-price"></span>
+        <span style="text-decoration: line-through; color: var(--g-mute); font-size: 18px;" id="pdp-price-was"></span>
+        <span class="g-note">small-batch №<span id="pdp-specimen"></span></span>
+      </div>
+
+      <div>
+        <div class="g-mono" style="color: var(--g-mute); margin-bottom: 10px;" data-t="pdpSize"></div>
+        <div class="g-pdp-options">
+          <button class="g-pdp-opt">250 ml</button>
+          <button class="g-pdp-opt is-on">500 ml</button>
+          <button class="g-pdp-opt">1 L</button>
+        </div>
+      </div>
+
+      <div class="g-pdp-cta">
+        <div class="g-pdp-qty"><button>−</button><span>1</span><button>+</button></div>
+        <button class="g-btn g-btn-ember" style="flex: 1;" data-t="pdpAdd"></button>
+        <button class="g-nav-icon" title="wishlist">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-8-5.5-8-11.5A5 5 0 0 1 12 6a5 5 0 0 1 8 3.5C20 15.5 12 21 12 21z"/></svg>
+        </button>
+      </div>
+
+      <div class="g-pdp-meta">
+        <div class="g-pdp-meta-item">
+          <div class="ico">❦</div>
+          <div><strong data-t="pdpShipping"></strong><span data-t="pdpShippingSub"></span></div>
+        </div>
+        <div class="g-pdp-meta-item">
+          <div class="ico">❀</div>
+          <div><strong data-t="pdpGuarantee"></strong><span data-t="pdpGuaranteeSub"></span></div>
+        </div>
+        <div class="g-pdp-meta-item">
+          <div class="ico">✿</div>
+          <div><strong data-t="pdpBatch"></strong><span data-t="pdpBatchSub"></span></div>
+        </div>
+        <div class="g-pdp-meta-item">
+          <div class="ico">✾</div>
+          <div><strong data-t="pdpNatural"></strong><span data-t="pdpNaturalSub"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="g-wrap" style="padding-bottom: 40px;">
+    <div class="g-pdp-tabs">
+      <button class="g-pdp-tab is-on" data-t="pdpTab1"></button>
+      <button class="g-pdp-tab" data-t="pdpTab2"></button>
+      <button class="g-pdp-tab" data-t="pdpTab3"></button>
+      <button class="g-pdp-tab" data-t="pdpTab4"></button>
+    </div>
+    <div class="g-pdp-tab-body">
+      <div>
+        <p id="pdp-story-1"></p>
+        <p id="pdp-story-2"></p>
+      </div>
+      <div>
+        <div class="g-ing-rail" style="grid-template-columns: 1fr 1fr; margin-top: 0;" id="pdp-ings"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="g-section g-wrap">
+    <h2 class="g-h2" style="margin-bottom: 32px;" data-t="pdpRelated"></h2>
+    <div class="g-grid-4" id="pdp-related"></div>
+  </section>
+</main>
+
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, plate, productCard, t, isHe, productName, productDesc, catName, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('shop');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = t(el.dataset.t));
+
+  const slug = new URLSearchParams(location.search).get('slug') || 'aloe-drink';
+  const p = window.CATALOG.products.find(x => x.slug === slug) || window.CATALOG.products[0];
+  const cat = window.CATALOG.categories.find(c => c.slug === p.cat);
+
+  document.getElementById('crumb-cat').textContent = catName(cat);
+  document.getElementById('pdp-title').textContent = productName(p);
+  document.getElementById('pdp-lead').textContent = productDesc(p);
+  document.getElementById('pdp-price').textContent = '₪' + p.price;
+  document.getElementById('pdp-price-was').textContent = '₪' + (p.price + 30);
+  document.getElementById('pdp-specimen').textContent = p.specimen;
+
+  const plateKind = p.plate || 'leaf';
+  document.getElementById('pdp-main').innerHTML = plate('', { kind: plateKind, tag: 'SIGNATURE', specimen: p.specimen });
+
+  // Thumbs
+  const thumbKinds = [plateKind, 'ember', 'cream', ''];
+  document.getElementById('pdp-thumbs').innerHTML = thumbKinds.map((k, i) =>
+    `<div class="g-pdp-thumb ${i === 0 ? 'is-active' : ''}">${plate('', { kind: k })}</div>`
+  ).join('');
+
+  // Story paragraphs
+  document.getElementById('pdp-story-1').textContent = isHe()
+    ? 'הבקבוק הזה נמזג במטבח שלנו בתל אביב, מבודדים מהאור בעטיפה מאורגנת. אין שני בקבוקים זהים — ההבדל הוא טביעת האצבע של הגן.'
+    : 'This bottle is poured in our kitchen in Tel Aviv, shielded from light and wrapped in organic paper. No two bottles are identical — the difference is the fingerprint of the garden.';
+  document.getElementById('pdp-story-2').textContent = isHe()
+    ? 'הנוסחה נחה שבועיים לפני שהיא נכנסת לבקבוק, ועוד שבוע לפני שהיא נסגרת. לכן המוצר נשלח תוך יומיים ולא בו-ביום — הסבלנות היא חלק מהמתכון.'
+    : 'The formula rests for two weeks before bottling, then another week before sealing. That\u2019s why we ship in two days, not same-day — patience is part of the recipe.';
+
+  // Ingredients
+  const ings = isHe() ? [
+    { name: 'אלוורה ברברדנסיס', mark: 'a' },
+    { name: 'דבש גליל', mark: 'h' },
+    { name: 'פרופוליס', mark: 'p' },
+    { name: 'שמן זית', mark: 'o' },
+  ] : [
+    { name: 'Aloe barbadensis', mark: 'a' },
+    { name: 'Galilee honey', mark: 'h' },
+    { name: 'Raw propolis', mark: 'p' },
+    { name: 'Olive oil', mark: 'o' },
+  ];
+  document.getElementById('pdp-ings').innerHTML = ings.map(i => `
+    <div class="g-ing"><span class="g-ing-mark">${i.mark}</span><h3 class="g-ing-name">${i.name}</h3></div>`).join('');
+
+  // Related
+  const related = window.CATALOG.products.filter(x => x.slug !== p.slug).slice(0, 4);
+  document.getElementById('pdp-related').innerHTML = related.map(productCard).join('');
+
+  // Thumb clicks
+  document.querySelectorAll('.g-pdp-thumb').forEach((th, i) => th.addEventListener('click', () => {
+    document.querySelectorAll('.g-pdp-thumb').forEach(x => x.classList.remove('is-active'));
+    th.classList.add('is-active');
+    document.getElementById('pdp-main').innerHTML = plate('', { kind: thumbKinds[i], tag: 'SIGNATURE', specimen: p.specimen });
+  }));
+  document.querySelectorAll('.g-pdp-opt').forEach(btn => btn.addEventListener('click', () => {
+    document.querySelectorAll('.g-pdp-opt').forEach(x => x.classList.remove('is-on'));
+    btn.classList.add('is-on');
+  }));
+  document.querySelectorAll('.g-pdp-tab').forEach(tab => tab.addEventListener('click', () => {
+    document.querySelectorAll('.g-pdp-tab').forEach(x => x.classList.remove('is-on'));
+    tab.classList.add('is-on');
+  }));
+
+  wireChrome();
+})();
+</script>
+</body>
+</html>

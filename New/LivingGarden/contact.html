@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact · Yarit°</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;1,9..144,400;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="chrome-nav"></div>
+<main>
+  <section class="g-wrap g-page-title">
+    <h1>Write to <em>the</em> <span class="g-under">garden</span>.</h1>
+    <p>We read everything — and reply within 48 hours, often with a handwritten note.</p>
+  </section>
+
+  <section class="g-wrap" style="padding-bottom: 120px;">
+    <div class="g-grid-2">
+      <div class="g-section-paper">
+        <h3 class="g-h3" style="margin-bottom: 24px;">Send a note</h3>
+        <div class="g-form">
+          <div class="g-field-row">
+            <div class="g-field"><label>Name</label><input placeholder="Rachel"/></div>
+            <div class="g-field"><label>Email</label><input placeholder="you@example.com"/></div>
+          </div>
+          <div class="g-field"><label>Subject</label>
+            <select><option>A question about a product</option><option>Returns</option><option>Wholesale</option><option>Just saying hello</option></select>
+          </div>
+          <div class="g-field"><label>Message</label><textarea rows="6" placeholder="Dear Yarit,"></textarea></div>
+          <button class="g-btn g-btn-ember g-btn-block">Send with love →</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="g-section-paper" style="margin-bottom: 24px;">
+          <span class="g-kicker">Visit the studio</span>
+          <h3 class="g-h3" style="margin: 16px 0 10px;">Florentin, Tel Aviv</h3>
+          <p style="color: var(--g-mute); margin: 0 0 16px;">Vital 7, ground floor · Thursdays & Fridays, 10–16</p>
+          <div style="height: 220px; border-radius: 16px; overflow: hidden;">
+            <div class="g-plate g-plate-cream" style="width:100%; height:100%;"><span class="g-plate-tag dark">STUDIO · FLORENTIN</span></div>
+          </div>
+        </div>
+
+        <div class="g-section-paper">
+          <span class="g-kicker">Quick answers</span>
+          <div style="margin-top: 20px; display: grid; gap: 16px;">
+            <details style="border-bottom: 1px dashed var(--g-rule); padding-bottom: 12px;"><summary style="font-family: var(--g-display); font-size: 20px; cursor: pointer;">Do you ship internationally?</summary><p style="color: var(--g-mute); margin: 10px 0 0;">Yes — to 22 countries. Usually arrives within 10 days.</p></details>
+            <details style="border-bottom: 1px dashed var(--g-rule); padding-bottom: 12px;"><summary style="font-family: var(--g-display); font-size: 20px; cursor: pointer;">Is everything vegan?</summary><p style="color: var(--g-mute); margin: 10px 0 0;">Everything except bee-based products (honey, propolis, pollen). Those are marked clearly.</p></details>
+            <details><summary style="font-family: var(--g-display); font-size: 20px; cursor: pointer;">Can I return a bottle?</summary><p style="color: var(--g-mute); margin: 10px 0 0;">Yes, for any reason, within 30 days — we\u2019ll refund and donate the bottle to a shelter.</p></details>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div id="chrome-footer"></div>
+<div id="chrome-sound"></div>
+<script src="data.js"></script>
+<script src="shared.js"></script>
+<script src="alive.js"></script>
+<script>
+(function(){
+  const { nav, footer, soundToggle, wireChrome } = window.LGShared;
+  document.getElementById('chrome-nav').outerHTML = nav('contact');
+  document.getElementById('chrome-footer').outerHTML = footer();
+  document.getElementById('chrome-sound').outerHTML = soundToggle();
+  wireChrome();
+})();
+</script>
+</body>
+</html>

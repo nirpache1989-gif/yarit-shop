@@ -2,9 +2,13 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom. Historical entries have been moved to [`docs/STATE-ARCHIVE.md`](./STATE-ARCHIVE.md) — this file only holds the two most recent ships.
 
-## Latest (2026-04-12 — Dark mode disabled, light-only enforced)
+## Latest (2026-04-18 — Dark mode disable + admin P0 regression fix + Living Garden handoff)
 
-**Session completed.** Dark mode toggle removed, site forced to light-only across storefront and admin. The hero logo rectangle bug (browser compositing of `<img>` as rectangular atomic layer) was confirmed unfixable after clip-path + blend-mode attempts. All dark-mode CSS preserved in git for future re-enable.
+**Session completed.** Three things landed this session:
+
+1. **Dark mode disabled** (deployed to prod, commit `a24b3de`).
+2. **Admin P0 regression fix** (deployed to prod, commit `d7a68bf`) — the `a24b3de` commit accidentally wiped `VercelBlobClientUploadHandler` from `importMap.js` because `npm run build` regenerated the file locally (where `BLOB_READ_WRITE_TOKEN` is unset). Manually restored. Admin dashboard verified live on prod via Chrome MCP.
+3. **Living Garden design handoff docs created** — no code changes, all groundwork for the upcoming full redesign.
 
 ### Changes in this session
 
@@ -12,10 +16,22 @@
 
 2. **Clip-path + blend-mode CSS** (kept for future) — Added `clip-path: ellipse(50% 50%)` + `filter: none` on hero logo img in dark mode. Changed `.logo-halo` `mix-blend-mode: multiply` to `normal`. These rules are scoped to `[data-theme="dark"]` and have no effect while dark mode is disabled.
 
+3. **P0 importMap regression fix** — restored the missing `VercelBlobClientUploadHandler` import + map entry in `src/app/(payload)/admin/importMap.js`. Verified prod `/admin` dashboard renders end-to-end.
+
+4. **Living Garden design overhaul — docs + planning only** (no code). New design direction commissioned by Yarit. Handoff files at `/New/handoff/`. Docs created:
+   - `docs/DESIGN-LIVING-GARDEN.md` — comprehensive reference: tokens, typography, layout, chrome, cards, signature "alive" motion layer, all 9 pages, i18n, data model, motion strategy.
+   - `docs/NEXT-SESSION-PROMPT.md` rewritten — 4-phase implementation plan (Foundation → Chrome → Pages → Polish) + 3 open questions for user confirmation (brand rename Copaia → Yarit°?, main-branch vs. parallel?, GSAP vs. vanilla for cursor FX?).
+   - `docs/NEXT-SESSION-PROMPT-2026-04-18-dark-mode-disable.md` — archived previous prompt.
+   - `docs/DECISIONS.md` — new **ADR-021** for the design overhaul direction.
+
 ### Quality gates
 - `npx tsc --noEmit` — 0 errors
 - `npm run lint` — 0 errors, 0 warnings
 - `npm run build` — all routes compile
+
+### Production verification
+- `https://yarit-shop.vercel.app` — storefront light mode, no theme toggle
+- `https://yarit-shop.vercel.app/admin` — dashboard renders, sidebar nav live, stats cards, 8 tile grid, Hebrew RTL
 
 ---
 
