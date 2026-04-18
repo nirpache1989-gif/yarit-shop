@@ -32,6 +32,7 @@ import { DriftingLeaves } from '@/components/ui/DriftingLeaves'
 import { GardenAlive } from '@/components/motion/GardenAlive'
 import { RevealOnScroll } from '@/components/motion/RevealOnScroll'
 import { MarqueeBanner } from '@/components/layout/MarqueeBanner'
+import { AmbientSoundPill } from '@/components/layout/AmbientSoundPill'
 import { SkipLink } from '@/components/layout/SkipLink'
 
 import '@/app/globals.css'
@@ -196,6 +197,7 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
           </main>
           <Footer />
           <CartDrawer />
+          <AmbientSoundPill />
         </NextIntlClientProvider>
       </body>
     </html>
