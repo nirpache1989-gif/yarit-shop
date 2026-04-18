@@ -4,9 +4,15 @@
  *          `FooterMotion` (client). Same server→client split pattern as
  *          MeetYarit.tsx / MeetYaritMotion.tsx.
  *
- *          The garland botanical texture, 4-column grid, and bottom
- *          strip now animate in via GSAP ScrollTrigger instead of the
- *          previous IntersectionObserver-backed `<Reveal>` wrappers.
+ *          Living Garden chrome: the visual shell is a 5-column dark
+ *          ink grid (see `.g-footer` in globals.css). The GSAP
+ *          ScrollTrigger timeline (garland fade + column stagger +
+ *          bottom strip delay) is preserved inside FooterMotion.
+ *
+ *          Placeholder guards: `getResolvedSiteSettings` strips any
+ *          contact / social field whose value is a known placeholder
+ *          so the FooterMotion client only sees "real" values. Empty
+ *          strings skip rendering the corresponding link entirely.
  */
 import { getLocale, getTranslations } from 'next-intl/server'
 import { brand } from '@/brand.config'
@@ -28,9 +34,11 @@ export async function Footer() {
       contactLinkLabel={tNav('contact')}
       infoLabel={t('information')}
       aboutLinkLabel={tNav('about')}
+      supportLabel={t('support')}
       newsletterHeading={t('newsletterHeading')}
       newsletterBody={t('newsletterBody')}
       allRightsReserved={t('allRightsReserved')}
+      madeSlowlyLabel={t('madeSlowly')}
       social={{
         instagram: settings.social.instagram,
         facebook: settings.social.facebook,

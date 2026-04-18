@@ -1,27 +1,32 @@
 /**
  * @file FooterMotion — client-side GSAP wrapper for the Footer
- * @summary Tier-S GSAP upgrade S1. Replaces the IntersectionObserver-
- *          backed `<Reveal>` wrappers with a single GSAP ScrollTrigger
- *          scope for smoother, timing-controlled entrance:
+ * @summary Living Garden 5-column dark-ink footer with the existing
+ *          GSAP ScrollTrigger timeline preserved:
+ *            - `.footer-garland` fades from opacity 0 → CSS resting value
+ *            - 5 grid columns stagger upward with 100ms gap
+ *            - Bottom strip arrives 400ms after the columns
  *
- *            - `.footer-garland` botanical texture fades from opacity 0
- *              to its CSS resting opacity (0.08 light / 0.18 dark)
- *            - 4 grid columns stagger upward with 100ms gap
- *            - Bottom strip (social + copyright) arrives 400ms after
+ *          Scope element hooks `[data-footer-garland]`,
+ *          `[data-footer-col]`, `[data-footer-bottom]` are kept
+ *          exactly as before so the GSAP setup can target elements
+ *          without knowing about the Living Garden classes.
  *
- *          Server shell: `Footer.tsx` resolves translations + settings
- *          and passes all data as primitive props here. Same pattern as
+ *          Server shell: `Footer.tsx` resolves translations + site
+ *          settings (including `isPlaceholder` guards on contact
+ *          fields) and passes primitive props here. Same pattern as
  *          MeetYarit.tsx / MeetYaritMotion.tsx.
  *
- *          Accessibility: reduced-motion users see the fully-present
- *          footer immediately via `clearProps: 'all'`.
+ *          The social + WhatsApp links are rendered only when the
+ *          corresponding prop is non-empty — the server shell
+ *          already strips placeholder values.
+ *
+ *          Reduced motion: `clearProps: 'all'` on all three targets
+ *          so the footer is fully visible immediately.
  */
 'use client'
 
 import { useRef } from 'react'
 import { Link } from '@/lib/i18n/navigation'
-import { Container } from '@/components/ui/Container'
-import { Eyebrow } from '@/components/ui/Eyebrow'
 import { NewsletterSignup } from '@/components/layout/NewsletterSignup'
 import { useGsapScope } from '@/components/motion/GsapScope'
 
@@ -39,9 +44,11 @@ type FooterMotionProps = {
   contactLinkLabel: string
   infoLabel: string
   aboutLinkLabel: string
+  supportLabel: string
   newsletterHeading: string
   newsletterBody: string
   allRightsReserved: string
+  madeSlowlyLabel: string
   social: SocialLinks
   whatsapp: string
   year: number
@@ -55,9 +62,11 @@ export function FooterMotion({
   contactLinkLabel,
   infoLabel,
   aboutLinkLabel,
+  supportLabel,
   newsletterHeading,
   newsletterBody,
   allRightsReserved,
+  madeSlowlyLabel,
   social,
   whatsapp,
   year,
@@ -76,7 +85,6 @@ export function FooterMotion({
         return
       }
 
-      // Garland fade-in — from opacity 0 to CSS resting value
       gsap.from(garland, {
         opacity: 0,
         duration: 1.2,
@@ -89,7 +97,6 @@ export function FooterMotion({
         },
       })
 
-      // Grid columns stagger
       gsap.from(cols, {
         y: 20,
         opacity: 0,
@@ -104,7 +111,6 @@ export function FooterMotion({
         },
       })
 
-      // Bottom strip arrives after columns
       gsap.from(bottom, {
         y: 12,
         opacity: 0,
@@ -122,133 +128,107 @@ export function FooterMotion({
     [],
   )
 
+  const hasSupportLinks = Boolean(whatsapp)
+  const hasSocial = Boolean(social.instagram || social.facebook || social.tiktok)
+
   return (
-    <footer
-      ref={scopeRef}
-      className="mt-20 md:mt-24 border-t border-[var(--color-border-brand)] bg-[var(--color-background)] relative overflow-hidden"
-    >
+    <footer ref={scopeRef} className="g-footer">
       <div data-footer-garland className="footer-garland" aria-hidden />
 
-      <Container className="relative py-16 md:py-20">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-8 mb-12">
-          {/* Brand column */}
-          <div data-footer-col className="col-span-2 md:col-span-1 space-y-3">
-            <div
-              className="text-2xl font-bold text-[var(--color-primary-dark)]"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
+      <div className="mx-auto max-w-[1360px] px-6 md:px-12 relative">
+        <div className="g-footer-grid mb-10">
+          {/* Brand + blurb + newsletter */}
+          <div data-footer-col>
+            <div className="g-footer-brand">
               {brandName}
+              <sup>°</sup>
             </div>
-            <p className="text-sm text-[var(--color-muted)] leading-relaxed max-w-xs">
-              {brandBlurb}
-            </p>
-          </div>
-
-          {/* Shop column */}
-          <div data-footer-col>
-            <Eyebrow as="h3" className="mb-3">
-              {shopLabel}
-            </Eyebrow>
-            <ul className="space-y-2 text-sm text-[var(--color-muted)]">
-              <li>
-                <Link href="/shop" className="hover:text-[var(--color-primary-dark)]">
-                  {shopLinkLabel}
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-[var(--color-primary-dark)]">
-                  {contactLinkLabel}
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Learn column */}
-          <div data-footer-col>
-            <Eyebrow as="h3" className="mb-3">
-              {infoLabel}
-            </Eyebrow>
-            <ul className="space-y-2 text-sm text-[var(--color-muted)]">
-              <li>
-                <Link href="/about" className="hover:text-[var(--color-primary-dark)]">
-                  {aboutLinkLabel}
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Newsletter signup column */}
-          <div data-footer-col className="col-span-2 md:col-span-1 space-y-3">
-            <Eyebrow as="h3" tone="accent">
-              {newsletterHeading}
-            </Eyebrow>
-            <p className="text-sm text-[var(--color-muted)] leading-relaxed">
-              {newsletterBody}
-            </p>
+            <p className="g-footer-tagline">{brandBlurb}</p>
             <NewsletterSignup />
           </div>
-        </div>
 
-        {/* Bottom strip — social + copyright */}
-        <div
-          data-footer-bottom
-          className="pt-8 border-t border-[var(--color-border-brand)] flex flex-col md:flex-row items-center justify-between gap-4"
-        >
-          <ul className="flex items-center gap-5 text-sm text-[var(--color-muted)]">
-            {social.instagram && (
+          {/* Shop */}
+          <div data-footer-col>
+            <h4>{shopLabel}</h4>
+            <ul>
               <li>
-                <a
-                  href={social.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[var(--color-primary-dark)]"
-                >
-                  Instagram
-                </a>
+                <Link href="/shop">{shopLinkLabel}</Link>
               </li>
-            )}
-            {social.facebook && (
               <li>
-                <a
-                  href={social.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[var(--color-primary-dark)]"
-                >
-                  Facebook
-                </a>
+                <Link href="/contact">{contactLinkLabel}</Link>
               </li>
-            )}
-            {social.tiktok && (
+            </ul>
+          </div>
+
+          {/* Information */}
+          <div data-footer-col>
+            <h4>{infoLabel}</h4>
+            <ul>
               <li>
-                <a
-                  href={social.tiktok}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[var(--color-primary-dark)]"
-                >
-                  TikTok
-                </a>
+                <Link href="/about">{aboutLinkLabel}</Link>
               </li>
+            </ul>
+          </div>
+
+          {/* Support — rendered only when at least one contact exists */}
+          {hasSupportLinks && (
+            <div data-footer-col>
+              <h4>{supportLabel}</h4>
+              <ul>
+                {whatsapp && (
+                  <li>
+                    <a
+                      href={`https://wa.me/${whatsapp}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      WhatsApp
+                    </a>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {/* Newsletter heading + social */}
+          <div data-footer-col>
+            <h4>{newsletterHeading}</h4>
+            <p className="g-footer-tagline">{newsletterBody}</p>
+            {hasSocial && (
+              <ul className="flex flex-row gap-4 mt-2">
+                {social.instagram && (
+                  <li>
+                    <a href={social.instagram} target="_blank" rel="noopener noreferrer">
+                      Instagram
+                    </a>
+                  </li>
+                )}
+                {social.facebook && (
+                  <li>
+                    <a href={social.facebook} target="_blank" rel="noopener noreferrer">
+                      Facebook
+                    </a>
+                  </li>
+                )}
+                {social.tiktok && (
+                  <li>
+                    <a href={social.tiktok} target="_blank" rel="noopener noreferrer">
+                      TikTok
+                    </a>
+                  </li>
+                )}
+              </ul>
             )}
-            {whatsapp && (
-              <li>
-                <a
-                  href={`https://wa.me/${whatsapp}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[var(--color-primary-dark)]"
-                >
-                  WhatsApp
-                </a>
-              </li>
-            )}
-          </ul>
-          <div className="text-xs text-[var(--color-muted)]">
-            &copy; {year} {brandName} &mdash; {allRightsReserved}
           </div>
         </div>
-      </Container>
+
+        <div data-footer-bottom className="g-footer-bottom">
+          <span>
+            &copy; {year} {brandName} — {allRightsReserved}
+          </span>
+          <span>{madeSlowlyLabel}</span>
+        </div>
+      </div>
     </footer>
   )
 }
