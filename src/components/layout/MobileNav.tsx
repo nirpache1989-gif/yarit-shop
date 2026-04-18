@@ -31,6 +31,13 @@ import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/lib/i18n/navigation'
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
+import { cn } from '@/lib/cn'
+
+const PANEL_LINKS = [
+  { href: '/shop', key: 'shop' },
+  { href: '/about', key: 'about' },
+  { href: '/contact', key: 'contact' },
+] as const
 
 type Props = {
   /**
@@ -210,24 +217,25 @@ export function MobileNav({ accountSlot }: Props) {
             </div>
 
             <nav className="flex-1 overflow-y-auto p-5 space-y-1">
-              <Link
-                href="/shop"
-                className="block px-4 py-3 rounded-xl text-base font-semibold text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/10 transition-colors"
-              >
-                {navT('shop')}
-              </Link>
-              <Link
-                href="/about"
-                className="block px-4 py-3 rounded-xl text-base font-semibold text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/10 transition-colors"
-              >
-                {navT('about')}
-              </Link>
-              <Link
-                href="/contact"
-                className="block px-4 py-3 rounded-xl text-base font-semibold text-[var(--color-primary-dark)] hover:bg-[var(--color-primary)]/10 transition-colors"
-              >
-                {navT('contact')}
-              </Link>
+              {PANEL_LINKS.map((l) => {
+                const active =
+                  pathname === l.href || pathname.startsWith(`${l.href}/`)
+                return (
+                  <Link
+                    key={l.href}
+                    href={l.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={cn(
+                      'block px-4 py-3 rounded-xl text-base font-semibold transition-colors hover:bg-[var(--color-primary)]/10',
+                      active
+                        ? 'text-[var(--g-ember)]'
+                        : 'text-[var(--color-primary-dark)]',
+                    )}
+                  >
+                    {navT(l.key)}
+                  </Link>
+                )
+              })}
 
               <div className="h-px bg-[var(--color-border-brand)] my-3" />
 
