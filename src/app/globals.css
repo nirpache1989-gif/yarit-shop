@@ -106,6 +106,14 @@
   --g-ember:      #C46B3A;  /* warm accent, italics, highlights */
   --g-ember-deep: #9A4E26;
   --g-mute:       #8A7B58;  /* secondary text */
+
+  /* Font family aliases used by the .g-* classnames in the Living
+     Garden motion + chrome block below. The underlying --font-*
+     variables are wired by next/font in the storefront layout. */
+  --g-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --g-body:    var(--font-source-serif), ui-serif, Georgia, serif;
+  --g-accent:  var(--font-caveat), cursive;
+  --g-mono:    var(--font-jetbrains), ui-monospace, monospace;
 }
 
 /* Base body style — applied to the storefront only. */
@@ -174,6 +182,392 @@ body {
     position: relative;
     z-index: 2;
   }
+}
+
+/* ============================================================
+ * Living Garden motion + chrome (Phase 1 remainder + Phase 2)
+ * ------------------------------------------------------------
+ * Consumed by `GardenAlive`, `RevealOnScroll`, `MarqueeBanner`,
+ * `AmbientSoundPill`, and the new `.g-nav` / `.g-footer` chrome.
+ * Copied verbatim from the prototype at
+ * `New/handoff/design/LivingGarden/styles.css` with three
+ * deliberate deltas:
+ *   1. `.g-nav` omits its resting `background-color` — the
+ *      scroll-scrubbed `#site-header` rule elsewhere in this file
+ *      owns the bg alpha via `--header-scroll-progress`.
+ *   2. Three `[dir="rtl"]` mirrors added for the sound pill, the
+ *      marquee track, and the nav badge.
+ *   3. Reduced-motion overrides live inside the existing
+ *      `@media (prefers-reduced-motion: reduce)` block at the
+ *      bottom of this file — NOT a second `@media` block here.
+ * Unwrapped (not inside `@layer base`) so `.g-*` selectors win
+ * against Tailwind utilities, same posture as `.drifting-leaves`.
+ * ============================================================ */
+
+/* ── Cursor spotlight + leaf trail ─────────────────────────── */
+.g-cursor-spot {
+  position: fixed;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(196, 107, 58, 0.20) 0%, rgba(107, 142, 78, 0.10) 35%, transparent 70%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: multiply;
+}
+.g-leaves {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+}
+.g-leaf {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  animation: g-leaf-fall 2.4s ease-out forwards;
+  will-change: transform, opacity;
+}
+.g-leaf-leaf { color: var(--g-leaf); }
+.g-leaf-ember { color: var(--g-ember); }
+@keyframes g-leaf-fall {
+  0%   { opacity: 0; transform: translate(-50%, -50%) rotate(0) scale(0.6); }
+  15%  { opacity: 1; transform: translate(-50%, -50%) rotate(calc(var(--rot) * 0.3)) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--drift)), calc(-50% + 200px)) rotate(var(--rot)) scale(0.85); }
+}
+
+/* ── Scroll vine ───────────────────────────────────────────── */
+.g-scroll-vine {
+  position: fixed;
+  top: 72px;
+  bottom: 0;
+  right: 18px;
+  width: 48px;
+  pointer-events: none;
+  z-index: 30;
+  color: var(--g-leaf);
+  opacity: 0.65;
+}
+.g-scroll-vine svg { width: 100%; height: 100%; }
+[dir="rtl"] .g-scroll-vine { right: auto; left: 18px; }
+
+/* ── Reveal on scroll ──────────────────────────────────────── */
+.g-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s, transform 0.8s;
+}
+.g-reveal.is-in { opacity: 1; transform: none; }
+.g-reveal-delay-1 { transition-delay: 0.1s; }
+.g-reveal-delay-2 { transition-delay: 0.2s; }
+.g-reveal-delay-3 { transition-delay: 0.3s; }
+
+/* ── Marquee banner ────────────────────────────────────────── */
+.g-banner {
+  background: var(--g-leaf-deep);
+  color: var(--g-paper);
+  overflow: hidden;
+  padding: 14px 0;
+  font-family: var(--g-mono);
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+.g-banner-track {
+  display: flex;
+  gap: 48px;
+  white-space: nowrap;
+  animation: g-marquee 32s linear infinite;
+}
+.g-banner-track span::before {
+  content: '❦';
+  margin-right: 48px;
+  color: var(--g-ember);
+}
+@keyframes g-marquee { to { transform: translateX(-50%); } }
+[dir="rtl"] .g-banner-track { animation-direction: reverse; }
+
+/* ── Card parallax + bloom (Phase 3 product cards) ─────────── */
+.g-card {
+  position: relative;
+  background: var(--g-paper);
+  border-radius: 16px 16px 28px 28px;
+  padding: 16px;
+  box-shadow: 0 2px 0 var(--g-rule);
+  transition: transform 0.4s cubic-bezier(.2,.9,.3,1.1), box-shadow 0.4s;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.g-card::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(196, 107, 58, 0.3), transparent 60%);
+  z-index: 2;
+}
+.g-card:hover {
+  transform: translateY(-10px) perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg));
+  box-shadow: 0 6px 0 var(--g-rule), 0 36px 56px -24px rgba(107, 142, 78, 0.4);
+}
+.g-card:hover::before { opacity: 1; }
+.g-card-img {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 12px 12px 24px 24px;
+  overflow: hidden;
+}
+.g-card-img .g-plate { width: 100%; height: 100%; }
+.g-card-bloom {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 22px;
+  color: var(--g-ember);
+}
+.g-card:hover .g-card-bloom {
+  animation: g-bloom-spin 4s linear infinite;
+}
+@keyframes g-bloom-spin { to { transform: rotate(360deg); } }
+.g-card-body { padding: 16px 8px 8px; }
+.g-card-cat {
+  font-family: var(--g-mono);
+  color: var(--g-mute);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.g-card-name {
+  font-family: var(--g-display);
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.15;
+  margin: 6px 0;
+}
+.g-card-desc {
+  font-size: 13px;
+  color: var(--g-mute);
+  margin: 0 0 14px;
+  line-height: 1.5;
+  min-height: 40px;
+}
+.g-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px dashed var(--g-rule);
+  padding-top: 12px;
+}
+
+/* ── Nav chrome ───────────────────────────────────────────── */
+/* .g-nav deliberately has NO `background-color` — the
+   scroll-scrubbed `header#site-header` rule owns bg alpha via
+   `--header-scroll-progress`. Keeping `backdrop-filter` + a
+   hairline `border-bottom` here so the frosted-glass effect
+   is still present at rest. */
+.g-nav {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 48px;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--g-rule-soft);
+}
+.g-nav-brand {
+  font-family: var(--g-display);
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.g-nav-brand sup {
+  font-family: var(--g-accent);
+  font-size: 22px;
+  color: var(--g-ember);
+}
+.g-nav-links { display: flex; gap: 32px; font-size: 14px; }
+.g-nav-links a {
+  position: relative;
+  padding-bottom: 4px;
+  color: var(--g-ink);
+}
+.g-nav-links a:hover { color: var(--g-leaf-deep); }
+.g-nav-links a.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--g-ember);
+  border-radius: 2px;
+  transform: skewX(-8deg);
+}
+.g-nav-right {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+.g-nav-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--g-rule);
+  border-radius: 50%;
+  background: var(--g-paper);
+  position: relative;
+  color: var(--g-ink);
+  transition: transform 0.2s, background 0.2s;
+}
+.g-nav-icon:hover {
+  transform: translateY(-2px);
+  background: var(--g-leaf);
+  color: var(--g-paper);
+}
+.g-nav-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--g-ember);
+  color: #fff;
+  font-family: var(--g-mono);
+  font-size: 10px;
+  border-radius: 999px;
+  padding: 2px 6px;
+}
+[dir="rtl"] .g-nav-badge { right: auto; left: -4px; }
+.g-lang-pill {
+  font-family: var(--g-mono);
+  font-size: 11px;
+  padding: 6px 12px;
+  border: 1px solid var(--g-ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--g-ink);
+}
+
+/* ── Ambient sound pill ───────────────────────────────────── */
+.g-sound-toggle {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 50;
+  padding: 12px 18px;
+  background: var(--g-paper);
+  border: 1.5px solid var(--g-ink);
+  border-radius: 999px;
+  font-family: var(--g-accent);
+  font-size: 20px;
+  color: var(--g-ink);
+  box-shadow: 0 4px 0 var(--g-rule);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.g-sound-toggle.is-on {
+  background: var(--g-leaf-deep);
+  color: var(--g-paper);
+  border-color: var(--g-leaf-deep);
+}
+[dir="rtl"] .g-sound-toggle { left: auto; right: 24px; }
+
+/* ── Footer ───────────────────────────────────────────────── */
+.g-footer {
+  background: var(--g-ink);
+  color: var(--g-paper);
+  padding: 80px 0 40px;
+  position: relative;
+}
+.g-footer .g-plate { opacity: 0.9; }
+.g-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1.3fr;
+  gap: 40px;
+}
+.g-footer h4 {
+  font-family: var(--g-display);
+  font-size: 20px;
+  font-weight: 400;
+  margin: 0 0 18px;
+  color: var(--g-paper);
+}
+.g-footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.g-footer a { color: var(--g-rule); font-size: 14px; }
+.g-footer a:hover { color: var(--g-ember); }
+.g-footer-brand { font-family: var(--g-display); font-size: 40px; }
+.g-footer-brand sup {
+  font-family: var(--g-accent);
+  color: var(--g-ember);
+  font-size: 30px;
+}
+.g-footer-tagline {
+  margin: 12px 0 24px;
+  color: var(--g-mute);
+  max-width: 320px;
+}
+.g-footer-newsletter {
+  display: flex;
+  background: rgba(255, 248, 230, 0.08);
+  border: 1px solid rgba(255, 248, 230, 0.2);
+  border-radius: 999px;
+  padding: 4px 4px 4px 18px;
+  align-items: center;
+}
+.g-footer-newsletter input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--g-paper);
+  padding: 10px;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+.g-footer-newsletter button {
+  background: var(--g-ember);
+  color: var(--g-paper);
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-family: var(--g-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.g-footer-bottom {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 248, 230, 0.15);
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--g-mute);
+  font-family: var(--g-mono);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ── Mobile breakpoint collapse ───────────────────────────── */
+@media (max-width: 900px) {
+  .g-nav { padding: 14px 24px; }
+  .g-nav-links { display: none; }
+  .g-footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
 /* Smooth scroll + focus visibility */
@@ -1063,5 +1457,24 @@ html[dir="rtl"] .btn-lift:focus-visible::before {
   header#site-header,
   header#site-header .leaf-breathe img {
     transition: none !important;
+  }
+
+  /* Living Garden Phase 1 remainder + Phase 2: freeze the new
+     motion surfaces under reduced motion. `GardenAlive` also
+     short-circuits to `return null` in JS, but these rules are
+     belt-and-braces in case a future entry point renders the
+     layers without the React component. */
+  .g-leaf,
+  .g-banner-track {
+    animation: none !important;
+  }
+  .g-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .g-cursor-spot,
+  .g-leaves {
+    display: none !important;
   }
 }
