@@ -1,165 +1,88 @@
-# Next session — Living Garden Phase 1 remainder + Phase 2 Chrome
+# Session 20 — Living Garden Phase 3: Home page rebuild
 
-> **Purpose:** Continue the Living Garden redesign. The first Phase 1 slice (fonts + tokens + body ambient layers) shipped on `feat/living-garden` on 2026-04-18. Resume with the two deferred Phase 1 primitives (`GardenAlive.tsx`, `RevealOnScroll.tsx`) then move on to Phase 2 Chrome.
+> **Branch:** `feat/living-garden` (12+ commits ahead of `main`, branch-local only).
+> **Prod:** unchanged at `d7a68bf` on `main`.
+> **Read first (in this order):** `CLAUDE.md` → `docs/AI-COLLABORATION.md` → `docs/NEXT-SESSION.md` → `docs/DESIGN-LIVING-GARDEN.md` → `docs/CODEMAP.md`. Then skim the prior session: [`docs/sessions/session-19-living-garden-phase-1-remainder-phase-2-chrome.md`](sessions/session-19-living-garden-phase-1-remainder-phase-2-chrome.md).
 >
-> **Read first:** `CLAUDE.md`, then `docs/DESIGN-LIVING-GARDEN.md` (full design reference), then `docs/STATE.md` (most recent entry describes exactly what shipped), then skim `/New/handoff/README.md` and open `/New/handoff/design/LivingGarden/index.html` in a browser.
->
-> **Status snapshot:** branch `feat/living-garden` is ahead of `main`. Prod unchanged. User confirmed all 3 ADR-021 open questions (keep Copaia, main-branch rebuild, hybrid motion).
+> **Preview first.** Open `New/handoff/design/LivingGarden/index.html` in a browser before touching any code. Pay attention to the hero rhythm, the marquee → featured grid handoff, the category garden, the story strip with the drop cap, and the ingredients rail. This is the template the rest of the pages will follow.
 
 ---
 
-## Scope in 30 seconds
+## Where we are
 
-The storefront is being redesigned end-to-end. The design language is **"Living Garden"** — a warm, handmade, editorial apothecary aesthetic with signature "alive" interactions: leaves drift from the cursor, cards tilt on hover, a vine draws itself along the right edge as you scroll, a marquee banner runs between sections, and an ambient sound pill sits bottom-left.
+Living Garden Phase 1 + Phase 2 shipped. Every storefront page now wears the new chrome (header, footer, marquee banner, ambient sound pill) but the `<main>` content inside each page still renders the **old Night Apothecary design**. We're in a transition state — finished chrome, unfinished bodies.
 
-**What changes:** every storefront page, the color palette, all four fonts, the brand name, the home page structure, the motion system, and one new page (Journal / blog).
+The motion layer is live end-to-end:
+- `GardenAlive` — cursor spotlight, leaf trail, scroll vine, card parallax (vanilla React + CSS custom props, respects `prefers-reduced-motion`).
+- `RevealOnScroll` — GSAP ScrollTrigger adapter for `.g-reveal` elements.
+- `DriftingLeaves` — existing 5-leaf background layer (kept; coexists).
+- Body ambient layers — bokeh + fractal noise via `body::before` / `body::after`.
 
-**What stays:** Payload CMS admin panel, database schema (mostly — two fields + one new collection), i18n routing (next-intl), auth, middleware, cart logic, checkout flow, payment provider abstraction, API routes, SEO routes, build + deploy pipeline.
-
-**Fidelity:** high. Colors, typography, spacing, radii, and animations are finalized. Reproduce pixel-perfectly once photography lands (photos are TBD — use plate placeholders for now).
-
----
-
-## Priority 0 — User decisions (already locked on 2026-04-18)
-
-All three open questions from the previous prompt are now answered. No re-litigation needed unless the user changes their mind.
-
-1. **Brand:** keep `Copaia` wordmark. No `Yarit°` rename. Brand `name`, `tagline`, `description` stay. Only palette + fonts + motion evolve.
-2. **Route strategy:** main replacement on branch `feat/living-garden`. No parallel `/garden/*` routes.
-3. **Motion strategy:** hybrid — GSAP + ScrollTrigger for reveal-on-scroll; vanilla React + CSS custom properties for cursor / scroll high-frequency FX.
-
-These are recorded in `docs/DECISIONS.md` ADR-021 (status "Accepted").
+The design tokens are loaded but largely unused (only chrome consumes them). Every Phase 3 page rebuild swaps its content from `--color-*` legacy to `--g-*` Living Garden tokens as it ships.
 
 ---
 
-## Priority 1 — Implementation plan (proposed, user can reorder)
+## Scope for session 20
 
-Split the work into **four phases** so every phase ships a green build and the site stays functional throughout.
+**Build:** the Home page `/` rebuilt end-to-end in the Living Garden style.
 
-### Phase 1 — Foundation (in progress)
+**Do NOT touch** in this session:
+- Any page other than Home (`/shop`, `/product/[slug]`, `/cart`, `/checkout`, `/about`, `/contact`, `/account`, `/legal/*`) — those are sessions 21–27.
+- Payload collections or admin — schema updates for Phase 3.5 (Posts collection + Product fields) bundle with the pages that need them.
+- Middleware, API routes, payment / email abstractions.
+- Any existing motion primitive (`GardenAlive`, `RevealOnScroll`, `FooterMotion`, `DriftingLeaves`, `HeroMotion` scrubs) — additive composition only.
 
-Goal: tokens, fonts, global layers, motion primitives.
+### Home page sections (from `New/handoff/design/LivingGarden/index.html`)
 
-**Shipped on `feat/living-garden` (2026-04-18):**
-- [x] Add Fraunces, Source Serif 4, Caveat, JetBrains Mono via `next/font/google` in `src/app/(storefront)/[locale]/layout.tsx`. Heebo kept. Bellefair removed from storefront (still loaded independently by admin `(payload)/layout.tsx` for admin-brand.css).
-- [x] Update `src/brand.config.ts` `fonts` object. `name`/`tagline`/`description`/`colors` intentionally untouched per user decision to keep Copaia identity.
-- [x] Add `--g-*` token block to `src/app/globals.css` (additive, unused yet — existing `--color-*` tokens preserved so all ~60 consuming files render unchanged).
-- [x] Remap `--font-display` to `var(--font-fraunces)` so the ~50 storefront call sites reading `var(--font-display)` pick up the new display font.
-- [x] Replace `body::before` with watercolor bokeh (3 radial gradients, z-index 0).
-- [x] Add `body::after` SVG fractal noise (multiply blend, opacity 0.35, z-index 1).
-- [x] Keep existing `body > *:not([role="dialog"])` z-index 2 rule so content layers above ambient layers.
-- [x] Delete obsolete `[data-theme="dark"] body::before` override (dark mode disabled).
+1. **Hero** — `.g-hero` with `.g-hero-grid` 1.3fr/1fr. Left: kicker + Copaia° wordmark H1 with mixed upright + italic + underlined word, lead copy, CTA row, dashed meta strip with 3 stats (17 years, 34 living formulas, 7,000 customers). Right: 4/5 aspect `.g-hero-visual` with radius `260px 260px 24px 24px`, ember + leaf `.g-float-badge` floaters, handwritten `.g-hero-note`.
+2. **Marquee banner** — *already shipped* via `MarqueeBanner` mounted in layout. No work here.
+3. **Featured grid** — `.g-kicker` eyebrow + `.g-h2` heading, 4-col `.g-grid-4` of `.g-card` product cards with plate placeholder + `.g-card-bloom` glyph + mono category + Fraunces name + short desc + price row with `.g-btn-ember` "+ Add". Cards participate in `GardenAlive`'s parallax via the `.g-card` class.
+4. **Category garden** — 5-tile `.g-cats` grid with `№ 0X items` mono count + Fraunces name + single-glyph icon in leaf color.
+5. **Story strip** — `.g-story-grid` 1fr/1.3fr with image left, Fraunces drop cap on first paragraph (`::first-letter` 72px ember), Caveat-rotated `.g-note` floating accent, "Read the full story →" link.
+6. **Ingredients rail** — 4-col `.g-ing-rail` of `.g-ing` cards, each with `.g-ing-mark` (46px Fraunces italic single letter), `.g-ing-name`, `.g-ing-desc`. Hover: `translateY(-6px) rotate(-1deg)`.
+7. **Testimonials** — 3-col grid of `.g-quote` cards with oversized `::before` 96px Fraunces opening quote, 22px italic quote text, 44px `.g-quote-avatar` leaf circle + name + city.
 
-**Still to do in Phase 1:**
-- [ ] Build new motion client component `src/components/living-garden/GardenAlive.tsx` — cursor spotlight + leaf trail + scroll vine + `prefers-reduced-motion` gate. Mount in `(storefront)/[locale]/layout.tsx` only (NOT in the Payload admin). Vanilla React + CSS custom properties per ADR-021 motion strategy.
-- [ ] Build `src/components/living-garden/RevealOnScroll.tsx` — GSAP ScrollTrigger wrapper component for `.g-reveal` / `.g-reveal-delay-*` behavior. Reuse the existing single GSAP entry point `@/lib/motion/gsap`. Apply the 2026-04-11 `immediateRender: false + once: true + start: 'top bottom-=40'` invariant per CLAUDE.md rule #12.
+**Data:**
+- Featured + Category + Story + Ingredients + Testimonials copy pulls from `src/messages/{he,en}.json` — add a new `home` namespace (or extend the existing one — check what's already there and keep it additive).
+- Product data for the featured grid loads via the existing `fetchFeaturedProducts` (or equivalent — see the current `HeroMotion` / `FeaturedProducts` imports).
+- Category tiles map from the existing `Categories` collection — 5 categories already seeded.
+- Ingredient + testimonial cards are hard data — live in i18n messages for now; no Payload schema change this session.
 
-Verify: `tsc`, `lint`, `build` all green. The current Copaia look still renders because the new `--g-*` tokens are additive and no existing component reads them yet.
+### Approach — bite-sized slices
 
-### Phase 2 — Chrome (1 session)
+Because Home is big, split into commits:
 
-Goal: nav, footer, banner marquee, sound pill. Every page picks them up automatically.
+1. **Slice A — Hero.** Replace `HeroMotion.tsx` body (or create a new `HeroLivingGarden.tsx` client component — preserve the existing Hero entry timeline for reference; pick one based on reuse potential). Wire `.g-hero` + `.g-hero-grid` + `.g-float-badge` + `.g-hero-note`. Keep the GSAP entrance timeline pattern (logo → words stagger → subhead → CTAs) but re-target it at the new DOM.
+2. **Slice B — Featured grid.** New `FeaturedProductsLivingGarden.tsx`. Reuse existing `<ProductCard>` data shape but render as `.g-card` with plate placeholder + bloom glyph. Verify `GardenAlive` card parallax picks up the CSS custom props on hover.
+3. **Slice C — Categories.** New `CategoryGardenLivingGarden.tsx` rendering the 5-tile `.g-cats` grid.
+4. **Slice D — Story strip.** New `StoryStripLivingGarden.tsx` with the drop cap + `.g-note` accent.
+5. **Slice E — Ingredients rail.** New `IngredientsRailLivingGarden.tsx`.
+6. **Slice F — Testimonials.** New `TestimonialsLivingGarden.tsx`.
+7. **Slice G — Page wire-up.** Update `src/app/(storefront)/[locale]/page.tsx` to render the new sections in order. Remove the old Hero / FeaturedProducts / CategoryGrid / MeetYarit / Testimonials imports.
+8. **Slice H — Add `.g-reveal` targets.** Sprinkle `.g-reveal` / `.g-reveal-delay-{1,2,3}` classes on the sections so `RevealOnScroll` animates them in.
+9. **Verification + STATE update.**
 
-- [ ] `src/components/layout/Header.tsx` — rebuild in Living Garden style (sticky, 82% opacity, backdrop-blur, Fraunces wordmark with degree mark, 32px link gap, 40px circle icons, cart badge, lang pill).
-- [ ] `src/components/layout/Footer.tsx` — 5-col grid with dark `--g-ink` background + paper text + newsletter pill + mono bottom strip. Must keep the existing `isPlaceholder` guards on contact fields.
-- [ ] `src/components/layout/BannerMarquee.tsx` — new component, CSS marquee 32s linear between sections on home only.
-- [ ] `src/components/layout/AmbientSoundPill.tsx` — new component. Visual-only for this phase; real audio deferred to Phase 4.
-- [ ] Mobile nav drawer: update existing `MobileNav` to match the Living Garden pill/icon style but keep the focus-trap + scroll-lock logic.
+Each slice ends with tsc + lint + build green + a commit. The site stays functional throughout — if a slice isn't ready, the old component stays rendered.
 
-Verify in prod preview: every existing page still works with the new chrome. Content inside `<main>` stays on old design for now.
+### Non-negotiables (inherited from prior sessions)
 
-### Phase 3 — Pages (3-5 sessions)
+1. Every string through `src/messages/{he,en}.json` (CLAUDE.md rule #1).
+2. `Link` / `usePathname` / `useRouter` from `@/lib/i18n/navigation`, never `next/link`.
+3. Every server page: `setRequestLocale(locale)` at the top + `await params`.
+4. `cookies()`, `headers()`, `draftMode()` are async in Next 16.
+5. Single GSAP entry: `@/lib/motion/gsap`.
+6. Every `gsap.from + scrollTrigger` gets `immediateRender: false + once: true + start: 'top bottom-=40'` (CLAUDE.md rule #12).
+7. `useGsapScope` from `@/components/motion/GsapScope` for every GSAP client component — auto cleanup + reduced-motion gate built in.
+8. After every `npm run build`, check `git diff src/app/(payload)/admin/importMap.js` and restore the `VercelBlobClientUploadHandler` line if wiped.
+9. Never push or deploy without explicit user word (`push`, `deploy`).
+10. RTL first-class: the hero grid should feel balanced in Hebrew too. Flip visual-on-the-right → visual-on-the-left naturally via `direction-aware` Tailwind (`ms-*` / `me-*` / `end-*` / `start-*`), NOT `left-*` / `right-*`.
 
-Rebuild page-by-page. Each page ships a green build before moving on.
+### Design file references
 
-| Order | Page | Est. complexity | Notes |
-|---|---|---|---|
-| 1 | Home `/` | High | Most components (hero, marquee, featured, category garden, story, ingredients, testimonials). Sets the template for everything else. |
-| 2 | Shop `/shop` | Medium | Reuse product card. New: sidebar filters, pagination. |
-| 3 | Product `/product/[slug]` | Medium | Reuse product card for related. New: gallery, variant pills, tabs, PDP meta grid. Requires Payload schema update (see Phase 3.5). |
-| 4 | Cart `/cart` | Medium | Reuse product line-item pattern. New: gift-note block, promo code. |
-| 5 | Checkout `/checkout` | Medium | Steps + 3 paper blocks + hand-wrap callout. Keep existing payment-provider integration. |
-| 6 | About `/about` | Low | Mostly static content with timeline + values rail + dark CTA card. |
-| 7 | Contact `/contact` | Low | Form + studio card + FAQ accordion. |
-| 8 | Account `/account` + `/account/orders/[id]` | Low-Medium | Sidebar nav + Garden points card + orders rail. Reuse existing auth + order fetch logic. |
-| 9 | Journal `/journal` + `/journal/[slug]` | Medium | **New Payload `Posts` collection required** — see Phase 3.5. Index is a 3-col letter-card grid. Detail page not in prototype — design as a long-form reading layout matching the rest. |
-
-### Phase 3.5 — Payload schema updates (bundled in with Phase 3 where relevant)
-
-- [ ] Add `plate` field to `Products` — `select` with options `'leaf'`, `'ember'`, `'cream'`, `''`. Default `''`. Used as colorway hint for placeholders/overlays.
-- [ ] Add `specimen` field to `Products` — `text`, e.g. `001`-`999`. Can auto-generate from product ID if not set.
-- [ ] Add `badge` field to `Products` — `select` with `'new'`, `'bestseller'`, or null.
-- [ ] Add `Posts` collection — fields listed in `DESIGN-LIVING-GARDEN.md` §13. Include Hebrew + English localization on title/excerpt/body. Lexical richtext for body. Upload relation for cover image.
-- [ ] Regenerate `importMap.js` manually after adding the `Posts` collection — **DO NOT run `npm run build` without committing current `importMap.js` first** (prior P0 regression lessons learned).
-- [ ] Seed script (`POST /api/dev/seed`) — add 6 sample journal posts to match the prototype's `posts` array.
-
-### Phase 4 — Motion polish + photography wiring + final QA (1 session)
-
-- [ ] Replace plate placeholders with real `next/image` product photos as Yarit provides them. Keep the tag + specimen overlay system (absolute-positioned on top of the image).
-- [ ] Hook up the ambient sound pill to a real audio file (~20s looping field recording). Crossfade on toggle. Respect `prefers-reduced-motion` AND a user-level "sounds off" toggle.
-- [ ] Full responsive pass — viewport ≤ 900px falls back to 1-column grids (already coded in `styles.css` — verify in Preview MCP at 375×812 and 768×1024).
-- [ ] RTL sanity check — Hebrew renders every page correctly, scroll vine flips to left edge, nav badge flips, marquee direction still works.
-- [ ] Accessibility audit — focus rings on all interactive elements, aria-labels on icon buttons, reduced-motion branches, color contrast AA across the new palette.
-- [ ] Full prod QA walkthrough — every route, both locales, both viewports, dark-mode not present (verified).
-
----
-
-## Priority 2 — What NOT to touch
-
-- `src/collections/*` — keep collection logic, just add fields per Phase 3.5.
-- `src/payload.config.ts` — keep admin + plugins wiring. Only the `theme: 'light'` addition from the prior session stays.
-- `src/app/(payload)/*` — Payload admin route group. Untouched.
-- `src/components/admin/*` — admin components. Untouched.
-- `src/middleware.ts` — locale + admin middleware. Untouched.
-- `src/lib/payments/*` — payment provider abstraction. Untouched.
-- `src/lib/email/*` — email provider abstraction. Untouched.
-- `src/app/api/*` — API routes. Untouched.
-- `src/app/(storefront)/[locale]/layout.tsx` — keep the shell (NextIntlClientProvider, DriftingLeaves wrapper if we're replacing it, SkipLink). Replace only the header/footer slot contents.
-
----
-
-## Priority 3 — Reference docs (read them)
-
-- `docs/DESIGN-LIVING-GARDEN.md` — **full design reference** (tokens, components, pages, motion, i18n, data model)
-- `docs/CLAUDE.md` — project rules (no hardcoded strings, `await params`, etc.)
-- `docs/ARCHITECTURE.md` — current system shape
-- `docs/DECISIONS.md` — add **ADR-021** for this redesign
-
-Raw design files:
-- `/New/handoff/README.md` — client-facing design summary
-- `/New/handoff/design/LivingGarden/index.html` — home
-- `/New/handoff/design/LivingGarden/shop.html` — shop
-- `/New/handoff/design/LivingGarden/product.html` — PDP
-- `/New/handoff/design/LivingGarden/cart.html` — cart
-- `/New/handoff/design/LivingGarden/checkout.html` — checkout
-- `/New/handoff/design/LivingGarden/about.html` — about
-- `/New/handoff/design/LivingGarden/journal.html` — journal (new)
-- `/New/handoff/design/LivingGarden/contact.html` — contact
-- `/New/handoff/design/LivingGarden/account.html` — account
-- `/New/handoff/design/LivingGarden/styles.css` — 622-line source of truth for CSS
-- `/New/handoff/design/LivingGarden/alive.js` — 136-line motion layer
-- `/New/handoff/design/LivingGarden/shared.js` — 173-line nav/footer/card helpers
-- `/New/handoff/design/LivingGarden/data.js` — 148-line catalog + COPY dictionary
-
----
-
-## Non-negotiables (same every session)
-
-1. **Never `git push origin main` without explicit user word** ("push")
-2. **Never `npx vercel --prod --yes` without explicit user word** ("deploy")
-3. **Motion is additive only** — never remove existing keyframes
-4. **`setRequestLocale` + `await params` / `await searchParams`** in every server page/layout
-5. **Never import `next/link` in storefront** — use `Link` from `@/lib/i18n/navigation`
-6. **Single GSAP entry point** — `@/lib/motion/gsap`
-7. **Brand data stays in `src/brand.config.ts`**
-8. **Server → client props are serializable only** — no function props
-9. **Hebrew + English strings through `src/messages/{he,en}.json`**
-10. **Never re-add `generateStaticParams` returning only `{locale}`** — CI fails per ADR-018
-11. **Every `gsap.from + scrollTrigger` gets `immediateRender: false + once: true + start: 'top bottom-=40'`** per CLAUDE.md rule #12
-12. **Prod DB changes require explicit user approval**
-13. **If you touch a Vercel env var, redeploy** — middleware bakes them at build time
-14. **Don't push or deploy in a loop without confirming each one with the user**
-15. **`importMap.js` regenerates when you run `npm run build`** — always check the diff and restore the `VercelBlobClientUploadHandler` entry if it's gone (prior P0 — see STATE.md "Latest" entry for the fix)
+- Raw home page: `New/handoff/design/LivingGarden/index.html`
+- Styles: `New/handoff/design/LivingGarden/styles.css` (already partially ported into `src/app/globals.css`; any home-specific selectors still live in the prototype)
+- Data dictionary: `New/handoff/design/LivingGarden/data.js` (`COPY.en` / `COPY.he` — source of truth for i18n strings)
+- Full design reference: `docs/DESIGN-LIVING-GARDEN.md`
 
 ---
 
@@ -168,39 +91,45 @@ Raw design files:
 ```bash
 cd "C:/AI/YaritShop/yarit-shop"
 npx tsc --noEmit        # must exit 0
-npm run lint            # must exit 0, 0 errors 0 warnings
+npm run lint            # must exit 0, 0 errors 0 warnings (2 pre-existing warnings in prototype handoff files are OK)
 npm run build           # must exit 0
-# after build: check `git diff src/app/(payload)/admin/importMap.js` — restore Vercel Blob line if missing
+# after build:
+git diff "src/app/(payload)/admin/importMap.js"     # expect empty; if not, restore from HEAD
 ```
 
-**Prod:** `https://yarit-shop.vercel.app`
-**Admin:** `https://yarit-shop.vercel.app/admin/login` (password `CopaiaTemp2026!`)
+Dev server auto-picks a free port via `.claude/launch.json` `autoPort: true`. Preview MCP uses the `yarit-shop dev` entry.
 
 ---
 
-## Definition of done (whole redesign)
+## What comes after session 20
 
-- [ ] Phase 1 — Foundation shipped (fonts, tokens, motion primitives, body ambient layers)
-- [ ] Phase 2 — Chrome shipped (nav, footer, marquee, sound pill)
-- [ ] Phase 3 — 9 pages rebuilt (home, shop, product, cart, checkout, about, journal, contact, account)
-- [ ] Phase 3.5 — Payload schema updated (3 Product fields + Posts collection + seed)
-- [ ] Phase 4 — Real photography wired, ambient sound wired, responsive + RTL + a11y verified
-- [ ] All quality gates green on every phase
-- [ ] Full prod QA walkthrough clean
-- [ ] User has signed off on the look via Preview MCP screenshots at each phase
-- [ ] `docs/STATE.md` updated with each phase's ship
-- [ ] This prompt archived and a new one written for the next phase
+Session-by-session forecast (rough — adjust based on how slices go):
+
+| # | Page | Notes |
+|---|---|---|
+| 21 | `/shop` | 3-col grid + sidebar filters + pagination. Reuse `ProductCard` from session 20. |
+| 22 | `/product/[slug]` | Gallery + variant pills + tabs + PDP meta grid. **Phase 3.5: adds `plate`/`specimen`/`badge` fields to Products.** |
+| 23 | `/cart` | 2-col grid + gift-note block + promo code. Reuse line-item pattern. |
+| 24 | `/checkout` | Step pills + 3 paper blocks + hand-wrap callout. Keep payment-provider integration. |
+| 25 | `/about` | Page-title + hero visual + timeline + values rail + CTA. |
+| 26 | `/contact` + `/account` | Short pages bundled. |
+| 27 | `/journal` + `/journal/[slug]` | **Phase 3.5: new Payload `Posts` collection.** Index grid + detail layout. |
+| 28 | Phase 4 polish | Real audio file, real photography, full responsive + RTL + a11y audit. |
+
+Expect some slippage — Home alone may slip into session 21 if the hero + featured grid eat the budget.
 
 ---
 
-## Suggested first-session scope
+## Definition of done for session 20
 
-Don't try to do everything. A realistic first-session slice:
-
-1. ~5 min: read `DESIGN-LIVING-GARDEN.md`, open the prototype HTML files in a browser.
-2. ~15 min: get user confirmation on P0.1 (brand rename?), P0.2 (main vs. parallel?), P0.3 (motion strategy?).
-3. ~90 min: Phase 1 (foundation).
-4. ~45 min: Phase 2 (chrome) if time.
-5. Document + ship.
-
-Phases 3 + 3.5 + 4 are multi-session work. Don't rush.
+- [ ] All 7 home sections render in Living Garden style.
+- [ ] `src/app/(storefront)/[locale]/page.tsx` imports the new sections only; old ones removed.
+- [ ] `.g-reveal` classes sprinkled; `RevealOnScroll` animates sections as they enter the viewport.
+- [ ] `GardenAlive` card parallax verified on the featured product cards (cursor over card → tilt).
+- [ ] Both locales render correctly (LTR + RTL), mobile breakpoint collapses to 1-col cleanly.
+- [ ] `npx tsc --noEmit && npm run lint && npm run build` green.
+- [ ] `importMap.js` diff empty.
+- [ ] Preview MCP screenshots captured and mentioned in STATE update.
+- [ ] `docs/STATE.md` updated with session 20 changelog entry.
+- [ ] `docs/NEXT-SESSION-PROMPT.md` rewritten for session 21 (or the Home page is split and session 21 finishes it).
+- [ ] This prompt archived to `docs/sessions/session-20-home-page.md`.
