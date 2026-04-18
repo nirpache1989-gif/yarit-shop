@@ -7,7 +7,21 @@ Every significant architectural or product decision is logged here with a date a
 ## ADR-021 — Living Garden storefront redesign direction
 
 **Date:** 2026-04-18
-**Status:** Accepted — implementation pending user confirmation on 3 open questions (see `docs/NEXT-SESSION-PROMPT.md`)
+**Status:** Accepted — user confirmed all 3 open questions on 2026-04-18. Phase 1 Foundation slice (fonts + tokens + body ambient layers) shipped on `feat/living-garden`. Phase 1 remainder (`GardenAlive.tsx` + `RevealOnScroll.tsx`), Phase 2 Chrome, Phase 3 Pages, Phase 4 Polish still pending.
+
+**User-confirmed answers (2026-04-18):**
+- **Brand:** keep `Copaia` wordmark — no `Yarit°` rename. Visual redesign only.
+- **Route strategy:** main replacement on feature branch `feat/living-garden`. No parallel `/garden/*` routes.
+- **Motion strategy:** hybrid as recommended — GSAP + ScrollTrigger for reveal-on-scroll, vanilla React + CSS custom properties for cursor / scroll high-frequency FX.
+
+**Phase 1 Foundation — additive-tokens strategy (shipped 2026-04-18):**
+
+To preserve the current Night Apothecary look while new pages are prepared, Phase 1 is **additive**:
+- Existing `--color-*` tokens stay on Night Apothecary hex values so the ~60 storefront files reading `var(--color-*)` render unchanged.
+- New `--g-*` Living Garden tokens are defined in parallel (`--g-bg`, `--g-ink`, `--g-paper`, `--g-leaf`, `--g-leaf-deep`, `--g-ember`, `--g-ember-deep`, `--g-mute`, `--g-rule`, `--g-rule-soft`, `--g-bg-2`). Unused until Phase 2 Chrome + Phase 3 Pages adopt them.
+- `--font-display` is remapped from `var(--font-frank-ruhl)` (Bellefair) to `var(--font-fraunces)` so the ~50 storefront call sites reading `var(--font-display)` pick up Fraunces automatically.
+- Body ambient layers shipped per spec: `body::before` = three overlapping radial-gradient bokeh at z-index 0; `body::after` = SVG fractal noise with `mix-blend-mode: multiply; opacity: 0.35` at z-index 1. Existing `.ambient-breathe` layer stays; it sits at z-index 0 in the DOM so instances of it visually cover the bokeh on pages that use it (current look preserved).
+- Admin untouched. `src/app/(payload)/layout.tsx` still loads Bellefair as `--font-frank-ruhl` for admin-brand.css; the storefront-side removal has no effect on admin.
 
 **Context:** Yarit commissioned a full storefront redesign from an external designer. Deliverable: a high-fidelity HTML prototype + design brief at `/New/handoff/`. The direction — called **"Living Garden"** — is a warm, handmade, editorial apothecary aesthetic. The site literally grows as you scroll: leaves drift from the cursor, a vine draws itself along the right edge, cards tilt on hover, an ambient sound pill sits bottom-left, a marquee banner runs between sections.
 

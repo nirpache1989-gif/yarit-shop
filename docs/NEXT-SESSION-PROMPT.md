@@ -1,10 +1,10 @@
-# Next session — Living Garden design overhaul
+# Next session — Living Garden Phase 1 remainder + Phase 2 Chrome
 
-> **Purpose:** Yarit has commissioned a full storefront redesign under a new design direction called **"Living Garden"**. High-fidelity HTML prototypes + a design brief live in `/New/handoff/`. This session is the FIRST implementation session of the redesign.
+> **Purpose:** Continue the Living Garden redesign. The first Phase 1 slice (fonts + tokens + body ambient layers) shipped on `feat/living-garden` on 2026-04-18. Resume with the two deferred Phase 1 primitives (`GardenAlive.tsx`, `RevealOnScroll.tsx`) then move on to Phase 2 Chrome.
 >
-> **Read first:** `CLAUDE.md`, then `docs/DESIGN-LIVING-GARDEN.md` (full design reference), then `docs/STATE.md`, then skim `/New/handoff/README.md` and open `/New/handoff/design/LivingGarden/index.html` in a browser.
+> **Read first:** `CLAUDE.md`, then `docs/DESIGN-LIVING-GARDEN.md` (full design reference), then `docs/STATE.md` (most recent entry describes exactly what shipped), then skim `/New/handoff/README.md` and open `/New/handoff/design/LivingGarden/index.html` in a browser.
 >
-> **Previous session prompt (dark mode disable) archived at** `docs/NEXT-SESSION-PROMPT-2026-04-18-dark-mode-disable.md`.
+> **Status snapshot:** branch `feat/living-garden` is ahead of `main`. Prod unchanged. User confirmed all 3 ADR-021 open questions (keep Copaia, main-branch rebuild, hybrid motion).
 
 ---
 
@@ -20,25 +20,15 @@ The storefront is being redesigned end-to-end. The design language is **"Living 
 
 ---
 
-## Priority 0 — Get user confirmation on three open questions
+## Priority 0 — User decisions (already locked on 2026-04-18)
 
-Before writing any code:
+All three open questions from the previous prompt are now answered. No re-litigation needed unless the user changes their mind.
 
-1. **Brand rename Copaia → Yarit°?**
-   - The prototype uses `Yarit°` (with degree mark) + `— small apothecary` subtitle.
-   - This would be the third rename (Shoresh → Copaia → Yarit°). Domain, emails, invoices, social, admin meta all flip.
-   - Confirm with user. If yes, this drives an update to `src/brand.config.ts`, a migration on `SiteSettings` (`brand.name`, `brand.tagline`), and a rewrite of `src/messages/{he,en}.json` for navigational brand references.
-   - If user wants to keep "Copaia" on brand, we skip the rename and only apply the visual redesign. The prototype's wordmark would be replaced with "Copaia" / "קופאה" but everything else stays.
+1. **Brand:** keep `Copaia` wordmark. No `Yarit°` rename. Brand `name`, `tagline`, `description` stay. Only palette + fonts + motion evolve.
+2. **Route strategy:** main replacement on branch `feat/living-garden`. No parallel `/garden/*` routes.
+3. **Motion strategy:** hybrid — GSAP + ScrollTrigger for reveal-on-scroll; vanilla React + CSS custom properties for cursor / scroll high-frequency FX.
 
-2. **Parallel route vs. main replacement?**
-   - **A — Main replacement (riskier, cleaner):** feature branch `feat/living-garden`, rebuild storefront in place, ship when every page ships green. Prod stays on current Copaia look until the merge.
-   - **B — Parallel `/garden/*` routes (safer):** mount every new page at `/garden/shop`, `/garden/product/[slug]`, etc. — existing `/shop` keeps serving current prod. Flip the root routes to point at the new components once everything is verified. Good for incremental review with user.
-   - Recommend **A** if the user wants a big-bang reveal; **B** if they want to iterate page-by-page with visibility.
-
-3. **Motion system: reuse GSAP or port to vanilla?**
-   - The codebase has significant GSAP investment (Tier-1 waves + Tier-S shipped, ScrollTrigger wired in `src/lib/motion/gsap.ts`).
-   - The prototype's `alive.js` is deliberately vanilla for cursor/scroll high-frequency interactions.
-   - Recommend **hybrid**: keep GSAP + ScrollTrigger for reveal-on-scroll (consistency with current work); implement cursor spotlight + leaf trail + card parallax + scroll vine in plain React + CSS custom properties (lower overhead, simpler to reason about).
+These are recorded in `docs/DECISIONS.md` ADR-021 (status "Accepted").
 
 ---
 
@@ -46,28 +36,25 @@ Before writing any code:
 
 Split the work into **four phases** so every phase ships a green build and the site stays functional throughout.
 
-### Phase 1 — Foundation (1 session)
+### Phase 1 — Foundation (in progress)
 
-Goal: tokens, fonts, global layers, but NO visible page changes yet.
+Goal: tokens, fonts, global layers, motion primitives.
 
-- [ ] Add Fraunces, Source Serif 4, Caveat, JetBrains Mono, Heebo via `next/font/google` in `src/app/(storefront)/[locale]/layout.tsx` (Heebo already present).
-- [ ] Remove Bellefair (old display). Keep the CSS variable name as an alias pointing at Fraunces for backwards compat OR drop it — depends on whether any admin component reads it.
-- [ ] Update `src/brand.config.ts`:
-  - `name` → `{ he: '(Yarit°|קופאה)', en: 'Yarit°' }` per P0.1 outcome
-  - `tagline` → new copy (see `DESIGN-LIVING-GARDEN.md` §1)
-  - `description` → new copy
-  - `colors` → Living Garden palette
-  - `fonts.display` → `'Fraunces'`, add `body`, `accent`, `mono`
-- [ ] Update `src/app/globals.css`:
-  - Replace `@theme` color tokens with Living Garden values
-  - Add `--g-*` custom properties matching the prototype (map 1:1)
-  - Add `body::before` watercolor bokeh + `body::after` noise layer
-  - Keep the existing GSAP-related keyframes
-  - Delete dark-mode-specific rules that target the hero logo PNG (no longer relevant)
-- [ ] Build new motion client component `src/components/living-garden/GardenAlive.tsx` — cursor spotlight + leaf trail + scroll vine + `prefers-reduced-motion` gate. Mount in `(storefront)/[locale]/layout.tsx` only (NOT in the Payload admin).
-- [ ] Build `src/components/living-garden/RevealOnScroll.tsx` — wrapper component or class utility using existing GSAP ScrollTrigger for `.g-reveal`/`.g-reveal-delay-*` behavior.
+**Shipped on `feat/living-garden` (2026-04-18):**
+- [x] Add Fraunces, Source Serif 4, Caveat, JetBrains Mono via `next/font/google` in `src/app/(storefront)/[locale]/layout.tsx`. Heebo kept. Bellefair removed from storefront (still loaded independently by admin `(payload)/layout.tsx` for admin-brand.css).
+- [x] Update `src/brand.config.ts` `fonts` object. `name`/`tagline`/`description`/`colors` intentionally untouched per user decision to keep Copaia identity.
+- [x] Add `--g-*` token block to `src/app/globals.css` (additive, unused yet — existing `--color-*` tokens preserved so all ~60 consuming files render unchanged).
+- [x] Remap `--font-display` to `var(--font-fraunces)` so the ~50 storefront call sites reading `var(--font-display)` pick up the new display font.
+- [x] Replace `body::before` with watercolor bokeh (3 radial gradients, z-index 0).
+- [x] Add `body::after` SVG fractal noise (multiply blend, opacity 0.35, z-index 1).
+- [x] Keep existing `body > *:not([role="dialog"])` z-index 2 rule so content layers above ambient layers.
+- [x] Delete obsolete `[data-theme="dark"] body::before` override (dark mode disabled).
 
-Verify: `tsc`, `lint`, `build` all green. No visible page changes because no page is using the new tokens yet (the old pages still reference the old palette variables which should stay intact for this phase only — re-map the CSS variable names so the old pages still render).
+**Still to do in Phase 1:**
+- [ ] Build new motion client component `src/components/living-garden/GardenAlive.tsx` — cursor spotlight + leaf trail + scroll vine + `prefers-reduced-motion` gate. Mount in `(storefront)/[locale]/layout.tsx` only (NOT in the Payload admin). Vanilla React + CSS custom properties per ADR-021 motion strategy.
+- [ ] Build `src/components/living-garden/RevealOnScroll.tsx` — GSAP ScrollTrigger wrapper component for `.g-reveal` / `.g-reveal-delay-*` behavior. Reuse the existing single GSAP entry point `@/lib/motion/gsap`. Apply the 2026-04-11 `immediateRender: false + once: true + start: 'top bottom-=40'` invariant per CLAUDE.md rule #12.
+
+Verify: `tsc`, `lint`, `build` all green. The current Copaia look still renders because the new `--g-*` tokens are additive and no existing component reads them yet.
 
 ### Phase 2 — Chrome (1 session)
 

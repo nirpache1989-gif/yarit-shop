@@ -2,7 +2,85 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom. Historical entries have been moved to [`docs/STATE-ARCHIVE.md`](./STATE-ARCHIVE.md) — this file only holds the two most recent ships.
 
-## Latest (2026-04-18 — Dark mode disable + admin P0 regression fix + Living Garden handoff)
+## Latest (2026-04-18 — Living Garden Phase 1 Foundation slice on `feat/living-garden`)
+
+**Session completed.** First implementation session of the Living Garden redesign landed a tightly scoped Phase 1 slice — fonts + tokens + body ambient layers — on a new feature branch. User confirmed all 3 ADR-021 open questions (keep Copaia wordmark, main-branch rebuild, hybrid motion). No prod impact yet; branch is local only until user greenlights a push. Quality gates all green; visual verification via Preview MCP confirmed storefront, Hebrew RTL, and admin all render correctly.
+
+### Scope this session
+
+Phase 1 Foundation from `docs/NEXT-SESSION-PROMPT.md` was split. This session shipped **only** the additive-safe slices:
+1. Fonts swap (Bellefair → Fraunces + Source Serif 4 + Caveat + JetBrains Mono; Heebo kept).
+2. Design tokens (additive `--g-*` block; existing `--color-*` untouched to preserve current look).
+3. Body ambient layers (watercolor bokeh `body::before` + SVG noise `body::after`).
+
+**Deferred to a later Phase 1 slice** per user decision: `GardenAlive.tsx` motion primitive (cursor spotlight + leaf trail + scroll vine) and `RevealOnScroll.tsx` helper (`.g-reveal` / `.g-reveal-delay-*`).
+
+### User decisions captured (ADR-021 status updated)
+
+- Keep `Copaia` wordmark — no `Yarit°` rename. Brand `name` / `tagline` / `description` unchanged this phase.
+- Main replacement on `feat/living-garden` branch; no parallel `/garden/*` routes.
+- Hybrid motion — GSAP + ScrollTrigger for reveal-on-scroll, vanilla React + CSS custom properties for cursor / scroll FX.
+
+### Changes in this session
+
+1. **`src/app/(storefront)/[locale]/layout.tsx`** — removed `Bellefair` import + declaration + className reference; added `Fraunces`, `Source_Serif_4`, `Caveat`, `JetBrains_Mono` imports with CSS variables `--font-fraunces`, `--font-source-serif`, `--font-caveat`, `--font-jetbrains`. `Heebo` unchanged. `<html className>` now passes all five font variables.
+
+2. **`src/brand.config.ts`** — `fonts` object updated: `sans: 'Heebo'` kept; `display: 'Fraunces'` (was `'Bellefair'`); new entries `body: 'Source Serif 4'`, `accent: 'Caveat'`, `mono: 'JetBrains Mono'`. `colors`, `name`, `tagline`, `description` all untouched — Copaia identity preserved.
+
+3. **`src/app/globals.css`** — three surgical edits:
+   - `--font-display` remapped from `var(--font-frank-ruhl)` to `var(--font-fraunces)` so the ~50 storefront call sites reading `var(--font-display)` pick up Fraunces automatically.
+   - New `:root { --g-*: ... }` block added after `@theme` with 11 Living Garden palette tokens (`--g-bg`, `--g-bg-2`, `--g-ink`, `--g-paper`, `--g-rule`, `--g-rule-soft`, `--g-leaf`, `--g-leaf-deep`, `--g-ember`, `--g-ember-deep`, `--g-mute`). Additive only — unused by current pages; ready for Phase 2+ to adopt.
+   - `body::before` old grain (z-index 1, opacity 0.05) replaced with Living Garden watercolor bokeh (three radial gradients: ember at 15%/10%, leaf at 85%/30%, rule at 50%/80%; z-index 0). New `body::after` added with SVG fractal noise (`mix-blend-mode: multiply; opacity: 0.35`; z-index 1). Existing `body > *:not([role="dialog"])` z-index 2 rule preserved so content layers above both ambient layers. Obsolete `[data-theme="dark"] body::before` override deleted (dark mode disabled).
+
+4. **`.claude/launch.json`** — added `"autoPort": true` to the `yarit-shop dev` entry so Preview MCP can start the dev server on an alternate port when 3000 is occupied by another project.
+
+5. **`docs/DECISIONS.md` ADR-021** — status updated from "pending user confirmation" → "Accepted; Phase 1 Foundation slice shipped on `feat/living-garden`". Added user-confirmed answers section + Phase 1 additive-tokens strategy documentation.
+
+### Admin isolation verified
+
+Admin route group (`src/app/(payload)/layout.tsx`) still loads Bellefair independently and exposes it as `--font-frank-ruhl` for `admin-brand.css`. My storefront edits have zero effect on admin:
+- `/admin/login` renders with Night Apothecary palette intact, `--color-background` undefined on admin (correct — admin doesn't import globals.css), Bellefair-as-`--font-frank-ruhl` still loaded, Hebrew login form + title `התחברות — ניהול קופאה` unchanged.
+- `--g-*` tokens correctly do NOT bleed into admin scope — they live inside globals.css `:root` which the admin layout doesn't import.
+
+### Quality gates
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors; 2 pre-existing warnings in `New/LivingGarden/alive.js` + `New/handoff/design/LivingGarden/alive.js` (prototype handoff files, not part of production code — predate this session)
+- `npm run build` → 43 routes compiled, no SSG regressions, `importMap.js` diff empty (Vercel Blob handler preserved)
+
+### Visual verification via Preview MCP
+
+Dev server at `http://localhost:54788` (autoPort picked it — port 3000 occupied by another project). Verified:
+
+- **`/en`**: title `Copaia — Rooted in wellness`; `getComputedStyle` confirms `--g-bg: #efe6d1`, `--g-leaf: #6b8e4e`, `--g-ember: #c46b3a`; `--font-display` resolves to `"Fraunces", "Fraunces Fallback", ui-serif, Georgia, serif`; `body::before` z-index 0 with `radial-gradient(800px 600px at 15% 10%, rgba(196, 107, 58, 0.1), ...)`; `body::after` z-index 1, opacity 0.35, multiply blend, SVG data URL; `document.fonts` reports `Caveat`, `Fraunces`, `Heebo`, `JetBrains Mono`, `Source Serif 4` all loaded (Bellefair absent); 0 console errors.
+- **`/` (Hebrew fallback)**: `dir="rtl"`, `lang="he"`, title `קופאה — שורשים של בריאות`, same tokens + layers live.
+- **`/admin/login`**: title `התחברות — ניהול קופאה`, `data-theme="light"`, `--font-frank-ruhl: "Bellefair", "Bellefair Fallback"` (admin keeps Bellefair), `--g-leaf` EMPTY on admin (correct), login form renders.
+
+Screenshot capture via MCP timed out twice on a hung renderer; inspect + eval confirmed everything the screenshot would have shown. Not a code issue — Preview MCP screenshot hangs under Next dev + Turbopack + heavy CSS.
+
+### State of the tree
+
+Branch: `feat/living-garden` (new, off `main` at `a39577a`). Five tracked files modified:
+- `src/app/(storefront)/[locale]/layout.tsx`
+- `src/app/globals.css`
+- `src/brand.config.ts`
+- `.claude/launch.json`
+- `docs/DECISIONS.md`
+- `docs/STATE.md` (this entry)
+- `docs/NEXT-SESSION-PROMPT.md` (status update for remaining Phase 1 work)
+
+Untracked: `.claude/settings.local.json` (local settings, intentionally not staged).
+
+### Follow-up TODOs (next session)
+
+- **Phase 1 remainder** — `GardenAlive.tsx` (cursor spotlight + leaf trail + scroll vine with `prefers-reduced-motion` gate, mounted in storefront layout only) + `RevealOnScroll.tsx` (GSAP ScrollTrigger wrapper for `.g-reveal` / `.g-reveal-delay-*`).
+- **Phase 2 Chrome** — new Header, Footer, BannerMarquee, AmbientSoundPill. Every page picks them up automatically.
+- **Evaluate `body::after` noise intensity** — opacity 0.35 is what the spec calls for, but it's ~7× stronger than the prior grain (0.05). If it reads too aggressive against the existing Night Apothecary palette, dialing to 0.15–0.20 is a one-liner.
+- **Retire `.ambient-breathe`** in Phase 2 when new Hero ships (no longer needed once the body layers are the atmosphere source of truth).
+
+---
+
+## Previous (2026-04-18 — Dark mode disable + admin P0 regression fix + Living Garden handoff)
 
 **Session completed.** Three things landed this session:
 

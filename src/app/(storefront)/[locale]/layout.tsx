@@ -21,7 +21,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { getTranslations, setRequestLocale } from 'next-intl/server'
-import { Heebo, Bellefair } from 'next/font/google'
+import { Heebo, Fraunces, Source_Serif_4, Caveat, JetBrains_Mono } from 'next/font/google'
 
 import { routing } from '@/lib/i18n/routing'
 import { brand } from '@/brand.config'
@@ -70,20 +70,46 @@ const heebo = Heebo({
 })
 
 /*
- * Display font — swapped from Frank Ruhl Libre to Bellefair
- * (Design Round 3 follow-up). Bellefair is a higher-contrast
- * Hebrew+Latin serif inspired by Bodoni, with more editorial
- * character than Frank Ruhl Libre's classical restraint.
- * Used by Hebrew fashion/wellness brands that want a more
- * distinctive display face. Single weight (400) is all Bellefair
- * ships — its character comes from the letterforms, not weight.
- * We keep the --font-frank-ruhl variable name for backwards
- * compatibility with admin-brand.css which references it.
+ * Living Garden fonts — Phase 1 Foundation (2026-04-18).
+ * Fraunces = editorial display serif (upright + italic, 400 + 500).
+ * Source Serif 4 = Latin body serif (regular + italic + semibold).
+ * Caveat = handwritten accent for specimen labels, notes.
+ * JetBrains Mono = kicker eyebrows + numeric badges.
+ * Heebo stays for Hebrew RTL body.
+ * Bellefair is no longer loaded on the storefront. The admin layout
+ * at `src/app/(payload)/layout.tsx` still loads Bellefair as
+ * `--font-frank-ruhl` for admin-brand.css — that stays independent.
+ * In globals.css, `--font-display` was remapped to `--font-fraunces`
+ * so the ~50 storefront call sites that read `var(--font-display)`
+ * pick up Fraunces automatically.
  */
-const bellefair = Bellefair({
-  subsets: ['hebrew', 'latin'],
-  weight: ['400'],
-  variable: '--font-frank-ruhl',
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  weight: ['400', '500'],
+  variable: '--font-fraunces',
+  display: 'swap',
+})
+
+const sourceSerif = Source_Serif_4({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  weight: ['400', '600'],
+  variable: '--font-source-serif',
+  display: 'swap',
+})
+
+const caveat = Caveat({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-caveat',
+  display: 'swap',
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-jetbrains',
   display: 'swap',
 })
 
@@ -132,7 +158,7 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
       lang={locale}
       dir={dir}
       suppressHydrationWarning
-      className={`${heebo.variable} ${bellefair.variable} h-full antialiased`}
+      className={`${heebo.variable} ${fraunces.variable} ${sourceSerif.variable} ${caveat.variable} ${jetbrains.variable} h-full antialiased`}
     >
       <head>
         {/* Synchronous theme bootstrap — must run before React hydrates
