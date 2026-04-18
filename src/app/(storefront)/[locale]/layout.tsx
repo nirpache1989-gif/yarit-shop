@@ -29,6 +29,8 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { DriftingLeaves } from '@/components/ui/DriftingLeaves'
+import { GardenAlive } from '@/components/motion/GardenAlive'
+import { RevealOnScroll } from '@/components/motion/RevealOnScroll'
 import { SkipLink } from '@/components/layout/SkipLink'
 
 import '@/app/globals.css'
@@ -176,6 +178,15 @@ export default async function StorefrontLayout({ children, params }: LayoutProps
             everything else (z-index 0) and doesn't intercept clicks. */}
         <div className="ambient-breathe" aria-hidden />
         <DriftingLeaves />
+        {/* Living Garden motion layer — cursor spotlight, leaf trail,
+            scroll vine, and card parallax. Vanilla React + CSS custom
+            properties per ADR-021. Coexists with DriftingLeaves
+            (different z-indices, additive layering per user decision). */}
+        <GardenAlive />
+        {/* GSAP ScrollTrigger scope that adds `.is-in` to every
+            `.g-reveal` as it enters the viewport. CSS owns the
+            0.8s opacity + translateY transition. */}
+        <RevealOnScroll />
         <NextIntlClientProvider>
           <Header />
           <main id="main-content" className="flex-1 relative z-10">
