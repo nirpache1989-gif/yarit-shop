@@ -2,7 +2,83 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom. Historical entries have been moved to [`docs/STATE-ARCHIVE.md`](./STATE-ARCHIVE.md) — this file only holds the two most recent ships.
 
-## Latest (2026-04-18 — Living Garden Phase 1 Foundation slice on `feat/living-garden`)
+## Latest (2026-04-18 — Living Garden Phase 1 remainder + Phase 2 Chrome on `feat/living-garden`)
+
+**Session completed.** Second implementation session of the Living Garden redesign. Shipped the two deferred Phase 1 motion primitives (`GardenAlive`, `RevealOnScroll`) and the full Phase 2 Chrome (Header, Footer, MarqueeBanner, AmbientSoundPill, MobileNav active-state polish). Branch `feat/living-garden` is now 12 commits ahead of `main`. Prod unchanged — branch stays local until user greenlights a push.
+
+### User decisions captured (via AskUserQuestion)
+
+- **Wordmark:** `Copaia` + `<sup>°</sup>` degree mark (Caveat in `--g-ember`) — micro-accent echoes prototype identity.
+- **DriftingLeaves retirement:** keep both — `DriftingLeaves` and `GardenAlive` coexist at different z-indices.
+- **HeaderShrinkObserver:** stays; `.g-nav` omits its resting `background-color` so the scrub owns bg alpha via `--header-scroll-progress`.
+
+### Changes in this session (12 commits)
+
+1. **`src/messages/{he,en}.json`** — added `marquee.bannerLine`, `layout.soundPillLabelIdle`, `layout.soundPillLabelPlaying`, `footer.support`, `footer.madeSlowly` in both locales.
+
+2. **`src/app/globals.css`** — three surgical additions:
+   - Font aliases `--g-display / --g-body / --g-accent / --g-mono` inside the existing `:root` block.
+   - A single `/* ==== Living Garden motion + chrome ==== */` block (~380 lines) inserted between the Phase 1 body-ambient `@layer base` rules and the smooth-scroll declaration. Contains `.g-cursor-spot`, `.g-leaves`, `.g-leaf*`, `@keyframes g-leaf-fall`, `.g-scroll-vine` (+ `[dir="rtl"]` mirror), `.g-reveal*`, `.g-banner*` (+ RTL `animation-direction: reverse`), `.g-card*` + `@keyframes g-bloom-spin`, `.g-nav*` (bg omitted — scrub owns it), `.g-nav-badge` (+ RTL mirror), `.g-lang-pill`, `.g-sound-toggle*` (+ RTL mirror), `.g-footer*`, and a 900px breakpoint collapse.
+   - Reduced-motion additions appended to the existing `@media (prefers-reduced-motion: reduce)` block.
+
+3. **`src/components/motion/GardenAlive.tsx`** (new, ~200 lines) — client component porting prototype `alive.js` to React. Renders three sibling layers: `.g-cursor-spot` (z 9998), `.g-leaves` (z 9999), `.g-scroll-vine` (z 30) with an SVG sinusoidal path (48 quadratic Beziers) + 18 leaf markers. Effects: cursor spotlight (360×360 multiply-blended radial), 80ms-throttled leaf glyph spawns from `❦ ❀ ✿ ❧ ✾ ❣` (2.5s lifespan), scroll vine dashoffset interpolation, card parallax via `--mx/--my/--tx/--ty` CSS custom props. Vanilla React + CSS custom properties — no GSAP for cursor FX. Gates behind `useGsapReducedMotion()` with `return null` + no listeners in reduced mode.
+
+4. **`src/components/motion/RevealOnScroll.tsx`** (new, ~70 lines) — GSAP ScrollTrigger adapter. Uses `useGsapScope`; collects every `.g-reveal` on mount and creates a `ScrollTrigger.create` with `start: 'top bottom-=40'` + `once: true` per element. `onEnter` adds `.is-in`; CSS owns the 0.8s opacity + translateY transition. No `gsap.from` — no render side-effect, so the invariant `immediateRender: false + once: true` is automatically satisfied. Reduced-motion path: synchronously adds `.is-in` to all targets.
+
+5. **`src/app/(storefront)/[locale]/layout.tsx`** — imports + mounts `<GardenAlive />`, `<RevealOnScroll />`, `<MarqueeBanner />` (inside `<main>`), `<AmbientSoundPill />`. Final body stacking order: SkipLink → ambient-breathe → DriftingLeaves → GardenAlive → RevealOnScroll → [Header, main(MarqueeBanner + children), Footer, CartDrawer, AmbientSoundPill].
+
+6. **`src/components/layout/HeaderNavLinks.tsx`** (new, ~45 lines) — client subcomponent reading `usePathname()` + `useTranslations('nav')` to render `Shop / About / Contact` links with `is-active` class on the matching route. Lets `Header.tsx` stay a server component.
+
+7. **`src/components/layout/Header.tsx`** — rewritten to `.g-nav` shell: `Copaia<sup>°</sup>` wordmark + `leaf-breathe` logo, `<HeaderNavLinks />`, `.g-nav-right` with HeaderAccountLink + LanguageSwitcher + (hidden md+) ThemeToggle + CartIcon + MobileNav. `HeaderShrinkObserver` still mounted as client sibling.
+
+8. **`src/components/layout/MarqueeBanner.tsx`** (new, ~40 lines) — CSS-only marquee; renders the translated `marquee.bannerLine` six times inside `.g-banner-track`. `role="presentation"` + `aria-hidden`. RTL direction flip handled by CSS.
+
+9. **`src/components/layout/AmbientSoundPill.tsx`** (new, ~85 lines) — bottom-corner pill toggle. Lazy-creates a looping `HTMLAudioElement` pointing at `/audio/ambient.mp3` (asset not yet shipped). Graceful degradation: `.play().catch()` silently stays idle on autoplay reject or 404. `aria-pressed`, localized label. Phase 4 wires real audio + crossfade.
+
+10. **`src/components/layout/FooterMotion.tsx`** — visual rewrite to `.g-footer` dark-ink 5-column grid (2fr 1fr 1fr 1fr 1.3fr). Brand col has `<sup>°</sup>` accent + newsletter signup. Support column gated on `whatsapp` presence. Social row gated on `hasSocial`. GSAP ScrollTrigger timeline preserved verbatim — garland fade, column stagger (100ms), bottom strip delay (400ms), all with `immediateRender: false + once: true + start: 'top bottom-=40'` per CLAUDE.md rule #12.
+
+11. **`src/components/layout/Footer.tsx`** — server shell passes two new props (`supportLabel = t('support')`, `madeSlowlyLabel = t('madeSlowly')`). `isPlaceholder` filtering in `getResolvedSiteSettings` unchanged.
+
+12. **`src/components/layout/MobileNav.tsx`** — slide-in panel links refactored to a config array. Each gets `aria-current="page"` + `text-[var(--g-ember)]` when active. Focus-trap, scroll-lock, ESC handler, auto-close on route change, portal-to-body — all preserved.
+
+### Quality gates (all green)
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors; 2 pre-existing warnings in prototype handoff files (unchanged from prior session)
+- `npm run build` → 43 routes compiled, no SSG regressions
+- `importMap.js` — diff checked + restored after each build; `VercelBlobClientUploadHandler` preserved (prior P0 fix holds)
+
+### Visual verification via Preview MCP
+
+Dev server at `http://localhost:61546` (autoPort; 3000 occupied). Tested on native desktop viewport + 375×812 mobile preset.
+
+**`/en` (LTR):** wordmark `Copaia°` with sup color `rgb(196, 107, 58)` (ember); 3 nav links; cursor spot + leaves container + scroll vine on right edge (18px); DriftingLeaves coexists; marquee with 6 spans in normal direction; footer dark ink bg `rgb(42, 36, 22)` + paper text `rgb(255, 248, 230)` + 5 cols + "Made slowly" bottom strip; sound pill bottom-left 24px/24px; all 5 Living Garden fonts loaded (Fraunces, Source Serif 4, Caveat, JetBrains Mono, Heebo); 0 console errors.
+
+**`/` (Hebrew default, RTL):** `dir="rtl"`, `lang="he"`, title `קופאה — שורשים של בריאות`; wordmark `קופאה°`; scroll vine left 18px (RTL flipped); sound pill right 24px (RTL flipped); marquee `animation-direction: reverse`; Hebrew marquee line `משלוח חינם מעל ₪200...`; footer bottom `© 2026 קופאה — כל הזכויות שמורות` + `נעשה לאט`.
+
+**Active-link detection:** `/about` → `עלינו` highlighted with `is-active` class; `/contact` → `צור קשר` highlighted. Ember underline rule (`.g-nav-links a.is-active::after`) confirmed present in parsed stylesheets.
+
+**Mobile (375×812) at `/en/shop`:** hamburger visible, panel opens, `Shop` link gets `aria-current="page"` + `color: rgb(196, 107, 58)` (ember); inactive links `rgb(24, 51, 41)`.
+
+**Pointer interaction (fired 6 simulated `pointermove` events):** `g-leaves` container had spawned glyphs (class `g-leaf g-leaf-leaf`, text `✾`); cursor spotlight position updated to `450px / 500px`.
+
+**Reduced-motion CSS rules verified present** in stylesheet scan: `.g-leaf, .g-banner-track { animation: none }`, `.g-reveal { opacity: 1; transition: none; transform: none }`, `.g-cursor-spot, .g-leaves { display: none }`.
+
+### State of the tree
+
+Branch: `feat/living-garden` — 12 commits ahead of `main` (ec5f5fa → 7a1a7f6). Working tree clean. No prod deploys; no branch push. Untracked: `.claude/settings.local.json` (intentionally not staged).
+
+### Follow-up TODOs (next session)
+
+- **Phase 3 pages:** rebuild home → shop → product → cart → checkout → about → journal → contact → account in Living Garden style (4-5 sessions).
+- **Phase 3.5 Payload schema:** add `plate`, `specimen`, `badge` fields to Products; new `Posts` collection for Journal; seed 6 sample posts.
+- **Phase 4 polish:** wire real `/audio/ambient.mp3` + crossfade; replace plate placeholders with Yarit's photography; full responsive + RTL + a11y audit.
+- **Marquee scoping:** currently universal (mounted in `<main>`) — Phase 3 may narrow to home-only once new pages land.
+- **Noise opacity reconsider:** `body::after` at 0.35 may read too aggressive alongside the new `.g-footer` dark ink block. One-liner to dial if needed.
+
+---
+
+## Previous (2026-04-18 — Living Garden Phase 1 Foundation slice on `feat/living-garden`)
 
 **Session completed.** First implementation session of the Living Garden redesign landed a tightly scoped Phase 1 slice — fonts + tokens + body ambient layers — on a new feature branch. User confirmed all 3 ADR-021 open questions (keep Copaia wordmark, main-branch rebuild, hybrid motion). No prod impact yet; branch is local only until user greenlights a push. Quality gates all green; visual verification via Preview MCP confirmed storefront, Hebrew RTL, and admin all render correctly.
 
