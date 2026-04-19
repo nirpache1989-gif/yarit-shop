@@ -1,20 +1,31 @@
 /**
  * @file Storefront home page
- * @summary Homepage composition.
+ * @summary Living Garden Phase 3 composition. Renders the seven
+ *          Living Garden home sections in reading order:
  *
- *          Current order:
- *            Hero → TrustBar → Featured → MeetYarit → Testimonials → Categories
+ *            Hero → [MarqueeBanner mounted in layout] →
+ *            FeaturedProducts (grid) → CategoryGarden (tiles) →
+ *            StoryStrip → IngredientsRail → Testimonials
+ *
+ *          The MarqueeBanner + AmbientSoundPill + GardenAlive
+ *          motion layers all live in the storefront layout, so this
+ *          page only composes the `<main>` content.
+ *
+ *          The old Night Apothecary components (Hero, TrustBar,
+ *          FeaturedProducts, MeetYarit, Testimonials, CategoryGrid,
+ *          BranchDivider, ProductCard) remain on disk because shop
+ *          / PDP / cart still import them — those pages migrate in
+ *          sessions 21+.
  */
 import { setRequestLocale } from 'next-intl/server'
 
 import { routing, type Locale } from '@/lib/i18n/routing'
-import { Hero } from '@/components/sections/Hero'
-import { TrustBar } from '@/components/sections/TrustBar'
-import { FeaturedProducts } from '@/components/sections/FeaturedProducts'
-import { MeetYarit } from '@/components/sections/MeetYarit'
-import { Testimonials } from '@/components/sections/Testimonials'
-import { CategoryGrid } from '@/components/sections/CategoryGrid'
-import { BranchDivider } from '@/components/ui/BranchDivider'
+import { HeroLivingGarden } from '@/components/sections/HeroLivingGarden'
+import { FeaturedProductsLivingGarden } from '@/components/sections/FeaturedProductsLivingGarden'
+import { CategoryGardenLivingGarden } from '@/components/sections/CategoryGardenLivingGarden'
+import { StoryStripLivingGarden } from '@/components/sections/StoryStripLivingGarden'
+import { IngredientsRailLivingGarden } from '@/components/sections/IngredientsRailLivingGarden'
+import { TestimonialsLivingGarden } from '@/components/sections/TestimonialsLivingGarden'
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }))
@@ -31,19 +42,12 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <>
-      <Hero />
-      <TrustBar />
-      {/* T2.9 #6 — each divider binds its draw-in scroll trigger to
-          the next section via `dataFor`, so the sprig animates at the
-          exact moment the consumer section starts revealing. See
-          BranchDivider.tsx for the data-section lookup. */}
-      <BranchDivider dataFor="featured" />
-      <FeaturedProducts locale={typedLocale} />
-      <BranchDivider dataFor="meetyarit" />
-      <MeetYarit locale={typedLocale} />
-      <Testimonials locale={typedLocale} />
-      <BranchDivider dataFor="categories" />
-      <CategoryGrid locale={typedLocale} />
+      <HeroLivingGarden />
+      <FeaturedProductsLivingGarden locale={typedLocale} />
+      <CategoryGardenLivingGarden locale={typedLocale} />
+      <StoryStripLivingGarden />
+      <IngredientsRailLivingGarden />
+      <TestimonialsLivingGarden />
     </>
   )
 }
