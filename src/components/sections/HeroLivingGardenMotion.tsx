@@ -137,7 +137,7 @@ export function HeroLivingGardenMotion({
             <span data-hero-word>{title1}</span>{' '}
             <em data-hero-word>
               <span className="g-under">{title2}</span>
-            </em>
+            </em>{' '}
             <span data-hero-word>{title3}</span>
           </h1>
           <p className="g-hero-lead" data-hero-lead>
