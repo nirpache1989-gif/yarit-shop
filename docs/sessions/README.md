@@ -46,6 +46,7 @@ convention:
 
 | # | Slug | Shipped | One-line description |
 |---|---|---|---|
+| 20 | [home-page](session-20-home-page.md) | 2026-04-19 | Living Garden Phase 3 — Home page rebuild (Hero / Featured / Categories / Story / Ingredients / Quotes) + ProductCardLivingGarden. |
 | 19 | [living-garden-phase-1-remainder-phase-2-chrome](session-19-living-garden-phase-1-remainder-phase-2-chrome.md) | 2026-04-18 | GardenAlive + RevealOnScroll, Living Garden Header + Footer + Marquee + Sound Pill, MobileNav active-state. |
 | — | [2026-04-18 dark-mode-disable](NEXT-SESSION-PROMPT-2026-04-18-dark-mode-disable.md) | 2026-04-18 | Dark mode toggle removal + admin importMap P0 fix + Living Garden handoff docs. |
 | — | [2026-04-12 admin-fix](NEXT-SESSION-PROMPT-2026-04-12-admin-fix.md) | 2026-04-12 | Admin blank-page diagnostic + importMap entry fix. |

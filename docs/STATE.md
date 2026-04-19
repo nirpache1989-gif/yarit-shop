@@ -2,7 +2,88 @@
 
 > **This file is updated at the end of every work session.** When you finish a chunk of work, replace the relevant sections below and add an entry to the changelog at the bottom. Historical entries have been moved to [`docs/STATE-ARCHIVE.md`](./STATE-ARCHIVE.md) — this file only holds the two most recent ships.
 
-## Latest (2026-04-18 — Living Garden Phase 1 remainder + Phase 2 Chrome on `feat/living-garden`)
+## Latest (2026-04-19 — Living Garden Phase 3 Home page rebuild on `feat/living-garden`)
+
+**Session completed.** Third implementation session of the Living Garden redesign. Shipped the full Home page body in Living Garden style — six new sections replacing the Night Apothecary Hero / TrustBar / FeaturedProducts / MeetYarit / Testimonials / CategoryGrid. Branch `feat/living-garden` is now ~21 commits ahead of `main` (Phase 1 + 2 + 3 cumulative). Plan to merge into `main` per user direction, then sessions 21+ rebuild the remaining pages.
+
+### Slices shipped (9 commits this session)
+
+1. **Slice 0** — ported every missing `.g-*` selector from the prototype into `src/app/globals.css` (typography: `.g-display`, `.g-accent`, `.g-mono`, `.g-kicker`, `.g-h1-3`, `.g-note`, `.g-under`; layout: `.g-wrap`, `.g-section*`, `.g-grid-{2,3,4}`, `.g-row-between`; buttons: `.g-btn*`; hero: `.g-hero*`, `.g-float-badge*`; plates: `.g-plate*`, `.g-plate-tag`, `.g-plate-specimen`; cats: `.g-cats`, `.g-cat*`; story: `.g-story-grid`, `.g-story-visual`, `.g-story-body p:first-of-type::first-letter` drop cap; ingredients: `.g-ing-rail`, `.g-ing*`; testimonials: `.g-quote*`, `.g-quote-author*`, `.g-quote-avatar`; mobile 900px responsive collapse). Absolutely-positioned overlays use `inset-inline-start/end` for RTL. Also extended the `home` i18n namespace with `home.hero / .featured / .categoryGarden / .story / .ingredients / .quotes` sub-trees transcribed verbatim from the prototype `COPY.en` / `COPY.he`.
+
+2. **Slice A** — `src/components/sections/HeroLivingGarden.tsx` (server) + `HeroLivingGardenMotion.tsx` (client). `.g-hero .g-wrap .g-reveal` section with a 1.3fr/1fr grid, mixed upright + italic + `.g-under` headline, lead, CTA row (leaf + ghost btn + handwritten accent), dashed meta strip with 3 stats, and a leaf-plate visual with `SIGNATURE · 2026` tag, `№ 001` specimen number, two `.g-float-badge`s (natural + small-batch), and a handwritten corner note. GSAP entrance timeline (kicker → headline words stagger → lead → CTAs → meta → floaters) runs under `useGsapScope` with reduced-motion snap-to-final.
+
+3. **Slice B** — `src/components/sections/FeaturedProductsLivingGarden.tsx` (server, reuses the legacy Payload `isFeatured=true` query) + `src/components/product/ProductCardLivingGarden.tsx` (link-to-PDP card). `.g-grid-4` of `.g-card`s, each with an alternating leaf/ember/cream/- plate colorway, `№ 00N` specimen, bloom glyph corner, mono category eyebrow, Fraunces name + desc, dashed-rule price row with "+ Add" pill (links to PDP for now; real cart-add lands alongside PDP rebuild in session 22). Card hover parallax comes for free via `GardenAlive`'s global pointermove listener writing `--mx/--my/--tx/--ty` on any `.g-card`.
+
+4. **Slice C** — `src/components/sections/CategoryGardenLivingGarden.tsx`. 5-tile `.g-cats` grid with live per-category product counts (one `payload.count()` per tile batched through `Promise.all`) and a hardcoded prototype flower glyph map (`✿ ❀ ❦ ✾ ❧` for `nutrition / skincare / aloe / beauty / gifts`, `❦` fallback).
+
+5. **Slice D** — `src/components/sections/StoryStripLivingGarden.tsx`. `.g-story-grid` 1fr/1.3fr with cream plate on the leading edge and a two-paragraph body column on the trailing edge. 72px ember Fraunces drop cap fires purely via CSS (`.g-story-body p:first-of-type::first-letter`) with an RTL mirror rule flipping `float: left → right`.
+
+6. **Slice E** — `src/components/sections/IngredientsRailLivingGarden.tsx`. 4-col `.g-ing-rail` of ingredient cards (aloe / honey / propolis / olive), each with a 46px italic Fraunces Latin initial (decorative typographic mark, stays Latin in HE), Fraunces name, and short description. Copy in `home.ingredients.*` — no Payload schema this session.
+
+7. **Slice F** — `src/components/sections/TestimonialsLivingGarden.tsx`. `.g-grid-3` of `.g-quote` cards with oversized 96px Fraunces opening quote (CSS `::before`), italic Fraunces body, leaf-green avatar circle + mono-cased name + city. Copy in `home.quotes.q{1,2,3}.{text,who,where}`. Phase 4 polish swaps the leaf-circle avatars for real photos.
+
+8. **Slice G** — `src/app/(storefront)/[locale]/page.tsx` swapped to compose only the six new Living Garden sections (Hero → FeaturedProducts → CategoryGarden → StoryStrip → Ingredients → Testimonials). Dropped Hero / TrustBar / FeaturedProducts / MeetYarit / Testimonials / CategoryGrid / BranchDivider imports. MarqueeBanner stays mounted in the storefront layout so it still renders between the hero and the featured grid without being listed in the page.
+
+9. **Slice H + I** — Verification + docs. Spot-fix: missing whitespace between the italic `em` and the final span in the hero H1 ("growswith you." → "grows with you."). No other polish needed — all 6 sections have correct `.g-reveal` / `.g-reveal-delay-{1,2,3}` wrappers already, and `GardenAlive` card parallax verified writing `--mx/--my/--tx/--ty` on synthetic pointermove.
+
+### Files added (11) — all in `src/components/sections` + `src/components/product`
+
+- `HeroLivingGarden.tsx` + `HeroLivingGardenMotion.tsx`
+- `FeaturedProductsLivingGarden.tsx`
+- `ProductCardLivingGarden.tsx`
+- `CategoryGardenLivingGarden.tsx`
+- `StoryStripLivingGarden.tsx`
+- `IngredientsRailLivingGarden.tsx`
+- `TestimonialsLivingGarden.tsx`
+
+Plus the archived session-20 prompt at `docs/sessions/session-20-home-page.md`.
+
+### Files modified
+
+- `src/app/globals.css` — ~450-line `/* Living Garden Phase 3 — Home page primitives */` block appended between the Phase 2 mobile-nav breakpoint and the smooth-scroll declaration. No changes to any existing Phase 1/2 selector.
+- `src/messages/en.json` + `src/messages/he.json` — extended `home` namespace with `.hero`, `.featured`, `.categoryGarden`, `.story`, `.ingredients`, `.quotes` sub-trees. Legacy `home.heroEyebrow / heroHeadline / …` keys stay in place (unreferenced by the new components but harmless).
+- `src/app/(storefront)/[locale]/page.tsx` — imports + JSX swapped to Living Garden sections.
+
+### Files NOT touched on disk (will be removed when other pages migrate)
+
+`Hero.tsx`, `HeroMotion.tsx`, `TrustBar.tsx`, `FeaturedProducts.tsx`, `FeaturedProductsMotion.tsx`, `MeetYarit.tsx`, `MeetYaritMotion.tsx`, `Testimonials.tsx`, `TestimonialsMotion.tsx`, `CategoryGrid.tsx`, `CategoryGridMotion.tsx`, `BranchDivider.tsx`, `ProductCard.tsx` — still imported by `/shop`, `/product/[slug]`, `/cart`, and `/checkout`. They get deleted when those pages rebuild in sessions 21–24.
+
+### Quality gates (all green)
+
+- `npx tsc --noEmit` → 0 errors
+- `npm run lint` → 0 errors; 2 pre-existing prototype warnings unchanged
+- `npm run build` → 43 routes, SSG clean
+- `importMap.js` — restored from HEAD after each build; `VercelBlobClientUploadHandler` line preserved
+
+### Preview MCP verification notes
+
+Dev server at `http://localhost:61546` (autoport; 3000 occupied). Tested at `1440×900` desktop, `375×812` mobile preset, and `/en` + `/he` routes.
+
+- **Sections** — all six `[data-section]`s render in order: `hero, featured, categories, story, ingredients, quotes`. Zero console errors on load.
+- **Typography** — `.g-h1` uses Fraunces, 56px at viewport width (clamp bottom); `.g-kicker` uses JetBrains Mono, 11px, 0.25em letter-spacing, leaf-deep color; `.g-ing-mark` uses Fraunces italic, 46px, leaf-deep; `.g-quote` on parchment with 2px rule shadow; `.g-cat-icon` in leaf color.
+- **Reveals** — all 19 `.g-reveal` elements get `.is-in` after `RevealOnScroll` trigger refresh. Chrome CSS transitions sometimes stick at `currentTime: 0` in Playwright headless but `.finish()` confirms the final state (opacity: 1, transform: none) works — in a real browser the 0.8s transition runs normally.
+- **Card parallax** — synthetic pointermove at card 70%/30% coords writes `--mx: 225px`, `--my: 179px`, `--tx: 1.2deg`, `--ty: 1.2deg`. `GardenAlive` picks up the new cards without any per-card wiring.
+- **Hebrew RTL** — `dir="rtl"`, `lang="he"`, hero H1 renders Hebrew copy `בריאות שצומחת אִתָּךְ , יום אחר יום.`, float badges show `100% טבעי` / `ייצור קטן`, story drop cap's first letter is Hebrew `י`. `inset-inline-*` positioning flips float badges to the correct logical edges without a separate RTL rule.
+- **Mobile (375w)** — `.g-hero-grid`, `.g-grid-4`, `.g-story-grid` collapse to 1 column; `.g-cats` and `.g-ing-rail` collapse to 2 columns; wrap padding drops to 24px.
+
+Screenshots via `preview_screenshot` timed out (known Next dev + Turbopack issue in this project); verified via `preview_inspect` + `preview_eval` DOM reads instead.
+
+### Visual / minor discrepancies (OK for now, address in Phase 4 polish)
+
+- **Body font inheritance** — `.g-story-body p` inherits body `font-family: Heebo` instead of the prototype's `Source Serif 4`. The app's body font is intentionally Heebo (RTL-optimized); migrating only the Home-page body text to `--g-body` would create inconsistency with other pages still on the old design. Revisit when every Phase 3 page has shipped.
+- **Real hero plate** — `.g-hero-visual` still uses a leaf-gradient plate placeholder; a real photo of Yarit or a product lands in Phase 4.
+- **Testimonial avatars** — solid leaf circles in the prototype; real photos in Phase 4.
+- **Featured grid seeded count** — dev DB currently has 3 products with `isFeatured: true`; prototype mocks 8. Not a regression — prod DB + final Yarit catalog will populate the full 8 slots.
+
+### Follow-ups for session 21
+
+- Rebuild `/shop` — 3-col grid + sidebar filters + pagination. Reuse `ProductCardLivingGarden` from this session. See `docs/NEXT-SESSION-PROMPT.md`.
+- Start removing Night Apothecary section files once the pages that still import them have migrated.
+- Add an ADR to `docs/DECISIONS.md` capturing the "new `*LivingGarden.tsx` components alongside old" decision.
+
+---
+
+## Previous (2026-04-18 — Living Garden Phase 1 remainder + Phase 2 Chrome on `feat/living-garden`)
 
 **Session completed.** Second implementation session of the Living Garden redesign. Shipped the two deferred Phase 1 motion primitives (`GardenAlive`, `RevealOnScroll`) and the full Phase 2 Chrome (Header, Footer, MarqueeBanner, AmbientSoundPill, MobileNav active-state polish). Branch `feat/living-garden` is now 12 commits ahead of `main`. Prod unchanged — branch stays local until user greenlights a push.
 

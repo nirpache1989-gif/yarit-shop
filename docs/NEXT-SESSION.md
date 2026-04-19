@@ -4,21 +4,32 @@
 > 5-minute orientation. After this, read `CLAUDE.md`, then
 > `docs/NEXT-SESSION-PROMPT.md` for the full session brief.
 >
-> **Last updated:** 2026-04-18, end of **session 19 (Living Garden Phase 1 remainder + Phase 2 Chrome)**.
+> **Last updated:** 2026-04-19, end of **session 20 (Living Garden Phase 3 — Home page rebuild)**.
 
 ---
 
 ## Where we are right now
 
-- **Session 19 just finished.** Phase 1 remainder (`GardenAlive` + `RevealOnScroll` motion primitives) and Phase 2 Chrome (Header, Footer, MarqueeBanner, AmbientSoundPill, MobileNav polish) shipped on branch `feat/living-garden`. 13 commits ahead of `main`, all quality gates green, branch stays local until user says `push`.
-- **Prod unchanged.** `https://yarit-shop.vercel.app` is still serving commit `d7a68bf` on `main` (dark mode disabled, admin P0 fix). Nothing new deployed.
-- **Transition state.** Every storefront page wears the new chrome (header, footer, marquee, sound pill) but the `<main>` content still renders the old Night Apothecary design. Phase 3 pages — starting with Home — are the next 7 sessions' work.
+- **Session 20 just finished.** Home page (`/` = `/{locale}`) rebuilt end-to-end in Living Garden style. Six new `*LivingGarden.tsx` section components (Hero, FeaturedProducts, CategoryGarden, StoryStrip, Ingredients, Testimonials) + a new `ProductCardLivingGarden`. Branch `feat/living-garden` carries Phase 1 + 2 + 3 cumulatively, ~21 commits ahead of `main`. All quality gates green. Merged into `main` at end of session per user direction.
+- **Prod unchanged** pending an explicit `deploy` word from the user. Prod is still serving commit `d7a68bf` with the dark-mode-disabled + admin P0 fix.
+- **Transition state.** **Home is Living Garden; every other storefront page is still Night Apothecary.** `/shop`, `/product/[slug]`, `/cart`, `/checkout`, `/about`, `/contact`, `/account`, `/legal/*` still import the old `Hero`, `FeaturedProducts`, `CategoryGrid`, `MeetYarit`, `Testimonials`, `BranchDivider`, `ProductCard` components. Those files stay on disk on purpose — they're deleted as each page migrates in sessions 21–27.
 
-## What's next — session 20
+## What's next — session 21
 
-**Phase 3 begins.** Full Home page rebuild in the Living Garden style — hero, featured grid, category garden, story strip, ingredients rail, testimonials. All details + section-by-section slicing plan in `docs/NEXT-SESSION-PROMPT.md`.
+**Shop page (`/shop`) rebuild in Living Garden.** 3-column grid + sidebar filters (category / price / availability) + pagination. Reuses `ProductCardLivingGarden` shipped in session 20 as the grid tile. See `docs/NEXT-SESSION-PROMPT.md` for the full brief.
 
-The Home page is the biggest page and sets the template for the other 8 pages. Expect 8-9 bite-sized commits (one per section + wire-up + verification). If Home overflows session 20, it spills into session 21.
+Rough forecast for the rest of the redesign:
+
+| # | Page | Notes |
+|---|---|---|
+| 21 | `/shop` | 3-col grid + sidebar filters + pagination. Reuse `ProductCardLivingGarden`. |
+| 22 | `/product/[slug]` | Gallery + variant pills + tabs + PDP meta grid. **Phase 3.5: adds `plate` / `specimen` / `badge` fields to Products.** |
+| 23 | `/cart` | 2-col grid + gift-note block + promo code. |
+| 24 | `/checkout` | Step pills + 3 paper blocks + hand-wrap callout. |
+| 25 | `/about` | Page-title + hero visual + timeline + values rail + CTA. |
+| 26 | `/contact` + `/account` | Short pages bundled. |
+| 27 | `/journal` + `/journal/[slug]` | **Phase 3.5: new Payload `Posts` collection.** |
+| 28 | Phase 4 polish | Real audio file, real photography, a11y audit, final responsive sweep. |
 
 ## Project at a glance
 
