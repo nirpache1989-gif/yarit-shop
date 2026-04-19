@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/ensure-importmap.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "tsc --noEmit && eslint",
