@@ -55,18 +55,24 @@ export function ProductCardLivingGarden({
   return (
     <Link href={`/product/${product.slug}`} className="g-card block">
       <div className="g-card-img">
-        <div className={`g-plate ${plateClass}`.trim()}>
-          {hasRealImage && (
+        {hasRealImage ? (
+          <div className="g-card-photo">
             <Image
               src={imageUrl}
               alt={imageAlt}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              className="object-cover"
+              className="object-contain p-4"
             />
-          )}
-          <span className="g-plate-specimen">№ {specimenNumber}</span>
-        </div>
+            <span className="g-plate-specimen g-card-specimen-on-photo">
+              № {specimenNumber}
+            </span>
+          </div>
+        ) : (
+          <div className={`g-plate ${plateClass}`.trim()}>
+            <span className="g-plate-specimen">№ {specimenNumber}</span>
+          </div>
+        )}
         <span className="g-card-bloom" aria-hidden="true">
           ❀
         </span>

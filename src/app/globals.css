@@ -321,6 +321,23 @@ body {
   overflow: hidden;
 }
 .g-card-img .g-plate { width: 100%; height: 100%; }
+
+/* Photo container — used when the product has a real image. Sits on
+   a warm parchment backdrop so the white-background product PNG
+   reads as "floating on cream paper" (matches the old ProductCard
+   museum-label pattern) rather than cropping aggressively against
+   the plate gradient. */
+.g-card-photo {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 30% 25%, #FFFCF0 0%, var(--g-paper) 70%),
+    var(--g-paper);
+}
+/* Subtle hairline inside the photo tile matching the specimen label. */
+.g-card-specimen-on-photo {
+  color: var(--g-mute) !important;
+}
 .g-card-bloom {
   position: absolute;
   top: 12px;
