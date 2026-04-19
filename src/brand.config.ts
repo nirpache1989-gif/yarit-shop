@@ -73,14 +73,16 @@ export const brand = {
    * The CSS variable names are set there and referenced by Tailwind
    * utilities in globals.css.
    *
-   * The display font was swapped from Frank Ruhl Libre to Bellefair
-   * in Design Round 3 (see src/app/(storefront)/[locale]/layout.tsx
-   * for the commentary). The CSS variable name `--font-frank-ruhl`
-   * is kept for backwards compatibility with admin-brand.css.
+   * Living Garden Phase 1 Foundation (2026-04-18): Bellefair was
+   * retired in favour of a four-font system for the redesign. See
+   * docs/DESIGN-LIVING-GARDEN.md §3 for the role of each face.
    */
   fonts: {
-    sans: 'Heebo',
-    display: 'Bellefair', // higher-contrast editorial serif, single weight (400)
+    sans: 'Heebo',                // Hebrew + Latin body — unchanged
+    display: 'Fraunces',          // editorial serif (replaces Bellefair)
+    body: 'Source Serif 4',       // Latin body serif
+    accent: 'Caveat',             // handwritten callouts (notes, specimen labels)
+    mono: 'JetBrains Mono',       // kicker eyebrows + numeric badges
   },
 
   /**

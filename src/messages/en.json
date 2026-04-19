@@ -24,6 +24,13 @@
     "search": "Search",
     "language": "Language"
   },
+  "marquee": {
+    "bannerLine": "Free shipping over ₪200 · 30-day returns · Hand-wrapped orders · Ships within 2 days"
+  },
+  "layout": {
+    "soundPillLabelIdle": "ambient sound",
+    "soundPillLabelPlaying": "ambience on"
+  },
   "home": {
     "heroEyebrow": "Est. 2026 · Tel Aviv",
     "heroHeadline": "Rooted in wellness",
@@ -37,7 +44,77 @@
     "featuredSubheadline": "The products I love most, carefully chosen for you",
     "seeAll": "See all",
     "categoriesEyebrow": "Find your fit",
-    "categoriesHeadline": "Categories"
+    "categoriesHeadline": "Categories",
+    "hero": {
+      "kicker": "A small apothecary, grown slowly",
+      "title1": "Wellness that",
+      "title2": "grows",
+      "title3": "with you.",
+      "lead": "Small-batch aloe, bee, and botanical formulas. Hand-selected by Yarit since 2009, shipped across Israel in tissue-wrapped packages.",
+      "cta1": "Shop the apothecary",
+      "cta2": "Read our story",
+      "handwrittenNote": "hand-wrapped",
+      "statYears": "Years tending",
+      "statProducts": "Living formulas",
+      "statHands": "Tended by",
+      "plateTag": "SIGNATURE · 2026",
+      "badgeNatural": "100% natural",
+      "badgeSmallBatch": "small-batch",
+      "visualNote": "from the kitchen, with love —"
+    },
+    "featured": {
+      "kicker": "Now in season",
+      "title1": "This",
+      "titleItalic": "week's",
+      "title2": "harvest",
+      "lead": "Eight small-batch favorites, stocked fresh and tied with twine.",
+      "seeAll": "See all",
+      "cardAdd": "Add"
+    },
+    "categoryGarden": {
+      "kicker": "Browse the garden",
+      "title": "Categories",
+      "itemsLabel": "items"
+    },
+    "story": {
+      "kicker": "Hand-tended since 2009",
+      "title1": "One",
+      "titleItalic": "gardener,",
+      "title2": "eight hundred kinds of patience.",
+      "p1": "Yarit started this shop from her kitchen in Tel Aviv with a single aloe leaf and a recipe from her grandmother. Every product still passes through her hands before it reaches yours.",
+      "p2": "We never rush a formula. Ingredients are foraged or sourced from small Israeli producers, mixed in batches of forty, and rested for two weeks before labeling.",
+      "readMore": "Read the long version"
+    },
+    "ingredients": {
+      "kicker": "What grows inside",
+      "title": "Four ingredients we come back to",
+      "aloeName": "Aloe barbadensis",
+      "aloeDesc": "Cold-pressed within 6 hours of harvest. The backbone of half the shop.",
+      "honeyName": "Wildflower honey",
+      "honeyDesc": "From three small apiaries in the Galilee. Clear, slow, never heated.",
+      "propolisName": "Raw propolis",
+      "propolisDesc": "The bees' own pharmacy. We tincture it ourselves.",
+      "oliveName": "Ancient olive",
+      "oliveDesc": "Single-grove oil, pressed at 27°C to keep the phenols living."
+    },
+    "quotes": {
+      "kicker": "From the garden notebook",
+      "q1": {
+        "text": "The aloe heat lotion saved my mother's shoulders. I've re-ordered four times this year.",
+        "who": "Noa B.",
+        "where": "Haifa · since 2019"
+      },
+      "q2": {
+        "text": "The package looks like Yarit wrapped it in her kitchen. Because she did.",
+        "who": "Liran K.",
+        "where": "Tel Aviv · since 2022"
+      },
+      "q3": {
+        "text": "The Galilee honey is the best thing in my pantry. Full stop.",
+        "who": "Dana S.",
+        "where": "Jerusalem · since 2020"
+      }
+    }
   },
   "trustBar": {
     "natural": "100% natural",
@@ -162,10 +239,12 @@
     "shop": "Shop",
     "customerService": "Customer service",
     "information": "Information",
+    "support": "Support",
     "social": "Follow us",
     "newsletterHeading": "Join the list",
     "newsletterBody": "Occasional notes from Yarit — a new product, a recommendation. No noise, no spam.",
-    "newsletterComingSoon": "Newsletter signup coming soon 🌿"
+    "newsletterComingSoon": "Newsletter signup coming soon 🌿",
+    "madeSlowly": "Made slowly"
   },
   "auth": {
     "login": "Log in",

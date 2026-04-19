@@ -1,111 +1,75 @@
 /**
- * @file Header — sticky site navigation
- * @summary Top bar with the Copaia logo, primary nav, cart icon,
- *          language switcher, and the customer account link.
+ * @file Header — sticky site navigation (Living Garden chrome)
+ * @summary Async server component that renders the new `.g-nav`
+ *          Living Garden header. Keeps every existing integration
+ *          (HeaderAccountLink, LanguageSwitcher, ThemeToggle,
+ *          CartIcon, MobileNav, HeaderShrinkObserver) — only the
+ *          visual shell and nav-list implementation change.
  *
- *          Async server component because `HeaderAccountLink` calls
- *          `getCurrentUser()` to decide whether to show "Login" or
- *          "My account". The cart icon stays a client component
- *          (Zustand state); everything else is server-rendered.
+ *          Wordmark: `{brand.name[locale]}<sup>°</sup>` — the
+ *          degree mark is a signature Living Garden accent (Caveat
+ *          in `--g-ember`; see `.g-nav-brand sup` in globals.css).
+ *
+ *          The `.g-nav` class intentionally omits its resting
+ *          `background-color` — the scroll-scrubbed `#site-header`
+ *          rule in globals.css owns bg alpha via
+ *          `--header-scroll-progress` (written by the
+ *          `HeaderShrinkObserver` client sibling mounted below).
+ *
+ *          Active-link underline is handled by the new
+ *          `HeaderNavLinks` client subcomponent so this component
+ *          can stay a server component (same pattern as Footer →
+ *          FooterMotion).
  */
 import Image from 'next/image'
-import { getTranslations } from 'next-intl/server'
+import { getLocale } from 'next-intl/server'
 import { Link } from '@/lib/i18n/navigation'
 import { brand } from '@/brand.config'
-import { Container } from '@/components/ui/Container'
 import { CartIcon } from '@/components/cart/CartIcon'
 import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { HeaderAccountLink } from '@/components/layout/HeaderAccountLink'
 import { MobileNav } from '@/components/layout/MobileNav'
 import { HeaderShrinkObserver } from '@/components/layout/HeaderShrinkObserver'
+import { HeaderNavLinks } from '@/components/layout/HeaderNavLinks'
 
 export async function Header() {
-  const t = await getTranslations('nav')
+  const locale = (await getLocale()) as 'he' | 'en'
+  const wordmark = brand.name[locale] ?? brand.name.en
 
   return (
     <>
-      {/* Tier-1 upgrade T1.5: client sibling that watches window scroll
-          and toggles `data-scrolled` on the header element below. The
-          CSS in globals.css (`header#site-header[data-scrolled="true"]`)
-          handles the shrink transition. No GSAP — plain useEffect +
-          rAF throttled scroll listener. */}
+      {/* Client sibling — writes --header-scroll-progress + data-scrolled
+          onto #site-header so globals.css rules can interpolate bg alpha
+          and logo shrink smoothly as the user scrolls. */}
       <HeaderShrinkObserver />
-      {/* 2026-04-11 Track D.1: background-color is now owned by the
-          scroll-scrubbed `header#site-header` rule in globals.css,
-          which interpolates it continuously via
-          `--header-scroll-progress`. We intentionally do NOT set a
-          Tailwind bg utility here or it would override the scrub. */}
-      <header
-        id="site-header"
-        className="sticky top-0 z-30 backdrop-blur-sm border-b border-[var(--color-primary)]/15"
-      >
-        <Container className="h-16 flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="group flex items-center gap-3 transition-transform duration-300 ease-out hover:scale-[1.015]"
-          >
-            {/* The logo's little leaf breathes (5.5s scale loop).
-                Transform origin is tuned so the leaf scales, not the
-                whole wordmark. See .leaf-breathe in globals.css. */}
-            <span className="leaf-breathe">
-              <Image
-                src="/brand/copaia.png"
-                alt={brand.name.en}
-                width={64}
-                height={96}
-                priority
-                className="h-10 w-auto object-contain"
-              />
-            </span>
-            <span
-              className="text-xl md:text-2xl font-bold text-[var(--color-primary-dark)] hidden sm:inline transition-colors duration-300 group-hover:text-[var(--color-primary)]"
-              style={{ fontFamily: 'var(--font-display)' }}
-            >
-              {brand.name.he}
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold">
-            <Link href="/shop" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
-              {t('shop')}
-            </Link>
-            <Link href="/about" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
-              {t('about')}
-            </Link>
-            <Link href="/contact" className="nav-link text-[var(--color-primary-dark)] hover:text-[var(--color-primary)] transition-colors uppercase tracking-wider">
-              {t('contact')}
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2 md:gap-3">
-            {/* Desktop account link — hidden below sm (via HeaderAccountLink's
-                own responsive classes). */}
-            <HeaderAccountLink />
-            {/* Language switcher — ALWAYS visible, every breakpoint.
-                Moved out of the `hidden md:flex` group because mobile
-                visitors (esp. Hebrew-default users wanting English)
-                could not find it when it only lived inside the
-                hamburger panel. Compact "עב / EN" takes minimal
-                horizontal space. See 2026-04-11 mobile audit. */}
-            <LanguageSwitcher />
-            {/* Theme toggle stays desktop-only in the top bar — it's
-                also mirrored inside the mobile hamburger panel so
-                mobile users can still flip themes if they want. */}
-            <div className="hidden md:flex items-center gap-3">
-              <ThemeToggle />
-            </div>
-            {/* Cart is always visible (it's a quick-access shortcut). */}
-            <CartIcon />
-            {/* Hamburger + slide-in panel, visible only below md. The
-                mobile account row is server-rendered so it stays aware
-                of logged-in state without the client having to call
-                getCurrentUser again. */}
-            <MobileNav
-              accountSlot={<HeaderAccountLink variant="mobile" />}
+      <header id="site-header" className="g-nav">
+        <Link href="/" className="g-nav-brand">
+          <span className="leaf-breathe">
+            <Image
+              src="/brand/copaia.png"
+              alt={brand.name.en}
+              width={48}
+              height={72}
+              priority
+              className="h-8 w-auto object-contain"
             />
+          </span>
+          <span>{wordmark}</span>
+          <sup>°</sup>
+        </Link>
+
+        <HeaderNavLinks />
+
+        <div className="g-nav-right">
+          <HeaderAccountLink />
+          <LanguageSwitcher />
+          <div className="hidden md:flex items-center">
+            <ThemeToggle />
           </div>
-        </Container>
+          <CartIcon />
+          <MobileNav accountSlot={<HeaderAccountLink variant="mobile" />} />
+        </div>
       </header>
     </>
   )
